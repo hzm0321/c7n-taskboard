@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { useTaskboardI18n } from "../i18n";
@@ -127,10 +128,10 @@ export function JiraConnectionDialog({
         )}
         {error && <p className="project-dialog-error" role="alert">{error}</p>}
         <div>
-          <button className="button secondary" type="button" disabled={saving} onClick={onClose}>
+          <Button variant="outline" size="sm" className="button secondary" type="button" disabled={saving} onClick={onClose}>
             {text("取消", "Cancel")}
-          </button>
-          <button
+          </Button>
+          <Button variant="default" size="sm"
             className="button primary"
             type="submit"
             disabled={
@@ -145,7 +146,7 @@ export function JiraConnectionDialog({
               : connection?.configured
                 ? text("保存并同步", "Save and sync")
                 : text("连接并同步", "Connect and sync")}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

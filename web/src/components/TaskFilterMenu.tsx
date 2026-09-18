@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { listenForOutsidePointerDown, listenForMenuViewportChange } from "../menuEvents";
 import {
   useEffect,
@@ -395,7 +396,7 @@ export function TaskFilterMenu({ tasks, search, labels, filters, onChange, sort,
 
   function renderOption(option: FilterOption, level: "root" | "submenu") {
     return (
-      <button
+      <Button variant="ghost" size="none"
         key={option.id}
         type="button"
         role="menuitemcheckbox"
@@ -412,7 +413,7 @@ export function TaskFilterMenu({ tasks, search, labels, filters, onChange, sort,
         {level === "root" && <span className="task-filter-item-category">{option.category}</span>}
         <span className="task-filter-item-count">{option.count}</span>
         <span className="task-filter-item-check">{option.selected && <LinearIcon name="check" />}</span>
-      </button>
+      </Button>
     );
   }
 
@@ -494,7 +495,7 @@ export function TaskFilterMenu({ tasks, search, labels, filters, onChange, sort,
       <div className="task-filter-root-list" role="menu">
         {visibleCategories.map((category) => (
           <div className="task-filter-anchor" key={category.id}>
-            <button
+            <Button variant="ghost" size="none"
               type="button"
               role="menuitem"
               aria-haspopup="menu"
@@ -509,7 +510,7 @@ export function TaskFilterMenu({ tasks, search, labels, filters, onChange, sort,
               <span className="task-filter-item-label">{category.label}</span>
               {category.summary && <span className="task-filter-item-summary">{category.summary}</span>}
               <span className="task-filter-chevron"><LinearIcon name="chevronRight" /></span>
-            </button>
+            </Button>
 
             {submenu === category.id && (
               <div
@@ -538,7 +539,7 @@ export function TaskFilterMenu({ tasks, search, labels, filters, onChange, sort,
 
       {activeCount > 0 && (
         <div className="task-filter-footer">
-          <button
+          <Button variant="ghost" size="none"
             type="button"
             className="task-filter-clear-all"
             data-filter-level="root"
@@ -546,7 +547,7 @@ export function TaskFilterMenu({ tasks, search, labels, filters, onChange, sort,
           >
             {text("清除所有筛选", "Clear all filters")}
             <span>{activeCount}</span>
-          </button>
+          </Button>
         </div>
       )}
     </div>,
@@ -555,23 +556,23 @@ export function TaskFilterMenu({ tasks, search, labels, filters, onChange, sort,
 
   return (
     <>
-      <button
+      <Button variant="ghost" size="none"
         ref={triggerRef}
         type="button"
         className={`task-filter-trigger${activeCount ? " is-active" : ""}${open ? " is-open" : ""}`}
         aria-label={activeCount
-          ? text(`筛选议题，已启用 ${activeCount} 个条件`, `Filter issues, ${activeCount} active`)
-          : text("筛选议题", "Filter issues")}
+          ? text(`筛选任务，已启用 ${activeCount} 个条件`, `Filter issues, ${activeCount} active`)
+          : text("筛选任务", "Filter issues")}
         aria-haspopup="menu"
         aria-expanded={open}
         title={activeCount
           ? text(`已启用 ${activeCount} 个筛选条件 (F)`, `${activeCount} active filters (F)`)
-          : text("筛选议题 (F)", "Filter issues (F)")}
+          : text("筛选任务 (F)", "Filter issues (F)")}
         onClick={() => open ? closeMenu() : openMenu()}
       >
         <TaskboardIcon name="filter" className="filter-icon" />
         {activeCount > 0 && <span className="task-filter-active-dot" aria-hidden="true" />}
-      </button>
+      </Button>
       {menu}
     </>
   );

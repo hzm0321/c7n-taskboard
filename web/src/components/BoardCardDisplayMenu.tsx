@@ -1,3 +1,6 @@
+import { GripVertical, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { listenForOutsidePointerDown } from "../menuEvents";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
@@ -180,29 +183,19 @@ export function BoardCardDisplayMenu({
       </div>
       <div className="project-automation-switch">
         <span>{text("封面", "Cover")}</span>
-        <button
-          type="button"
-          className={"board-setting-switch" + (settings.cover ? " is-on" : "")}
-          role="switch"
+        <Switch
           aria-label={text("显示封面", "Show cover")}
-          aria-checked={settings.cover}
-          onClick={() => onChange({ ...settings, cover: !settings.cover })}
-        >
-          <span aria-hidden="true" />
-        </button>
+          checked={settings.cover}
+          onCheckedChange={(checked) => onChange({ ...settings, cover: checked })}
+        />
       </div>
       <div className="project-automation-switch">
         <span>{text("正文", "Body")}</span>
-        <button
-          type="button"
-          className={"board-setting-switch" + (settings.body ? " is-on" : "")}
-          role="switch"
+        <Switch
           aria-label={text("显示正文", "Show body")}
-          aria-checked={settings.body}
-          onClick={() => onChange({ ...settings, body: !settings.body })}
-        >
-          <span aria-hidden="true" />
-        </button>
+          checked={settings.body}
+          onCheckedChange={(checked) => onChange({ ...settings, body: checked })}
+        />
       </div>
       <div className="project-automation-switch">
         <span>{text("创建时间", "Creation date")}</span>
@@ -217,7 +210,7 @@ export function BoardCardDisplayMenu({
           <span aria-hidden="true" />
         </button>
       </div>
-      <button
+      <Button variant="ghost" size="none"
         className="display-settings-more"
         type="button"
         aria-haspopup="dialog"
@@ -228,7 +221,7 @@ export function BoardCardDisplayMenu({
       >
         <span>{text("更多显示设置", "More display settings")}</span>
         <span aria-hidden="true">›</span>
-      </button>
+      </Button>
     </div>,
     document.body,
   ) : null;
@@ -245,18 +238,24 @@ export function BoardCardDisplayMenu({
         role="dialog"
         aria-modal="true"
         aria-labelledby="display-settings-title"
+        aria-describedby="display-settings-description"
       >
         <header className="display-settings-header">
-          <h2 id="display-settings-title">{text("更多显示设置", "More display settings")}</h2>
-          <button
-            ref={closeRef}
-            className="icon-button display-settings-close"
-            type="button"
-            aria-label={text("关闭显示设置", "Close display settings")}
-            onClick={closeDialog}
-          >
-            <LinearIcon name="close" />
-          </button>
+          <div className="display-settings-heading">
+            <div>
+              <h2 id="display-settings-title">{text("更多显示设置", "More display settings")}</h2>
+              <p id="display-settings-description">{text("拖动任务状态，调整显示位置和排列顺序。", "Drag task statuses to change their placement and order.")}</p>
+            </div>
+            <Button variant="ghost" size="none"
+              ref={closeRef}
+              className="icon-button display-settings-close"
+              type="button"
+              aria-label={text("关闭显示设置", "Close display settings")}
+              onClick={closeDialog}
+            >
+              <X size={18} aria-hidden="true" />
+            </Button>
+          </div>
         </header>
 
         <div className="display-settings-columns">
@@ -286,8 +285,17 @@ export function BoardCardDisplayMenu({
               onDrop={(event) => handleDrop(event, placement)}
               key={placement}
             >
-              <h3>{label}</h3>
+              <div className="display-settings-column-heading">
+                <h3>{label}</h3>
+                <span>{statusesFor(placement).length}</span>
+              </div>
+              <p className="display-settings-column-description">{placement === "main"
+                ? text("作为看板列展示", "Show as board columns")
+                : placement === "sidebar"
+                  ? text("收纳到「其他任务」", "Keep in Other tasks")
+                  : text("暂不在看板中展示", "Keep off the board")}</p>
               <div className="display-settings-status-list">
+                {statusesFor(placement).length === 0 && <p className="display-settings-empty">{text("拖动状态到这里", "Drop statuses here")}</p>}
                 {statusesFor(placement).map((status) => {
                   const dragShift = getStatusDragShift(status, placement);
                   return (
@@ -321,9 +329,8 @@ export function BoardCardDisplayMenu({
                         : <StatusIcon status={status as TaskStatus} color="var(--display-status-color)" size={15} />}
                       <span>{status === "archived"
                         ? text("已归档", "Archived")
-                        : status === "blocked"
-                          ? text("遇到阻碍（默认隐藏）", "Blocked (hidden by default)")
                         : taskStatusLabel(language, status)}</span>
+                      <GripVertical className="display-settings-drag-handle" size={14} aria-hidden="true" />
                     </div>
                   );
                 })}
@@ -333,9 +340,11 @@ export function BoardCardDisplayMenu({
         </div>
 
         <footer className="display-settings-footer">
-          <button className="button secondary" type="button" onClick={onReset}>
+          <Button variant="outline" size="sm" className="button secondary" type="button" onClick={onReset}>
             {text("重置为默认", "Reset to default")}
-          </button>
+          </Button>
+          <span>{text("修改自动保存", "Changes saved automatically")}</span>
+          <Button variant="default" size="sm" className="button primary" type="button" onClick={closeDialog}>{text("完成", "Done")}</Button>
         </footer>
       </div>
     </div>,
@@ -344,7 +353,7 @@ export function BoardCardDisplayMenu({
 
   return (
     <>
-      <button
+      <Button variant="ghost" size="none"
         ref={triggerRef}
         className={"task-filter-trigger board-card-display-trigger" + (
           menuOpen || dialogOpen ? " is-open" : ""
@@ -360,7 +369,7 @@ export function BoardCardDisplayMenu({
         }}
       >
         <LinearIcon name="displayOptions" />
-      </button>
+      </Button>
       {menu}
       {dialog}
     </>

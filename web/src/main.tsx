@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { initializeTaskboardStorage } from "./storage";
+import "./shadcn.css";
 import "./styles.css";
 
 async function main() {

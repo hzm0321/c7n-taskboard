@@ -1401,7 +1401,7 @@ function remoteAutomationPrompt(task, comments, attachments, target) {
     ? JSON.stringify(task.developmentContext)
     : "（项目根目录）";
   return [
-    `处理 Taskboard 议题 ${task.identifier}：${task.title}`,
+    `处理 Taskboard 任务 ${task.identifier}：${task.title}`,
     "",
     `远程工作目录：${target.workspacePath}`,
     `开发上下文：${developmentContext}`,
@@ -1511,7 +1511,7 @@ async function remoteAutomationCanStart(cdp, request, task, comments) {
         input: [{
           type: "text",
           text: [
-            "你是 Codex Taskboard 自动认领 Agent。只判断下面的议题当前是否允许开始。",
+            "你是 Codex Taskboard 自动认领 Agent。只判断下面的任务当前是否允许开始。",
             "根据完整描述和最新评论做语义判断：若任一处明确要求等待、暂不执行或当前不应开始，decision 为 wait；否则 decision 为 start。不要调用工具，不要解释。",
             JSON.stringify({
               identifier: task.identifier,

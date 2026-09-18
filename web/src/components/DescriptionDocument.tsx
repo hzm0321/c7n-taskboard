@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { memo, useEffect, useState, type ClipboardEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { attachmentContentUrl } from "../api";
@@ -271,14 +272,14 @@ export const DescriptionDocument = memo(function DescriptionDocument({
           aria-label={previewImage.alt || "Image preview"}
         >
           <img src={previewImage.src} alt={previewImage.alt} />
-          <button
+          <Button variant="ghost" size="none"
             className="icon-button display-settings-close image-preview-close"
             type="button"
             aria-label="Close image preview"
             onClick={() => setPreviewImage(null)}
           >
             <LinearIcon name="close" />
-          </button>
+          </Button>
         </div>
       </div>,
       document.body,

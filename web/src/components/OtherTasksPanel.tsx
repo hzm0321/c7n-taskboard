@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import type { CSSProperties, DragEvent } from "react";
 import { useTaskCardDragPreview } from "../useTaskCardDragPreview";
 import type { ActorIdentity, Task, TaskDraft, TaskStatus } from "../types";
@@ -50,7 +51,7 @@ function ArchivedTaskCard({
         </span>
         {task.source !== "jira" && (
           <>
-            <button
+            <Button variant="ghost" size="none"
               className="archived-task-action archived-task-restore"
               type="button"
               disabled={busy}
@@ -58,8 +59,8 @@ function ArchivedTaskCard({
             >
               <RefreshIcon color="currentColor" />
               {restoring ? text("恢复中…", "Restoring…") : text("恢复", "Restore")}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="none"
               className="archived-task-action archived-task-delete"
               type="button"
               aria-label={text(`永久删除 ${displayIdentifier}`, `Permanently delete ${displayIdentifier}`)}
@@ -68,7 +69,7 @@ function ArchivedTaskCard({
               onClick={() => onDelete(task)}
             >
               <DeleteIcon color="currentColor" />
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -120,8 +121,8 @@ export function ArchivedTasksColumn({
         {tasks.length === 0 && (
           <div className="column-empty">
             {hasActiveFilters
-              ? text("当前筛选下无匹配议题", "No issues match the current filters")
-              : text("没有已归档议题。", "There are no archived issues.")}
+              ? text("当前筛选下无匹配任务", "No issues match the current filters")
+              : text("没有已归档任务。", "There are no archived issues.")}
           </div>
         )}
       </div>
@@ -241,7 +242,7 @@ export function OtherTasksPanel({
           const count = tab === "archived" ? archivedTasks.length : tasksByStatus[tab].length;
           const selected = tab === activeTab;
           return (
-            <button
+            <Button variant="ghost" size="none"
               className={`other-tasks-tab${selected ? " is-active" : ""}`}
               id={`other-tasks-tab-${tab}`}
               key={tab}
@@ -253,24 +254,24 @@ export function OtherTasksPanel({
               onClick={() => onTabChange(tab)}
             >
               <span className="other-tasks-tab-label">{label}</span>
-              <span className="other-tasks-tab-count" aria-label={text(`${count} 个议题`, `${count} issues`)}>
+              <span className="other-tasks-tab-count" aria-label={text(`${count} 个任务`, `${count} issues`)}>
                 {count}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>
 
       {!archived && onCreate && (
-        <button
+        <Button variant="ghost" size="none"
           className="other-tasks-add"
           type="button"
-          aria-label={text(`在${activeLabel}中新建议题`, `Create issue in ${activeLabel}`)}
+          aria-label={text(`在${activeLabel}中新建任务`, `Create issue in ${activeLabel}`)}
           title={text(`添加到${activeLabel}`, `Add to ${activeLabel}`)}
           onClick={() => onCreate(activeTab)}
         >
           <PlusIcon color="currentColor" size={11} />
-        </button>
+        </Button>
       )}
 
       <div
@@ -335,13 +336,13 @@ export function OtherTasksPanel({
                 ? <DeleteIcon color="currentColor" />
                 : <LinearIcon name="panel" />}
             <strong>{hasActiveFilters
-              ? text("当前筛选下无匹配议题", "No issues match the current filters")
-              : text("暂无议题", "No issues")}</strong>
+              ? text("当前筛选下无匹配任务", "No issues match the current filters")
+              : text("暂无任务", "No issues")}</strong>
             <span>
               {hasActiveFilters
                 ? text("搜索和筛选会同步作用于所有状态。", "Search and filters apply to every status.")
                 : archived
-                  ? text("没有已归档议题。", "There are no archived issues.")
+                  ? text("没有已归档任务。", "There are no archived issues.")
                   : text(`没有${activeLabel}。`, `There are no issues in ${activeLabel}.`)}
             </span>
           </div>

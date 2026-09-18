@@ -1,0 +1,63 @@
+/* Utilities only: the existing app owns its global reset and theme. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "tw-animate-css";
+@source "./components/ui";
+@source "./components/ChoerodonConnectionDialog.tsx";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-switch-checked: var(--switch-checked);
+  --color-switch-unchecked: var(--switch-unchecked);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+  --color-secondary: var(--surface-muted);
+  --color-secondary-foreground: var(--text-primary);
+  --color-background: var(--surface);
+  --color-foreground: var(--text-primary);
+  --color-popover: var(--surface-raised);
+  --color-popover-foreground: var(--text-primary);
+  --color-muted: var(--surface-muted);
+  --color-muted-foreground: var(--text-tertiary);
+  --color-accent: var(--surface-hover);
+  --color-accent-foreground: var(--text-primary);
+  --color-input: var(--border-strong);
+  --color-border: var(--border);
+  --color-ring: var(--accent);
+  --color-destructive: var(--danger);
+}
+
+/* The shadcn primitives need border defaults without Tailwind preflight. */
+[data-slot="select-trigger"],
+[data-slot="select-content"] {
+  border-style: solid;
+}
+
+[data-slot="select-trigger"] {
+  color: var(--text-primary);
+  background: var(--surface);
+}
+
+[data-slot="select-content"] {
+  border-color: var(--border-strong);
+}
+
+[data-slot="select-trigger"][data-placeholder] {
+  color: var(--text-tertiary);
+}
+
+[data-slot="tabs-trigger"] {
+  border-style: solid;
+}
+
+[data-slot="button"] {
+  border-style: solid;
+}
+
+[data-slot="switch"] {
+  padding: 0;
+  border-width: 2px;
+  border-style: solid;
+}

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   useEffect,
   useMemo,
@@ -83,7 +84,7 @@ export function IssuePickerContent({
           aria-expanded="true"
           aria-controls="issue-relation-results"
           aria-activedescendant={results[activeIndex] ? `relation-option-${results[activeIndex].id}` : undefined}
-          placeholder={text("搜索议题…", "Search issues…")}
+          placeholder={text("搜索任务…", "Search issues…")}
           onChange={(event) => {
             setQuery(event.target.value);
             setActiveIndex(0);
@@ -120,7 +121,7 @@ export function IssuePickerContent({
             selected ? "is-selected" : "",
           ].filter(Boolean).join(" ");
           return (
-            <button
+            <Button variant="ghost" size="none"
               ref={(element) => {
                 optionRefs.current[index] = element;
               }}
@@ -142,10 +143,10 @@ export function IssuePickerContent({
                   {selected && <LinearIcon name="check" />}
                 </span>
               )}
-            </button>
+            </Button>
           );
         }) : (
-          <p className="issue-relation-empty">{text("没有匹配的议题", "No matching issues")}</p>
+          <p className="issue-relation-empty">{text("没有匹配的任务", "No matching issues")}</p>
         )}
       </div>
     </>
@@ -166,10 +167,6 @@ interface RelationActions {
     type: IssueRelationType,
     relatedTaskId: string,
   ) => Promise<RelationMutationResult>;
-}
-
-interface IssueSubIssuesProps extends RelationActions {
-  onCreateChild: () => void;
 }
 
 export function IssuePicker({
@@ -197,7 +194,7 @@ export function IssuePicker({
 
   return (
     <div className="issue-relation-picker" ref={rootRef}>
-      <button
+      <Button variant="ghost" size="none"
         className="issue-relation-add"
         type="button"
         disabled={disabled}
@@ -207,7 +204,7 @@ export function IssuePicker({
       >
         <PlusIcon color="currentColor" size={13} />
         <span>{label}</span>
-      </button>
+      </Button>
       {open && (
         <div className="issue-relation-popover">
           <IssuePickerContent
@@ -255,13 +252,13 @@ function IssueRelationRow({
   const { text } = useTaskboardI18n();
   return (
     <div className="issue-relation-row">
-      <button className="issue-relation-target" type="button" onClick={onOpen}>
+      <Button variant="ghost" size="none" className="issue-relation-target" type="button" onClick={onOpen}>
         <StatusIcon status={issue.status} size={14} />
         <span className="issue-relation-id">{issue.externalKey ?? issue.identifier}</span>
         <span className="issue-relation-title">{issue.title}</span>
         {showAssignee && <ActorAvatar actor={issue.assignee} className="issue-relation-assignee" />}
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost" size="none"
         className="issue-relation-remove"
         type="button"
         aria-label={text(
@@ -272,7 +269,7 @@ function IssueRelationRow({
         onClick={onRemove}
       >
         <LinearIcon name="close" />
-      </button>
+      </Button>
     </div>
   );
 }
@@ -299,7 +296,7 @@ export function IssueParentLink({
     <div className={`issue-parent-link${parent ? " has-parent" : ""}`}>
       {parent && (
         <>
-          <span className="issue-parent-prefix">{text("子议题属于", "Sub-issue of")}</span>
+          <span className="issue-parent-prefix">{text("子任务属于", "Sub-issue of")}</span>
           <IssueRelationRow
             issue={parent}
             removing={saving}
@@ -315,8 +312,8 @@ export function IssueParentLink({
       )}
       <IssuePicker
         label={parent
-          ? text("更换父议题", "Change parent issue")
-          : text("设置父议题", "Set parent issue")}
+          ? text("更换父任务", "Change parent issue")
+          : text("设置父任务", "Set parent issue")}
         candidates={candidates}
         disabled={saving}
         onSelect={async (candidate) => {
@@ -338,8 +335,7 @@ export function IssueSubIssues({
   onOpenTask,
   onAddRelation,
   onRemoveRelation,
-  onCreateChild,
-}: IssueSubIssuesProps) {
+}: RelationActions) {
   const { text } = useTaskboardI18n();
   const [savingId, setSavingId] = useState<string | null>(null);
   const subIssues = task.relations.subIssues;
@@ -363,7 +359,7 @@ export function IssueSubIssues({
     <section className="issue-sub-issues" aria-labelledby="sub-issues-heading">
       <header>
         <div>
-          <h2 id="sub-issues-heading">{text("子议题", "Sub-issues")}</h2>
+          <h2 id="sub-issues-heading">{text("子任务", "Sub-issues")}</h2>
           {subIssues.length > 0 && (
             <span className="sub-issue-summary">
               <span
@@ -375,30 +371,19 @@ export function IssueSubIssues({
             </span>
           )}
         </div>
-        <div className="issue-sub-issue-actions">
-          <button
-            className="issue-relation-add issue-sub-issue-create"
-            type="button"
-            disabled={savingId !== null}
-            onClick={onCreateChild}
-          >
-            <PlusIcon color="currentColor" size={13} />
-            <span>{text("新建子议题", "New sub-issue")}</span>
-          </button>
-          <IssuePicker
-            label={text("添加子议题", "Add sub-issue")}
-            candidates={candidates}
-            disabled={savingId !== null}
-            onSelect={async (candidate) => {
-              setSavingId(candidate.id);
-              try {
-                await onAddRelation(candidate, "parent", task.id);
-              } finally {
-                setSavingId(null);
-              }
-            }}
-          />
-        </div>
+        <IssuePicker
+          label={text("添加子任务", "Add sub-issue")}
+          candidates={candidates}
+          disabled={savingId !== null}
+          onSelect={async (candidate) => {
+            setSavingId(candidate.id);
+            try {
+              await onAddRelation(candidate, "parent", task.id);
+            } finally {
+              setSavingId(null);
+            }
+          }}
+        />
       </header>
       {subIssues.length > 0 && (
         <div className="issue-sub-issue-list">
@@ -428,9 +413,9 @@ export function IssueSubIssues({
 }
 
 const RELATION_GROUPS = [
-  { type: "blocked_by", field: "blockedBy", chineseLabel: "阻塞于", englishLabel: "Blocked by", chineseAddLabel: "添加阻塞议题", englishAddLabel: "Add blocker", tone: "blocked-by" },
-  { type: "blocks", field: "blocks", chineseLabel: "阻塞", englishLabel: "Blocks", chineseAddLabel: "添加被阻塞议题", englishAddLabel: "Add blocked issue", tone: "blocks" },
-  { type: "related", field: "related", chineseLabel: "相关议题", englishLabel: "Related issues", chineseAddLabel: "添加相关议题", englishAddLabel: "Add related issue", tone: "related" },
+  { type: "blocked_by", field: "blockedBy", chineseLabel: "阻塞于", englishLabel: "Blocked by", chineseAddLabel: "添加阻塞任务", englishAddLabel: "Add blocker", tone: "blocked-by" },
+  { type: "blocks", field: "blocks", chineseLabel: "阻塞", englishLabel: "Blocks", chineseAddLabel: "添加被阻塞任务", englishAddLabel: "Add blocked issue", tone: "blocks" },
+  { type: "related", field: "related", chineseLabel: "相关任务", englishLabel: "Related issues", chineseAddLabel: "添加相关任务", englishAddLabel: "Add related issue", tone: "related" },
 ] as const;
 
 export function IssueRelationSidebar({

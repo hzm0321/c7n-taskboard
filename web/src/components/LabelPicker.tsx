@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { listenForOutsidePointerDown } from "../menuEvents";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { labelDisplayName, labelPresentation } from "../labels";
@@ -112,7 +113,7 @@ export function LabelPicker({
 
   return (
     <div ref={rootRef} className={`composer-menu-anchor label-picker${className ? ` ${className}` : ""}`}>
-      <button
+      <Button variant="ghost" size="none"
         ref={triggerRef}
         type="button"
         className={triggerClassName}
@@ -142,7 +143,7 @@ export function LabelPicker({
               : resolvedPlaceholder}</span>
           )}
         </>}
-      </button>
+      </Button>
       {open && (
         <div className="composer-popover label-popover" role="dialog" aria-label={text("选择或创建标签", "Select or create labels")}>
           <input
@@ -157,7 +158,7 @@ export function LabelPicker({
               const presentation = labelPresentation(label, language);
               return (
                 <div className="label-option-row" role="presentation" key={label}>
-                  <button
+                  <Button variant="ghost" size="none"
                     type="button"
                     role="option"
                     aria-selected={selectedLabels.includes(label)}
@@ -167,9 +168,9 @@ export function LabelPicker({
                     <i style={{ background: presentation.tone ? presentation.color : "transparent" }} />
                     <span>{presentation.name}</span>
                     {selectedLabels.includes(label) && <b><LinearIcon name="check" /></b>}
-                  </button>
+                  </Button>
                   {onDeleteLabel && (
-                    <button
+                    <Button variant="ghost" size="none"
                       type="button"
                       className="label-delete-button"
                       disabled={disabled || pendingLabel !== null}
@@ -178,13 +179,13 @@ export function LabelPicker({
                       onClick={() => void deleteLabel(label)}
                     >
                       <DeleteIcon color="currentColor" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               );
             })}
             {canCreateLabel && (
-              <button
+              <Button variant="ghost" size="none"
                 type="button"
                 disabled={disabled || pendingLabel !== null}
                 onClick={() => void createLabel()}
@@ -195,7 +196,7 @@ export function LabelPicker({
                     : "transparent",
                 }} />
                 <span>{text(`创建 “${normalizedSearch}”`, `Create “${normalizedSearch}”`)}</span>
-              </button>
+              </Button>
             )}
           </div>
         </div>

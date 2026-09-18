@@ -455,6 +455,59 @@ export interface Task {
   updatedAt: string;
 }
 
+export interface ChoerodonChoice {
+  id: string;
+  name: string;
+}
+
+export interface ChoerodonConnection {
+  configured: boolean;
+  account: ChoerodonChoice | null;
+  organization: ChoerodonChoice | null;
+  project: ChoerodonChoice | null;
+  board: ChoerodonChoice | null;
+}
+
+export interface ChoerodonSyncIssue {
+  groupId: string;
+  groupName: string;
+  id: string;
+  key: string;
+  title: string;
+  type: string;
+  status: string;
+  priority: TaskPriority;
+  priorityName: string;
+  assignee: ActorIdentity;
+  startDate: string | null;
+  dueDate: string | null;
+  localTaskId: string | null;
+  localIdentifier: string | null;
+}
+
+export interface ChoerodonSyncPreview {
+  groups: ChoerodonChoice[];
+  organization: ChoerodonChoice;
+  project: ChoerodonChoice;
+  board: ChoerodonChoice;
+  sourceKey: string;
+  issues: ChoerodonSyncIssue[];
+}
+
+export interface ChoerodonSyncResult {
+  created: number;
+  updated: number;
+  unchanged: number;
+  tasks: { issueId: string; id: string; identifier: string }[];
+}
+
+export interface ChoerodonConnectionInput {
+  authorization: string;
+  organizationId: string;
+  projectId: string;
+  boardId: string;
+}
+
 export interface JiraConnection {
   configured: boolean;
   baseUrl: string | null;
@@ -547,4 +600,10 @@ export interface TaskDraft {
   startDate: string | null;
   dueDate: string | null;
   recurrence: Recurrence | null;
+}
+
+export interface CodexConversationCatalog {
+  projectName: string;
+  groups: { id: string; name: string }[];
+  threads: { id: string; title: string; updatedAt: string; binding: CodexThreadBinding }[];
 }

@@ -184,7 +184,7 @@ test("the remote automation prompt keeps taskctl local and delegates work to the
   assert.match(prompt, /Codex wait_threads/);
   assert.match(prompt, /远程会话不运行 taskctl/);
   assert.match(prompt, /完整 threadBinding 包含 threadId、codexProjectId、codexProjectKind、codexHostId、workspacePath/);
-  assert.match(prompt, /当前自动化的项目和主机只能作为未绑定议题的首次目标/);
+  assert.match(prompt, /当前自动化的项目和主机只能作为未绑定任务的首次目标/);
   assert.match(prompt, /存在 threadId 但没有完整 threadBinding[\s\S]*legacy local[\s\S]*--if-version[\s\S]*不得 send、create 或覆盖该绑定/);
   assert.match(prompt, /所有认领、评论和状态写入只由当前本地控制器完成/);
   assert.match(prompt, /已有完整 threadBinding 时，只能使用其保存的 threadId 和 codexHostId 调用 Codex send_message_to_thread/);

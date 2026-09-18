@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useState, type KeyboardEvent, type MouseEvent, type RefObject } from "react";
 import { assigneeTargetForActor } from "../actors";
 import { taskPriorityLabel, taskStatusLabel, useTaskboardI18n } from "../i18n";
@@ -61,6 +62,17 @@ export function IssueListView({
 
   return (
     <div className="issue-list-view" ref={scrollRef}>
+      <div className="issue-list-column-headings" aria-hidden="true">
+        <span>{text("任务", "Task")}</span>
+        <span className="issue-list-metadata-headings">
+          <span>{text("优先级", "Priority")}</span>
+          <span>{text("标签", "Labels")}</span>
+          <span>{text("截止日期", "Due")}</span>
+          <span>{text("对话", "Chat")}</span>
+          <span>{text("负责人", "Assignee")}</span>
+        </span>
+        <span>{text("创建日期", "Created")}</span>
+      </div>
       <div className="issue-list-groups">
         {TASK_STATUSES.map((status) => {
           const statusTasks = tasks.filter((task) => task.status === status);
@@ -68,12 +80,12 @@ export function IssueListView({
           const statusLabel = taskStatusLabel(language, status);
           return (
             <section className={`issue-list-group status-${status}`} key={status}>
-              <button className="issue-list-group-header" type="button" onClick={() => toggleStatus(status)} aria-expanded={!isCollapsed}>
+              <Button variant="ghost" size="none" className="issue-list-group-header" type="button" onClick={() => toggleStatus(status)} aria-expanded={!isCollapsed}>
                 <LinearIcon name={isCollapsed ? "chevronRight" : "chevronDown"} />
                 <span className="issue-list-status-icon"><StatusIcon status={status} color="currentColor" size={14} /></span>
                 <strong>{statusLabel}</strong>
-                <span>{statusTasks.length}</span>
-              </button>
+                <span className="issue-list-group-count">{statusTasks.length}</span>
+              </Button>
               {!isCollapsed && (
                 <div className="issue-list-rows">
                   {statusTasks.length ? statusTasks.map((task) => {
@@ -92,10 +104,10 @@ export function IssueListView({
                       >
                         <span className="issue-list-title-cell">
                           <small>{displayIdentifier}</small>
-                          <strong>{task.title}</strong>
+                          <strong title={task.title}>{task.title}</strong>
                           {presentations[task.id]?.unread && <span className="task-unread-dot" aria-label={text("有未读更新", "Unread updates")} />}
                         </span>
-                        <span className="issue-list-metadata" aria-label={text("议题属性", "Issue properties")}>
+                        <span className="issue-list-metadata" aria-label={text("任务属性", "Issue properties")}>
                           <span className="issue-list-priority-control" onClick={stopRow} onKeyDown={stopRow}>
                             <TaskPropertyPicker
                               value={task.priority}
@@ -146,6 +158,7 @@ export function IssueListView({
                           />
                           <label className="issue-list-assignee" title={task.assignee.name} onClick={stopRow}>
                             <ActorAvatar actor={task.assignee} />
+                            <span>{task.assignee.name}</span>
                             <select
                               aria-label={text(`${displayIdentifier} 负责人`, `${displayIdentifier} assignee`)}
                               value={assigneeTarget}
@@ -171,8 +184,8 @@ export function IssueListView({
                   }) : (
                     <div className="issue-list-empty">
                       {hasActiveFilters
-                        ? text("当前筛选下没有匹配议题", "No issues match the current filters")
-                        : text(`没有${statusLabel}议题`, `No ${statusLabel.toLowerCase()} issues`)}
+                        ? text("当前筛选下没有匹配任务", "No issues match the current filters")
+                        : text(`没有${statusLabel}任务`, `No ${statusLabel.toLowerCase()} issues`)}
                     </div>
                   )}
                 </div>

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import type { DragEvent } from "react";
 import { useTaskCardDragPreview } from "../useTaskCardDragPreview";
 import type { ActorIdentity, Task, TaskDraft, TaskStatus } from "../types";
@@ -11,11 +12,11 @@ export const STATUS_DETAILS: Record<
   { label: string; tone: string }
 > = {
   backlog: { label: "待立项", tone: "backlog" },
-  todo: { label: "等待认领", tone: "todo" },
-  in_progress: { label: "处理中", tone: "progress" },
-  in_review: { label: "等你确认", tone: "review" },
+  todo: { label: "待开发", tone: "todo" },
+  in_progress: { label: "开发中", tone: "progress" },
+  in_review: { label: "待确认", tone: "review" },
   blocked: { label: "遇到阻碍", tone: "blocked" },
-  done: { label: "完成", tone: "done" },
+  done: { label: "完成开发", tone: "done" },
   canceled: { label: "取消", tone: "canceled" },
 };
 
@@ -115,20 +116,21 @@ export function BoardColumn({
             <StatusIcon status={status} color="var(--column-status-color)" size={14} />
           </span>
           <h2 id={`column-${status}`}>
-            {label}{tasks.length > 0 ? ` ${tasks.length}` : ""}
+            {label}
           </h2>
+          <span className="column-task-count" aria-label={text(`${tasks.length} 个任务`, `${tasks.length} tasks`)}>{tasks.length}</span>
         </div>
         {createEnabled && (
           <div className="column-actions">
-            <button
+            <Button variant="ghost" size="none"
               type="button"
               className="icon-button add-task-button"
               onClick={() => onCreate(status)}
-              aria-label={text(`在${label}中新建议题`, `Create issue in ${label}`)}
+              aria-label={text(`在${label}中新建任务`, `Create issue in ${label}`)}
               title={text(`添加到${label}`, `Add to ${label}`)}
             >
-              <PlusIcon color="var(--column-status-color)" size={12} />
-            </button>
+              <PlusIcon color="currentColor" size={14} />
+            </Button>
           </div>
         )}
       </header>

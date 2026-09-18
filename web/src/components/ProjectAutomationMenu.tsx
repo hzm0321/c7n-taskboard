@@ -1,3 +1,5 @@
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LinearIcon } from "./LinearIcon";
@@ -167,35 +169,21 @@ export function ProjectAutomationMenu({
       </div>
       <div className="project-automation-switch">
         <span>{text("自动认领开关", "Auto-claim")}</span>
-        <button
-          type="button"
-          className={`board-setting-switch${draft.enabledByUser ? " is-on" : ""}`}
-          role="switch"
-          aria-checked={draft.enabledByUser}
+        <Switch
+          aria-label={text("自动认领开关", "Auto-claim")}
+          checked={draft.enabledByUser}
           disabled={disabled}
-          onClick={() => submitChange({
-            ...draft,
-            enabledByUser: !draft.enabledByUser,
-          })}
-        >
-          <span aria-hidden="true" />
-        </button>
+          onCheckedChange={(checked) => submitChange({ ...draft, enabledByUser: checked })}
+        />
       </div>
       <div className="project-automation-switch">
         <span>{text("根据额度启用/关闭", "Use quota limits")}</span>
-        <button
-          type="button"
-          className={`board-setting-switch${draft.quotaAware ? " is-on" : ""}`}
-          role="switch"
-          aria-checked={draft.quotaAware}
+        <Switch
+          aria-label={text("根据额度启用/关闭", "Use quota limits")}
+          checked={draft.quotaAware}
           disabled={disabled}
-          onClick={() => submitChange({
-            ...draft,
-            quotaAware: !draft.quotaAware,
-          })}
-        >
-          <span aria-hidden="true" />
-        </button>
+          onCheckedChange={(checked) => submitChange({ ...draft, quotaAware: checked })}
+        />
       </div>
       {draft.quotaAware && (
         <div className={`project-automation-quota is-${quota?.state ?? "unknown"}`}>
@@ -304,7 +292,7 @@ export function ProjectAutomationMenu({
 
   return (
     <>
-      <button
+      <Button variant="ghost" size="none"
         ref={triggerRef}
         type="button"
         className={`project-automation-trigger no-drag ${status === "ACTIVE" ? "is-active" : "is-paused"}`}
@@ -329,7 +317,7 @@ export function ProjectAutomationMenu({
         <span>{status === "ACTIVE"
           ? text("自动认领中", "Auto-claiming")
           : text("自动化", "Automation")}</span>
-      </button>
+      </Button>
       {menu}
     </>
   );

@@ -1,3 +1,21 @@
+# UI 配色与组件规范
+
+- 项目整体采用黑、白、灰的中性配色。主操作按钮在浅色主题中使用黑底白字；深色主题使用反向黑白对比，保证文字可读。
+- 普通按钮、链接、选中态和焦点强调使用统一的中性色主题变量，不使用蓝色或其他彩色作为品牌强调色，不在业务组件中硬编码强调色。
+- 错误、危险操作、警告、成功提示以及任务状态、优先级、标签等语义信息可以使用对应的语义色；普通操作按钮不得借用这些颜色做装饰。
+- React 界面的操作按钮统一使用 `web/src/components/ui/button.tsx` 中的 shadcn `Button`，通过 `variant`、`size` 和主题变量管理样式。主操作使用 `default`，次要操作使用 `outline` / `secondary`，工具栏与菜单操作使用 `ghost`，危险操作使用 `destructive`。
+- 开关控件统一使用 `web/src/components/ui/switch.tsx` 中的 shadcn `Switch`。按用户指定的参考样式，开启态使用蓝色轨道（`--switch-checked: #3395ff`）和白色圆点，关闭态使用中性灰轨道；此为黑白配色规则的明确例外，不影响普通按钮的黑白风格。
+- 新增或修改按钮时复用统一组件，不新增原生 `<button>` 或另一套按钮封装。shadcn / Radix 的 Tabs、Select 等语义组件及第三方编辑器内部控件沿用其组件自身实现。
+
+## 弹框标题区规范
+
+- 后续所有新增或修改的弹框（包括选择、配置和二次确认弹框），标题区统一参照“同步猪齿鱼”弹框的设计风格。实现参考 `web/src/components/ChoerodonSyncDialog.tsx`，样式参考 `web/src/styles.css` 中的 `.choerodon-sync-header`、`.choerodon-sync-heading` 及与会话弹框共用的标题规则。
+- 标题左对齐，不添加标题左侧装饰图标；使用 `18px` 字号、`650` 字重、`1.4` 行高及 `var(--text-primary)`。标题自身不设置额外内边距或固定高度，避免继承任务详情侧栏等页面标题的样式而发生错位。
+- 说明文字放在标题下方，顶部间距 `5px`，字号 `12px`，颜色为 `var(--text-secondary)`。
+- 标题区内边距为上 `24px`、左右 `24px`、下 `18px`；视口宽度不超过 `600px` 时统一为 `16px`。标题内容与关闭按钮采用横向布局，间距 `12px`。
+- 右上角关闭按钮与标题区顶部对齐，使用 shadcn `Button` 的 `ghost` 样式及项目 `.icon-button`，点击区域 `30 × 30px`，沿用同步弹框的 `X` 图标样式，并提供可访问的关闭标签。
+- 优先复用现有标题区样式规则，保持黑白灰主题变量和一致的窄屏表现，不在各业务弹框中另起一套标题视觉样式。
+
 # Project Development Rules
 
 For feature work in this repository, use this order:

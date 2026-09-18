@@ -1,4 +1,5 @@
 import { agentPlatformLabel, sessionResumeCommand } from "../agentSessions";
+import { Button } from "@/components/ui/button";
 import { useEffect, useLayoutEffect, useRef, useState, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import type { TaskConversationItem } from "../taskConversations";
@@ -103,7 +104,7 @@ export function TaskConversationMenu({
   const singleAgentLabel = singleAgentSession ? agentPlatformLabel(singleAgentSession.platform) : "";
   return (
     <>
-      <button
+      <Button variant="ghost" size="none"
         ref={triggerRef}
         className={`task-conversation-trigger${multiple ? " is-multiple" : ""}${singleAgentSession ? " is-agent-session" : ""}${open ? " is-open" : ""}`}
         type="button"
@@ -131,7 +132,7 @@ export function TaskConversationMenu({
         <ConversationIcon color="currentColor" size={16} />
         {multiple && <span>+{conversations.length}</span>}
         {singleAgentSession && <span>{singleAgentLabel}</span>}
-      </button>
+      </Button>
       {open && multiple && createPortal(
         <div
           ref={menuRef}
@@ -147,7 +148,7 @@ export function TaskConversationMenu({
         >
           <div className="task-conversation-menu-heading">{text("关联对话", "Linked conversations")}</div>
           {conversations.map((conversation) => (
-            <button
+            <Button variant="ghost" size="none"
               key={conversation.key}
               type="button"
               role="menuitem"
@@ -166,7 +167,7 @@ export function TaskConversationMenu({
               <span className={`task-conversation-menu-status${conversation.currentRun?.status === "running" ? " is-running" : ""}`}>
                 {conversationStatus(conversation, text)}
               </span>
-            </button>
+            </Button>
           ))}
         </div>,
         document.body,

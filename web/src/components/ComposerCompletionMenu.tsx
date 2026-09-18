@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTaskboardI18n } from "../i18n";
@@ -132,7 +133,7 @@ export function ComposerCompletionMenu({
         >
           <header aria-hidden="true">{group.label}</header>
           {group.options.map((option) => (
-            <button
+            <Button variant="ghost" size="none"
               className={option.selectableIndex === activeIndex ? "is-selected" : ""}
               type="button"
               role="option"
@@ -151,7 +152,7 @@ export function ComposerCompletionMenu({
                 <strong>{option.label}</strong>
                 {option.description && <small>{option.description}</small>}
               </span>
-            </button>
+            </Button>
           ))}
         </section>
       ))}

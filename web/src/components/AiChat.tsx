@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { composerReferencePersistence, readComposerReferenceId } from "../../../shared/composer-reference.mjs";
 import {
   useCallback,
@@ -953,7 +954,7 @@ function ThinkingStepDetail({
 
   return (
     <div className={`ai-chat-thinking-detail${isOpen ? " is-open" : ""}`}>
-      <button
+      <Button variant="ghost" size="none"
         aria-expanded={isOpen}
         className="ai-chat-thinking-detail-trigger"
         onClick={() => setIsOpen((open) => !open)}
@@ -975,7 +976,7 @@ function ThinkingStepDetail({
           </span>
         )}
         <LinearIcon name="chevronRight" />
-      </button>
+      </Button>
       <div
         aria-hidden={!isOpen}
         className="ai-chat-thinking-detail-panel"
@@ -1026,7 +1027,7 @@ function ThinkingSteps({
 
   return (
     <section className={`ai-chat-thinking-steps is-${status}`}>
-      <button
+      <Button variant="ghost" size="none"
         aria-expanded={isOpen}
         className="ai-chat-thinking-header"
         onClick={() => setIsOpen((open) => !open)}
@@ -1034,7 +1035,7 @@ function ThinkingSteps({
       >
         <span className="ai-chat-thinking-label">{statusLabel}</span>
         <LinearIcon className="ai-chat-thinking-chevron" name="chevronRight" />
-      </button>
+      </Button>
       <div
         aria-hidden={!isOpen}
         className={`ai-chat-thinking-panel${isOpen ? " is-open" : ""}`}
@@ -2791,7 +2792,7 @@ export function AiChat({
                 "Select a chat or start one in the current project",
               )}</span>
             </div>
-            <button
+            <Button variant="ghost" size="none"
               type="button"
               aria-label={text("对话历史", "Chat history")}
               aria-pressed={historyOpen}
@@ -2799,8 +2800,8 @@ export function AiChat({
               onClick={() => { setHistoryOpen((current) => !current); setMenu(null); }}
             >
               <ConversationIcon color="currentColor" />
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="none"
               type="button"
               aria-label={text("新建对话", "New chat")}
               title={projectId
@@ -2810,8 +2811,8 @@ export function AiChat({
               onClick={beginNewConversation}
             >
               <PlusIcon color="currentColor" size={15} />
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="none"
               type="button"
               aria-label={text("关闭 AI 对话", "Close AI chat")}
               title={text("关闭", "Close")}
@@ -2821,7 +2822,7 @@ export function AiChat({
               }}
             >
               <LinearIcon name="close" />
-            </button>
+            </Button>
           </header>
 
           {historyOpen && (
@@ -2835,7 +2836,7 @@ export function AiChat({
                   className={`ai-chat-history-row${thread.id === selectedThreadId ? " is-active" : ""}`}
                   key={thread.id}
                 >
-                  <button
+                  <Button variant="ghost" size="none"
                     type="button"
                     onClick={() => {
                       if (thread.id !== selectedThreadRef.current) resetComposer();
@@ -2850,8 +2851,8 @@ export function AiChat({
                       <strong>{thread.title}</strong>
                       <small>{thread.origin.projectName} · {dateLabel(thread.updatedAt, locale)}</small>
                     </span>
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="ghost" size="none"
                     className="ai-chat-history-delete"
                     type="button"
                     aria-label={text(`删除对话 ${thread.title}`, `Delete chat ${thread.title}`)}
@@ -2860,7 +2861,7 @@ export function AiChat({
                     onClick={() => void deleteThread(thread)}
                   >
                     <DeleteIcon color="currentColor" />
-                  </button>
+                  </Button>
                 </div>
               )) : (
                 <p>{text("还没有本地对话", "No local chats yet")}</p>
@@ -2893,7 +2894,7 @@ export function AiChat({
                   </div>
                 )}
                 {retryableUserEvent && (
-                  <button
+                  <Button variant="ghost" size="none"
                     className="ai-chat-retry"
                     type="button"
                     onClick={() => {
@@ -2908,7 +2909,7 @@ export function AiChat({
                   >
                     <RefreshIcon color="currentColor" />
                     {text("重试上一条消息", "Retry the previous message")}
-                  </button>
+                  </Button>
                 )}
               </>
             ) : (
@@ -2964,7 +2965,7 @@ export function AiChat({
                             <span>{attachment.filename}</span>
                           </span>
                         )}
-                      <button
+                      <Button variant="ghost" size="none"
                         type="button"
                         aria-label={text(
                           `移除附件 ${attachment.filename}`,
@@ -2976,7 +2977,7 @@ export function AiChat({
                         }}
                       >
                         <LinearIcon name="close" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -3032,7 +3033,7 @@ export function AiChat({
               />
               {composerSkillTokens.map((token) => {
                 return createPortal(
-                  <button
+                  <Button variant="ghost" size="none"
                     type="button"
                     aria-label={text(
                       `移除${token.kind === "agent" ? " Agent" : " Skill"} ${token.label}`,
@@ -3048,7 +3049,7 @@ export function AiChat({
                         : <ProjectIcon color="currentColor" />}
                       <span>{token.label}</span>
                     </span>
-                  </button>,
+                  </Button>,
                   token.element,
                   token.key,
                 );
@@ -3082,7 +3083,7 @@ export function AiChat({
                     const selected = selectableIndex === selectedCandidateIndex && selectableIndex >= 0;
                     const disabled = !candidate.selectable;
                     return (
-                      <button
+                      <Button variant="ghost" size="none"
                         className={selected ? "is-selected" : undefined}
                         type="button"
                         role="option"
@@ -3109,7 +3110,7 @@ export function AiChat({
                           <small>{candidate.description ?? candidate.group}</small>
                           {disabled && <em>{text("当前客户端未接入执行", "No client handler available")}</em>}
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                   {!composerCandidatesLoading
@@ -3133,7 +3134,7 @@ export function AiChat({
                 tabIndex={-1}
                 onChange={(event) => void handleAttachmentSelection(event)}
               />
-              <button
+              <Button variant="ghost" size="none"
                 className="ai-chat-attachment-button"
                 type="button"
                 aria-label={text("添加附件", "Add attachment")}
@@ -3142,9 +3143,9 @@ export function AiChat({
                 onClick={() => attachmentInputRef.current?.click()}
               >
                 <PlusIcon color="currentColor" size={15} />
-              </button>
+              </Button>
               <div className="ai-chat-menu-wrap ai-chat-permission-menu-wrap">
-                <button
+                <Button variant="ghost" size="none"
                   className="ai-chat-permission-trigger"
                   type="button"
                   aria-haspopup="menu"
@@ -3160,7 +3161,7 @@ export function AiChat({
                   <SandboxIcon sandbox={draftSandbox} />
                   {text(...SANDBOX_LABELS[draftSandbox])}
                   <LinearIcon name="chevronDown" />
-                </button>
+                </Button>
                 {menu === "sandbox" && (
                   <div
                     className="ai-chat-option-menu ai-chat-permission-menu"
@@ -3178,7 +3179,7 @@ export function AiChat({
                       </a>
                     </header>
                     {availableSandboxes.map((sandbox) => (
-                      <button
+                      <Button variant="ghost" size="none"
                         className={sandbox === "danger-full-access" ? "is-danger" : undefined}
                         type="button"
                         role="menuitemradio"
@@ -3192,7 +3193,7 @@ export function AiChat({
                           <small>{text(...SANDBOX_DESCRIPTIONS[sandbox])}</small>
                         </span>
                         {sandbox === draftSandbox && <LinearIcon name="check" />}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -3200,7 +3201,7 @@ export function AiChat({
 
               <span className="ai-chat-toolbar-spacer" />
               <div className="ai-chat-menu-wrap ai-chat-model-menu-wrap">
-                <button
+                <Button variant="ghost" size="none"
                   className="ai-chat-model-trigger"
                   type="button"
                   aria-haspopup="menu"
@@ -3226,25 +3227,25 @@ export function AiChat({
                       : draftEffort || text("推理", "Reasoning")}
                   </span>
                   <LinearIcon name="chevronDown" />
-                </button>
+                </Button>
                 {menu === "model" && (
                   <div
                     className="ai-chat-option-menu ai-chat-config-menu"
                     role="menu"
                     aria-label={text("模型与推理强度", "Model and reasoning effort")}
                   >
-                    <button type="button" onClick={() => setMenu("model-list")}>
+                    <Button variant="ghost" size="none" type="button" onClick={() => setMenu("model-list")}>
                       <span>{text("模型", "Model")}</span>
                       <strong>{modelDisplayName(selectedModel?.displayName ?? draftModel)}</strong>
                       <LinearIcon name="chevronRight" />
-                    </button>
-                    <button type="button" onClick={() => setMenu("effort-list")}>
+                    </Button>
+                    <Button variant="ghost" size="none" type="button" onClick={() => setMenu("effort-list")}>
                       <span>{text("推理强度", "Reasoning effort")}</span>
                       <strong>{EFFORT_LABELS[draftEffort]
                         ? text(...EFFORT_LABELS[draftEffort])
                         : draftEffort}</strong>
                       <LinearIcon name="chevronRight" />
-                    </button>
+                    </Button>
                   </div>
                 )}
                 {menu === "model-list" && (
@@ -3254,17 +3255,17 @@ export function AiChat({
                     aria-label={text("选择模型", "Select model")}
                   >
                     <header>
-                      <button
+                      <Button variant="ghost" size="none"
                         type="button"
                         aria-label={text("返回模型与推理强度", "Back to model and reasoning effort")}
                         onClick={() => setMenu("model")}
                       >
                         <LinearIcon name="chevronLeft" />
-                      </button>
+                      </Button>
                       <strong>{text("模型", "Model")}</strong>
                     </header>
                     {(activeCatalog?.models ?? []).map((model) => (
-                      <button
+                      <Button variant="ghost" size="none"
                         type="button"
                         role="menuitemradio"
                         aria-checked={model.slug === draftModel}
@@ -3275,7 +3276,7 @@ export function AiChat({
                           <strong>{modelDisplayName(model.displayName)}</strong>
                         </span>
                         {model.slug === draftModel && <LinearIcon name="check" />}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -3286,17 +3287,17 @@ export function AiChat({
                     aria-label={text("选择推理强度", "Select reasoning effort")}
                   >
                     <header>
-                      <button
+                      <Button variant="ghost" size="none"
                         type="button"
                         aria-label={text("返回模型与推理强度", "Back to model and reasoning effort")}
                         onClick={() => setMenu("model")}
                       >
                         <LinearIcon name="chevronLeft" />
-                      </button>
+                      </Button>
                       <strong>{text("推理强度", "Reasoning effort")}</strong>
                     </header>
                     {selectedModel.supportedReasoningEfforts.map((effort) => (
-                      <button
+                      <Button variant="ghost" size="none"
                         type="button"
                         role="menuitemradio"
                         aria-checked={effort === draftEffort}
@@ -3305,14 +3306,14 @@ export function AiChat({
                       >
                         <span>{EFFORT_LABELS[effort] ? text(...EFFORT_LABELS[effort]) : effort}</span>
                         {effort === draftEffort && <LinearIcon name="check" />}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
               </div>
 
               {primaryAction === "stop" ? (
-                <button
+                <Button variant="ghost" size="none"
                   className="ai-chat-send-button is-stop"
                   type="button"
                   aria-label={text("停止生成", "Stop generating")}
@@ -3320,9 +3321,9 @@ export function AiChat({
                   onClick={() => void stopRun(currentRun)}
                 >
                   <span className="ai-chat-stop-mark" aria-hidden="true" />
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button variant="ghost" size="none"
                   className="ai-chat-send-button"
                   type="button"
                   aria-label={text("发送消息", "Send message")}
@@ -3336,7 +3337,7 @@ export function AiChat({
                   onClick={() => void startMessage(draft, false)}
                 >
                   <SendIcon color="currentColor" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -3350,10 +3351,10 @@ export function AiChat({
                   "This message lets Codex access files and commands outside the workspace. This approval applies only to this message.",
                 )}</p>
                 <div>
-                  <button type="button" onClick={() => setPendingDangerInput(null)}>
+                  <Button variant="ghost" size="none" type="button" onClick={() => setPendingDangerInput(null)}>
                     {text("取消", "Cancel")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="ghost" size="none"
                     className="is-danger"
                     type="button"
                     onClick={() => {
@@ -3370,7 +3371,7 @@ export function AiChat({
                     }}
                   >
                     {text("允许并发送", "Allow and send")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -3379,7 +3380,7 @@ export function AiChat({
       )}
 
       {!panelOpen && (
-        <button
+        <Button variant="ghost" size="none"
           type="button"
           className={`ai-chat-launcher is-${launcherState}`}
           aria-label={text("打开 AI 对话", "Open AI chat")}
@@ -3389,7 +3390,7 @@ export function AiChat({
         >
           <TaskboardIcon name="aiLauncher" />
           {launcherState !== "idle" && <span className="ai-chat-launcher-state" aria-hidden="true" />}
-        </button>
+        </Button>
       )}
     </div>
   );

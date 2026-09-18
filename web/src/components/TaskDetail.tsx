@@ -1,14 +1,13 @@
-import { agentPlatformLabel, sessionResumeCommand } from "../agentSessions";
-import {
-  appendUnreferencedAttachments,
-  resolveInlineAttachments,
-  uploadInlineAttachments,
-} from "../inlineAttachments";
+import { CodexConversationDialog } from "./CodexConversationDialog";
+import { CodexConversationUnlinkDialog } from "./CodexConversationUnlinkDialog";
+import { Link2, Unlink2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { resolveInlineAttachments, uploadInlineAttachments } from "../inlineAttachments";
 import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -38,7 +37,6 @@ import {
 import { TASK_PRIORITIES, TASK_STATUSES } from "../types";
 import type {
   ActorIdentity,
-  AgentPlatform,
   Attachment,
   Comment,
   CodexThreadBinding,
@@ -117,7 +115,6 @@ interface TaskDetailProps {
   attachmentsRevision: number;
   onCreateLabel: (label: string) => Promise<void>;
   onDeleteLabel: (label: string) => Promise<void>;
-  onCreateChild: (parent: Task) => void;
   onUpdate: (task: Task, changes: Partial<TaskDraft>) => Promise<Task>;
   onOpenTask: (task: TaskRelationSummary) => void;
   onAddRelation: (
@@ -135,6 +132,7 @@ interface TaskDetailProps {
   onOpenThread: (binding: CodexThreadBinding) => void;
   onOpenLegacyLocalThread: (threadId: string) => void;
   onOpenInThread: (task: Task) => void;
+  onConversationLinked: (task: Task) => void;
   onCopy: (text: string, announcement: string) => void;
   openingThread: boolean;
   onError: (message: TaskDetailError | null) => void;
@@ -149,7 +147,7 @@ function messageFor(error: unknown): TaskDetailError {
 function issueMessageFor(error: unknown): TaskDetailError {
   if (error instanceof ApiError && error.code === "VERSION_CONFLICT") {
     return [
-      "该议题已在其他位置更新，请刷新后重试。",
+      "该任务已在其他位置更新，请刷新后重试。",
       "This issue changed elsewhere. Refresh and try again.",
     ];
   }
@@ -239,10 +237,10 @@ const ACTIVITY_FIELD_LABELS: Record<string, readonly [string, string]> = {
 };
 
 const RELATION_LABELS: Record<IssueRelationType, readonly [string, string]> = {
-  parent: ["父议题", "Parent issue"],
+  parent: ["父任务", "Parent issue"],
   blocks: ["阻塞", "Blocks"],
   blocked_by: ["阻塞于", "Blocked by"],
-  related: ["相关议题", "Related issue"],
+  related: ["相关任务", "Related issue"],
 };
 
 function activityValue(
@@ -340,55 +338,37 @@ function ActivityChangeIcon({ field, before, after }: {
 
 function ConversationLink({
   threadId,
-  agentPlatform,
   onOpen,
   onCopy,
 }: {
   threadId: string;
-  agentPlatform?: AgentPlatform;
-  onOpen?: () => void;
+  onOpen: () => void;
   onCopy: (text: string, announcement: string) => void;
 }) {
   const { text } = useTaskboardI18n();
-  const platform = agentPlatform ?? "codex";
-  const label = agentPlatformLabel(platform);
-  const command = sessionResumeCommand(platform, threadId);
   return (
     <div className="issue-conversation-actions">
-      {agentPlatform ? (
-        <span className="issue-conversation-link" title={`${label}: ${threadId}`}>
-          <ConversationIcon color="currentColor" size={16} />
-          <strong>{label}</strong>
-          <span className="issue-conversation-session-id">{threadId}</span>
-        </span>
-      ) : (
-        <button
-          className="issue-conversation-link"
-          type="button"
-          title={text("查看对话", "View conversation")}
-          onClick={onOpen}
-        >
-          <ConversationIcon color="currentColor" size={16} />
-          <strong>{text("查看对话", "View conversation")}</strong>
-        </button>
-      )}
-      <button
+      <Button variant="ghost" size="none"
+        className="issue-conversation-link"
+        type="button"
+        title={text("查看对话", "View conversation")}
+        onClick={onOpen}
+      >
+        <ConversationIcon color="currentColor" size={16} />
+        <strong>{text("查看对话", "View conversation")}</strong>
+      </Button>
+      <Button variant="ghost" size="none"
         className="issue-conversation-copy"
         type="button"
-        title={`${text("复制恢复命令（POSIX shell）", "Copy resume command (POSIX shell)")}: ${command}`}
-        aria-label={agentPlatform
-          ? text(`复制 ${label} 恢复命令`, `Copy ${label} resume command`)
-          : undefined}
+        title={text("复制终端命令", "Copy terminal command")}
         onClick={() => onCopy(
-          command,
-          text(`${label} 恢复命令已复制。`, `${label} resume command copied.`),
+          `codex resume ${threadId}`,
+          text("Codex 恢复命令已复制。", "Codex resume command copied."),
         )}
       >
-        {agentPlatform
-          ? <img src={copyIdIcon} width={16} height={16} alt="" />
-          : <CodexResumeIcon />}
+        <CodexResumeIcon />
         <span>{text("复制终端命令", "Copy terminal command")}</span>
-      </button>
+      </Button>
     </div>
   );
 }
@@ -405,7 +385,6 @@ export function TaskDetail({
   attachmentsRevision,
   onCreateLabel,
   onDeleteLabel,
-  onCreateChild,
   onUpdate,
   onOpenTask,
   onAddRelation,
@@ -413,12 +392,16 @@ export function TaskDetail({
   onOpenThread,
   onOpenLegacyLocalThread,
   onOpenInThread,
+  onConversationLinked,
   onCopy,
   openingThread,
   onError,
 }: TaskDetailProps) {
   const { language, locale, text } = useTaskboardI18n();
   const [currentTask, setCurrentTask] = useState(task);
+  const [conversationDialogOpen, setConversationDialogOpen] = useState(false);
+  const [unlinkDialogOpen, setUnlinkDialogOpen] = useState(false);
+  const hasConversation = Boolean(currentTask.threadId || currentTask.threadBinding || currentTask.legacyLocalThreadId);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description);
   const [descriptionSegments, setDescriptionSegments] = useState<InlineMediaSegment[]>(
@@ -430,14 +413,6 @@ export function TaskDetail({
   >(null);
   const [savingProperty, setSavingProperty] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const descriptionAttachments = useMemo(
-    () => attachments.filter((attachment) => attachment.taskId === currentTask.id),
-    [attachments, currentTask.id],
-  );
-  const descriptionDocument = useMemo(
-    () => appendUnreferencedAttachments(description, descriptionAttachments),
-    [description, descriptionAttachments],
-  );
   const [attachmentsError, setAttachmentsError] = useState<TaskDetailError | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [taskActivities, setTaskActivities] = useState<TaskChangeActivity[]>([]);
@@ -475,10 +450,6 @@ export function TaskDetail({
     uploadedAttachments: Map<string, Attachment>;
   } | null>(null);
   const editingUploadedAttachmentsRef = useRef<Map<string, Attachment>>(new Map());
-  // A removed fallback can leave text equal to the stored body but different
-  // from the document the user started editing. That still needs a body PATCH.
-  const descriptionEditValueRef = useRef("");
-  const commentEditValueRef = useRef("");
   const draft = serializeInlineMedia(commentSegments);
   const commentInlineImages = inlineMediaImages(commentSegments);
   const commentInlineFiles = inlineMediaFiles(commentSegments);
@@ -785,7 +756,7 @@ export function TaskDetail({
     const normalized = title.trim();
     if (!normalized) {
       setTitle(currentTask.title);
-      onError(["议题标题不能为空。", "Issue title cannot be empty."]);
+      onError(["任务标题不能为空。", "Issue title cannot be empty."]);
       return;
     }
     if (normalized === currentTask.title) {
@@ -795,15 +766,6 @@ export function TaskDetail({
     await saveTask({ title: normalized }, "title");
   }
 
-  function beginDescriptionEdit() {
-    const segments = createInlineMediaSegments(
-      descriptionDocument, referenceTasks, descriptionAttachments,
-    );
-    descriptionEditValueRef.current = serializeInlineMedia(segments).trim();
-    setDescriptionSegments(segments);
-    setEditingDescription(true);
-  }
-
   async function saveDescription() {
     if (savingProperty === "description") return;
     const draftDescription = serializeInlineMedia(descriptionSegments).trim();
@@ -811,7 +773,6 @@ export function TaskDetail({
     const inlineFiles = inlineMediaFiles(descriptionSegments);
     if (
       draftDescription === currentTask.description
-      && draftDescription === descriptionEditValueRef.current
       && inlineImages.length === 0
       && inlineFiles.length === 0
     ) {
@@ -839,10 +800,6 @@ export function TaskDetail({
         return null;
       });
       if (!saved) return;
-      setCurrentTask(saved);
-      setDescription(saved.description);
-      const nextAttachments = await listAttachments(saved.id);
-      setAttachments(nextAttachments);
       const savedWithAddedRelations = await addMentionRelations(saved, descriptionSegments);
       const savedWithRelations = await removeUnreferencedMentionRelations(
         savedWithAddedRelations,
@@ -850,11 +807,18 @@ export function TaskDetail({
       );
       setCurrentTask(savedWithRelations);
       setDescription(savedWithRelations.description);
+      const nextAttachments = [
+        ...attachments,
+        ...[...uploadedImages, ...uploadedFiles].filter((attachment) => (
+          !attachments.some((item) => item.id === attachment.id)
+        )),
+      ];
       setDescriptionSegments(createInlineMediaSegments(
         savedWithRelations.description,
         referenceTasks,
         nextAttachments,
       ));
+      setAttachments(nextAttachments);
       setEditingDescription(false);
     } catch (error) {
       onError(messageFor(error));
@@ -931,13 +895,7 @@ export function TaskDetail({
       : null;
     editingUploadedAttachmentsRef.current.clear();
     setEditingId(comment.id);
-    const segments = createInlineMediaSegments(
-      appendUnreferencedAttachments(comment.body, comment.attachments),
-      referenceTasks,
-      comment.attachments,
-    );
-    commentEditValueRef.current = serializeInlineMedia(segments).trim();
-    setEditingSegments(segments);
+    setEditingSegments(createInlineMediaSegments(comment.body, referenceTasks, comment.attachments));
     setActiveMenuId(null);
   }
 
@@ -948,13 +906,12 @@ export function TaskDetail({
 
   async function saveComment(comment: Comment) {
     const body = editingDraft.trim();
-    if (
+    if (!body || (
       body === comment.body
-      && body === commentEditValueRef.current
       && editingInlineImages.length === 0
       && editingInlineFiles.length === 0
-    ) {
-      endCommentEdit();
+    )) {
+      if (body === comment.body) endCommentEdit();
       return;
     }
     const removedMentionIds = removedMentionTaskIds(
@@ -976,8 +933,9 @@ export function TaskDetail({
         }
         uploaded.push(attachment);
       }
-      const resolvedBody = resolveInlineAttachments(body, pending, uploaded).trim();
-      const updated = await updateComment(comment, resolvedBody);
+      const updated = await updateComment(
+        comment, resolveInlineAttachments(body, pending, uploaded).trim(),
+      );
       setComments((current) => current.map((item) => item.id === updated.id ? updated : item));
       const relationAnchor = await getTask(currentTask.id);
       const savedWithAddedRelations = await addMentionRelations(relationAnchor, editingSegments);
@@ -1065,19 +1023,19 @@ export function TaskDetail({
   return (
     <section
       className="issue-detail"
-      aria-label={text(`${displayIdentifier} 议题详情`, `${displayIdentifier} issue details`)}
+      aria-label={text(`${displayIdentifier} 任务详情`, `${displayIdentifier} issue details`)}
     >
       <div className="issue-detail-scroll">
         <div className="issue-detail-layout">
           <div className="issue-detail-main">
-            <article className="issue-editor" aria-label={text("议题内容", "Issue content")}>
+            <article className="issue-editor" aria-label={text("任务内容", "Issue content")}>
               <div className="issue-editor-content">
                 <textarea
                   ref={titleRef}
                   className="issue-title-input"
                   rows={1}
                   value={title}
-                  aria-label={text("议题标题", "Issue title")}
+                  aria-label={text("任务标题", "Issue title")}
                   disabled={savingProperty === "title"}
                   onChange={(event) => {
                     setTitle(event.target.value.replace(/\n/g, ""));
@@ -1124,7 +1082,7 @@ export function TaskDetail({
                         surface: "issue-description",
                       }}
                       placeholder={text("添加描述…", "Add description…")}
-                      ariaLabel={text("议题描述", "Issue description")}
+                      ariaLabel={text("任务描述", "Issue description")}
                       disabled={savingProperty === "description"}
                       allowAttachments
                       onChange={setDescriptionSegments}
@@ -1142,7 +1100,7 @@ export function TaskDetail({
                         }
                       }}
                     />
-                    <button
+                    <Button variant="ghost" size="none"
                       className="comment-attach-button issue-description-attach-button"
                       type="button"
                       disabled={savingProperty === "description"}
@@ -1156,7 +1114,7 @@ export function TaskDetail({
                       }}
                     >
                       <AttachmentIcon color="currentColor" />
-                    </button>
+                    </Button>
                     <input
                       ref={(input) => {
                         attachmentInputRef.current = input;
@@ -1181,12 +1139,12 @@ export function TaskDetail({
                   </div>
                 ) : (
                   <div
-                    className={`issue-description-read${descriptionDocument ? "" : " empty"}`}
+                    className={`issue-description-read${description ? "" : " empty"}`}
                     role="button"
                     tabIndex={0}
-                    aria-label={text("编辑议题描述", "Edit issue description")}
+                    aria-label={text("编辑任务描述", "Edit issue description")}
                     onClick={(event) => {
-                      if (event.target instanceof Element && event.target.closest("a, button, video")) return;
+                      if (event.target instanceof Element && event.target.closest("video")) return;
                       if (window.getSelection()?.isCollapsed === false) return;
                       descriptionCaretRef.current = null;
                       const range = event.currentTarget.ownerDocument.caretRangeFromPoint(
@@ -1214,10 +1172,14 @@ export function TaskDetail({
                       descriptionScrollPositionRef.current = scrollContainer
                         ? { element: scrollContainer, top: scrollContainer.scrollTop }
                         : null;
-                      beginDescriptionEdit();
+                      setDescriptionSegments(createInlineMediaSegments(
+                        description,
+                        referenceTasks,
+                        attachments,
+                      ));
+                      setEditingDescription(true);
                     }}
                     onKeyDown={(event) => {
-                      if (event.target !== event.currentTarget) return;
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         descriptionCaretRef.current = null;
@@ -1225,44 +1187,39 @@ export function TaskDetail({
                         descriptionScrollPositionRef.current = scrollContainer
                           ? { element: scrollContainer, top: scrollContainer.scrollTop }
                           : null;
-                        beginDescriptionEdit();
+                        setDescriptionSegments(createInlineMediaSegments(
+                          description,
+                          referenceTasks,
+                          attachments,
+                        ));
+                        setEditingDescription(true);
                       }
                     }}
                   >
-                    {descriptionDocument
+                    {description
                       ? <DescriptionDocument
-                          value={descriptionDocument}
+                          value={description}
                           referenceTasks={referenceTasks}
                           onOpenTask={onOpenTask}
-                          attachments={descriptionAttachments}
+                          attachments={attachments}
                           enableImagePreview
                           onOpenAttachment={handleAttachmentDownload}
-                          onCopyAttachmentPath={onCopy}
                         />
                       : text("添加描述…", "Add description…")}
                   </div>
                 )}
-                {(currentTask.agentSession || currentTask.threadBinding || currentTask.legacyLocalThreadId) && (
+                {(currentTask.threadBinding || currentTask.legacyLocalThreadId) && (
                   <div
                     className="issue-conversation-list"
-                    aria-label={text("处理此议题的对话", "Conversations for this issue")}
+                    aria-label={text("处理此任务的对话", "Conversations for this issue")}
                   >
-                    {currentTask.agentSession && (
-                      <ConversationLink
-                        agentPlatform={currentTask.agentSession.platform}
-                        threadId={currentTask.agentSession.sessionId}
-                        onCopy={onCopy}
-                      />
-                    )}
-                    {(currentTask.threadBinding || currentTask.legacyLocalThreadId) && (
-                      <ConversationLink
-                        threadId={currentTask.threadBinding?.threadId ?? currentTask.legacyLocalThreadId!}
-                        onOpen={() => currentTask.threadBinding
-                          ? onOpenThread(currentTask.threadBinding)
-                          : onOpenLegacyLocalThread(currentTask.legacyLocalThreadId!)}
-                        onCopy={onCopy}
-                      />
-                    )}
+                    <ConversationLink
+                      threadId={currentTask.threadBinding?.threadId ?? currentTask.legacyLocalThreadId!}
+                      onOpen={() => currentTask.threadBinding
+                        ? onOpenThread(currentTask.threadBinding)
+                        : onOpenLegacyLocalThread(currentTask.legacyLocalThreadId!)}
+                      onCopy={onCopy}
+                    />
                   </div>
                 )}
               </div>
@@ -1278,7 +1235,6 @@ export function TaskDetail({
             <IssueSubIssues
               task={currentTask}
               tasks={tasks}
-              onCreateChild={() => onCreateChild(currentTask)}
               onOpenTask={onOpenTask}
               onAddRelation={(anchor, type, relatedTaskId) => applyRelationMutation(
                 () => onAddRelation(anchor, type, relatedTaskId),
@@ -1309,7 +1265,7 @@ export function TaskDetail({
                   </span>
                   <p>
                     <strong>{currentTask.creatorName}</strong>
-                    {text(" 创建了此议题", " created this issue")}
+                    {text(" 创建了此任务", " created this issue")}
                     <time title={exactTime(currentTask.createdAt, locale)}>{relativeTime(currentTask.createdAt, locale)}</time>
                   </p>
                 </div>
@@ -1379,7 +1335,6 @@ export function TaskDetail({
                     );
                   }
                   const comment = item.comment;
-                  const commentBody = appendUnreferencedAttachments(comment.body, comment.attachments);
                   const commentActor: ActorIdentity = comment.authorType === currentUser.type
                     && comment.authorId === currentUser.id
                     ? currentUser
@@ -1416,7 +1371,7 @@ export function TaskDetail({
                         )}
                         {editingId !== comment.id && (
                           <div className="comment-actions" data-comment-menu-root={comment.id}>
-                            <button
+                            <Button variant="ghost" size="none"
                               type="button"
                               className="comment-menu-trigger"
                               aria-label={text("评论操作", "Comment actions")}
@@ -1425,10 +1380,10 @@ export function TaskDetail({
                               onClick={() => setActiveMenuId((current) => current === comment.id ? null : comment.id)}
                             >
                               <MoreIcon color="currentColor" />
-                            </button>
+                            </Button>
                             {activeMenuId === comment.id && (
                               <div className="comment-action-menu" role="menu">
-                                <button
+                                <Button variant="ghost" size="none"
                                   type="button"
                                   role="menuitem"
                                   disabled={savingCommentId !== null}
@@ -1436,8 +1391,8 @@ export function TaskDetail({
                                 >
                                   <EditIcon color="currentColor" />
                                   {text("编辑评论", "Edit comment")}
-                                </button>
-                                <button
+                                </Button>
+                                <Button variant="ghost" size="none"
                                   type="button"
                                   role="menuitem"
                                   className="danger"
@@ -1445,7 +1400,7 @@ export function TaskDetail({
                                 >
                                   <DeleteIcon color="currentColor" />
                                   {text("删除评论", "Delete comment")}
-                                </button>
+                                </Button>
                               </div>
                             )}
                           </div>
@@ -1485,7 +1440,7 @@ export function TaskDetail({
                           />
                           <div className="comment-edit-actions">
                             <div className="composer-footer-leading">
-                              <button
+                              <Button variant="ghost" size="none"
                                 className="comment-attach-button"
                                 type="button"
                                 disabled={savingCommentId === comment.id}
@@ -1494,7 +1449,7 @@ export function TaskDetail({
                                 onClick={() => editCommentAttachmentInputRef.current?.click()}
                               >
                                 <AttachmentIcon color="currentColor" />
-                              </button>
+                              </Button>
                               <input
                                 ref={editCommentAttachmentInputRef}
                                 type="file"
@@ -1509,60 +1464,50 @@ export function TaskDetail({
                               />
                             </div>
                             <div>
-                              <button
+                              <Button variant="outline" size="sm"
                                 className="button secondary"
                                 type="button"
                                 disabled={savingCommentId === comment.id}
                                 onClick={endCommentEdit}
                               >
                                 {text("取消", "Cancel")}
-                              </button>
-                              <button
+                              </Button>
+                              <Button variant="default" size="sm"
                                 className="button primary"
                                 type="button"
-                                disabled={savingCommentId === comment.id}
+                                disabled={!editingDraft.trim() || savingCommentId === comment.id}
                                 onClick={() => void saveComment(comment)}
                               >
                                 {savingCommentId === comment.id
                                   ? text("保存中…", "Saving…")
                                   : text("保存", "Save")}
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         </div>
                       ) : (
-                        commentBody && (
+                        comment.body && (
                           <div className="comment-body">
                             <DescriptionDocument
-                              value={commentBody}
+                              value={comment.body}
                               referenceTasks={referenceTasks}
                               onOpenTask={onOpenTask}
                               attachments={comment.attachments}
                               enableImagePreview
                               onOpenAttachment={handleAttachmentDownload}
-                              onCopyAttachmentPath={onCopy}
                             />
                           </div>
                         )
                       )}
-                      {(comment.agentSession || comment.threadBinding || comment.legacyLocalThreadId) && (
+                      {(comment.threadBinding || comment.legacyLocalThreadId) && (
                         <div className="comment-conversation-link">
-                          {comment.agentSession && (
-                            <ConversationLink
-                              agentPlatform={comment.agentSession.platform}
-                              threadId={comment.agentSession.sessionId}
-                              onCopy={onCopy}
-                            />
-                          )}
-                          {(comment.threadBinding || comment.legacyLocalThreadId) && (
-                            <ConversationLink
-                              threadId={comment.threadBinding?.threadId ?? comment.legacyLocalThreadId!}
-                              onOpen={() => comment.threadBinding
-                                ? onOpenThread(comment.threadBinding)
-                                : onOpenLegacyLocalThread(comment.legacyLocalThreadId!)}
-                              onCopy={onCopy}
-                            />
-                          )}
+                          <ConversationLink
+                            threadId={comment.threadBinding?.threadId ?? comment.legacyLocalThreadId!}
+                            onOpen={() => comment.threadBinding
+                              ? onOpenThread(comment.threadBinding)
+                              : onOpenLegacyLocalThread(comment.legacyLocalThreadId!)}
+                            onCopy={onCopy}
+                          />
                         </div>
                       )}
                     </div>
@@ -1607,7 +1552,7 @@ export function TaskDetail({
                 />
                 <footer className="composer-footer">
                   <div className="composer-footer-leading">
-                    <button
+                    <Button variant="ghost" size="none"
                       className="comment-attach-button"
                       type="button"
                       disabled={submitting}
@@ -1616,7 +1561,7 @@ export function TaskDetail({
                       onClick={() => commentAttachmentInputRef.current?.click()}
                     >
                       <AttachmentIcon color="currentColor" />
-                    </button>
+                    </Button>
                     <input
                       ref={commentAttachmentInputRef}
                       type="file"
@@ -1632,19 +1577,15 @@ export function TaskDetail({
                   </div>
                   <div>
                     <div className="comment-status-action">
-                      <span>{text("改变状态为-等待认领", "Change status to Todo")}</span>
-                      <button
-                        type="button"
-                        className={`board-setting-switch${changeStatusToTodo ? " is-on" : ""}`}
-                        role="switch"
-                        aria-checked={changeStatusToTodo}
+                      <span>{text("改变状态为-待开发", "Change status to Todo")}</span>
+                      <Switch size="sm"
+                        aria-label={text("改变状态为-待开发", "Change status to Todo")}
+                        checked={changeStatusToTodo}
                         disabled={submitting}
-                        onClick={() => setChangeStatusToTodo((current) => !current)}
-                      >
-                        <span aria-hidden="true" />
-                      </button>
+                        onCheckedChange={setChangeStatusToTodo}
+                      />
                     </div>
-                    <button
+                    <Button variant="default" size="sm"
                       className="button primary"
                       type="submit"
                       disabled={(
@@ -1654,16 +1595,22 @@ export function TaskDetail({
                       ) || submitting}
                     >
                       {submitting ? text("发布中…", "Posting…") : text("评论", "Comment")}
-                    </button>
+                    </Button>
                   </div>
                 </footer>
               </form>
             </section>
           </div>
 
-          <aside className="issue-properties" aria-label={text("议题属性", "Issue properties")}>
-            <div className="detail-primary-actions">
-              <button
+          <aside className="issue-properties" aria-label={text("任务属性", "Issue properties")}>
+            {conversationDialogOpen && <CodexConversationDialog task={currentTask} onClose={() => setConversationDialogOpen(false)} onLinked={(updated) => { setCurrentTask(updated); onConversationLinked(updated); }} />}
+            {unlinkDialogOpen && <CodexConversationUnlinkDialog task={currentTask} onClose={() => setUnlinkDialogOpen(false)} onUnlinked={(updated) => { setCurrentTask(updated); onConversationLinked(updated); }} />}
+            <div className="detail-primary-actions has-link-conversation">
+              <Button variant="ghost" size="none" className="detail-copy-action" type="button" onClick={() => hasConversation ? setUnlinkDialogOpen(true) : setConversationDialogOpen(true)}>
+                <span className="detail-copy-action-icon" aria-hidden="true">{hasConversation ? <Unlink2 size={16} /> : <Link2 size={16} />}</span>
+                <span className="detail-copy-action-label">{hasConversation ? text("取消关联", "Unlink conversation") : text("关联对话", "Link conversation")}</span>
+              </Button>
+              <Button variant="ghost" size="none"
                 className="detail-open-thread-action"
                 type="button"
                 disabled={openingThread}
@@ -1673,7 +1620,7 @@ export function TaskDetail({
                 <span>{openingThread
                   ? text("正在打开…", "Opening…")
                   : text("在新对话打开", "Open in new conversation")}</span>
-              </button>
+              </Button>
               {currentTask.externalUrl && (
                 <a
                   className="detail-copy-action detail-external-action"
@@ -1687,11 +1634,11 @@ export function TaskDetail({
                   <span className="detail-copy-action-label">{text("打开 Jira", "Open Jira")}</span>
                 </a>
               )}
-              <button
+              <Button variant="ghost" size="none"
                 className="detail-copy-action"
                 type="button"
                 title={text(
-                  `复制议题 ID ${displayIdentifier}`,
+                  `复制任务 ID ${displayIdentifier}`,
                   `Copy issue ID ${displayIdentifier}`,
                 )}
                 onClick={() => onCopy(
@@ -1702,8 +1649,8 @@ export function TaskDetail({
                 <span className="detail-copy-action-icon" aria-hidden="true"><img src={copyIdIcon} alt="" /></span>
                 <span className="detail-copy-action-label">{text("复制 ID", "Copy ID")}</span>
                 <span className="detail-copy-identifier">{displayIdentifier}</span>
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost" size="none"
                 className="detail-copy-action"
                 type="button"
                 onClick={() => onCopy(
@@ -1712,12 +1659,12 @@ export function TaskDetail({
                     currentTask.projectId,
                     currentTask.identifier,
                   ).href,
-                  text("议题链接已复制。", "Issue link copied."),
+                  text("任务链接已复制。", "Issue link copied."),
                 )}
               >
                 <span className="detail-copy-action-icon" aria-hidden="true"><img src={copyLinkIcon} alt="" /></span>
                 <span className="detail-copy-action-label">{text("复制链接", "Copy link")}</span>
-              </button>
+              </Button>
             </div>
             <h2>{text("属性", "Properties")}</h2>
             <div className="detail-property-row">
@@ -1942,8 +1889,8 @@ export function TaskDetail({
             <h2 id="delete-comment-title">{text("删除这条评论？", "Delete this comment?")}</h2>
             <p>{text("此操作无法撤销。", "This action cannot be undone.")}</p>
             <div>
-              <button className="button secondary" type="button" disabled={deleting} onClick={() => setPendingDelete(null)}>{text("取消", "Cancel")}</button>
-              <button className="button danger" type="button" disabled={deleting} onClick={() => void confirmDelete()}>{deleting ? text("删除中…", "Deleting…") : text("删除评论", "Delete comment")}</button>
+              <Button variant="outline" size="sm" className="button secondary" type="button" disabled={deleting} onClick={() => setPendingDelete(null)}>{text("取消", "Cancel")}</Button>
+              <Button variant="destructive" size="sm" className="button danger" type="button" disabled={deleting} onClick={() => void confirmDelete()}>{deleting ? text("删除中…", "Deleting…") : text("删除评论", "Delete comment")}</Button>
             </div>
           </div>
         </div>

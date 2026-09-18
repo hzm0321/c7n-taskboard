@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
@@ -484,7 +485,7 @@ export function TaskCard({
       }}
       onDragEnd={onDragEnd}
     >
-      <button
+      <Button variant="ghost" size="none"
         className="task-card-open"
         type="button"
         aria-label={text(`打开 ${displayIdentifier}: ${task.title}`, `Open ${displayIdentifier}: ${task.title}`)}
@@ -497,11 +498,11 @@ export function TaskCard({
         </span>
         {presentation.unread && <span className="task-unread-dot" aria-label={text("有未读更新", "Unread updates")} />}
         {task.status === "in_review" && onComplete && (
-          <button
+          <Button variant="ghost" size="none"
             className="task-card-complete"
             type="button"
-            aria-label={text(`完成 ${displayIdentifier}`, `Complete ${displayIdentifier}`)}
-            title={text("完成", "Complete")}
+            aria-label={text(`完成开发 ${displayIdentifier}`, `Complete ${displayIdentifier}`)}
+            title={text("完成开发", "Complete")}
             onClick={(event) => {
               event.stopPropagation();
               const card = event.currentTarget.closest<HTMLElement>(".task-card")!;
@@ -514,8 +515,8 @@ export function TaskCard({
             }}
           >
             <img src={completeIcon} alt="" aria-hidden="true" />
-            <span>{text("完成", "Complete")}</span>
-          </button>
+            <span>{text("完成开发", "Complete")}</span>
+          </Button>
         )}
         {variant === "sidebar" && (
           <span className="sidebar-card-creator">
@@ -541,7 +542,7 @@ export function TaskCard({
       )}
 
       {showsProperties && (
-        <div className="card-properties" aria-label={text("议题属性", "Issue properties")}>
+        <div className="card-properties" aria-label={text("任务属性", "Issue properties")}>
           {projectName && (
             <span className="project-chip" title={projectName}>
               <ProjectIcon color="currentColor" />

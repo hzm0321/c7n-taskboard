@@ -1805,6 +1805,12 @@ export class TaskboardDatabase {
     };
   }
 
+  getChoerodonTasks(origin) {
+    return this.database.prepare(`
+      SELECT * FROM tasks WHERE external_source = 'choerodon' AND external_origin = ?
+    `).all(origin).map((row) => ({ externalId: row.external_id, task: taskFromRow(row) }));
+  }
+
   createTask(input) {
     this.database.exec("BEGIN IMMEDIATE");
     try {
@@ -1897,6 +1903,11 @@ export class TaskboardDatabase {
         timestamp,
         input.agentSession ? JSON.stringify(input.agentSession) : null,
       );
+      if (input.external) {
+        this.database.prepare(`
+          UPDATE tasks SET external_source = ?, external_origin = ?, external_id = ?, external_key = ? WHERE id = ?
+        `).run(input.external.source, input.external.origin, input.external.id, input.external.key, id);
+      }
       this.database.exec("COMMIT");
       return this.getTask(id);
     } catch (error) {

@@ -9,12 +9,18 @@ import type {
   AiChatThreadSummary,
   Attachment,
   Comment,
+  ChoerodonChoice,
+  ChoerodonConnection,
+  ChoerodonConnectionInput,
+  ChoerodonSyncPreview,
+  ChoerodonSyncResult,
   ComposerCandidatesQuery,
   ComposerCandidatesResponse,
   ComposerRebindRequest,
   ComposerRebindResponse,
   ComposerTurnInput,
   CodexProjectIdentity,
+  CodexConversationCatalog,
   CodexThreadBinding,
   DevelopmentScan,
   HostContext,
@@ -236,6 +242,58 @@ export async function getCodexThreadProgress(
     } | null>;
   }>(`/api/local/codex-thread-progress?${query}`, { signal });
   return data.progress;
+}
+
+export async function getChoerodonConnection(): Promise<ChoerodonConnection> {
+  const data = await request<{ connection: ChoerodonConnection }>("/api/local/choerodon-connection");
+  return data.connection;
+}
+
+export function loginChoerodon(input: { username: string; password: string }): Promise<{
+  authorization: string;
+  account: ChoerodonChoice;
+  organizations: ChoerodonChoice[];
+}> {
+  return request("/api/local/choerodon-connection/login", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function getChoerodonOptions(input: {
+  resource: "organizations" | "projects" | "boards";
+  authorization: string;
+  organizationId?: string;
+  projectId?: string;
+}): Promise<{
+  account?: ChoerodonChoice;
+  organizations?: ChoerodonChoice[];
+  projects?: ChoerodonChoice[];
+  boards?: ChoerodonChoice[];
+}> {
+  return request("/api/local/choerodon-connection/options", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function configureChoerodonConnection(input: ChoerodonConnectionInput): Promise<ChoerodonConnection> {
+  const data = await request<{ connection: ChoerodonConnection }>("/api/local/choerodon-connection", {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+  return data.connection;
+}
+
+export function getChoerodonSyncPreview(projectId: string): Promise<ChoerodonSyncPreview> {
+  return request(`/api/local/choerodon-sync?${new URLSearchParams({ projectId })}`);
+}
+
+export function syncChoerodonIssues(projectId: string, sourceKey: string, issueIds: string[]): Promise<ChoerodonSyncResult> {
+  return request(`/api/local/choerodon-sync?${new URLSearchParams({ projectId })}`, {
+    method: "POST",
+    body: JSON.stringify({ sourceKey, issueIds }),
+  });
 }
 
 export async function publishHostRuntime(context: HostContext): Promise<void> {
@@ -804,4 +862,24 @@ export function resolvePersistedAttachmentUrl(value: string): string {
     return value;
   }
   return value;
+}
+
+export function getCodexConversations(projectId: string): Promise<CodexConversationCatalog> {
+  return request(`/api/local/codex-conversations?projectId=${encodeURIComponent(projectId)}`);
+}
+
+export async function linkCodexConversation(task: Task, threadId: string): Promise<Task> {
+  const data = await request<{ task: Task }>(`/api/local/codex-conversations?projectId=${encodeURIComponent(task.projectId)}`, {
+    method: "POST",
+    body: JSON.stringify({ taskId: task.id, version: task.version, threadId }),
+  });
+  return data.task;
+}
+
+export async function unlinkCodexConversation(task: Task): Promise<Task> {
+  const data = await request<{ task: Task }>(`/api/local/codex-conversations?projectId=${encodeURIComponent(task.projectId)}`, {
+    method: "DELETE",
+    body: JSON.stringify({ taskId: task.id, version: task.version }),
+  });
+  return data.task;
 }

@@ -6,11 +6,11 @@ const DAY_MS = 24 * 60 * 60 * 1_000;
 const CHECK_INTERVAL_MS = 60 * 60 * 1_000;
 const STATUS_LABELS = {
   backlog: "积压事项",
-  todo: "待办",
-  in_progress: "处理中",
-  in_review: "等你确认",
+  todo: "待开发",
+  in_progress: "开发中",
+  in_review: "待确认",
   blocked: "遇到阻碍",
-  done: "完成",
+  done: "完成开发",
   canceled: "取消",
 };
 

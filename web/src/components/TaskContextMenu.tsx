@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { listenForOutsidePointerDown, listenForMenuViewportChange } from "../menuEvents";
 import {
   useEffect,
@@ -77,7 +78,7 @@ function MenuItem({
 }: MenuItemProps) {
   return (
     <div className="context-menu-item-anchor">
-      <button
+      <Button variant="ghost" size="none"
         type="button"
         role={checked === undefined ? "menuitem" : "menuitemradio"}
         aria-checked={checked}
@@ -96,7 +97,7 @@ function MenuItem({
         {shortcut && <span className="context-menu-shortcut">{shortcut}</span>}
         {checked && <span className="context-menu-check"><LinearIcon name="check" /></span>}
         {submenu && <span className="context-menu-chevron"><LinearIcon name="chevronRight" /></span>}
-      </button>
+      </Button>
       {children}
     </div>
   );
@@ -366,7 +367,7 @@ export function TaskContextMenu({
 
       <div className="context-menu-group">
         <MenuItem
-          label={text("编辑议题", "Edit issue")}
+          label={text("编辑任务", "Edit issue")}
           icon={<EditIcon color="currentColor" />}
           shortcut="↵"
           onPointerEnter={closeSubmenu}
@@ -391,7 +392,7 @@ export function TaskContextMenu({
           {submenu === "copy" && (
             <div className="context-submenu" role="menu" data-submenu-panel="copy" style={{ "--submenu-shift": `${submenuShift}px` } as CSSProperties}>
               <MenuItem
-                label={text("复制议题 ID", "Copy issue ID")}
+                label={text("复制任务 ID", "Copy issue ID")}
                 onClick={() => closeThen(() => onCopy(
                   displayIdentifier,
                   text(`${displayIdentifier} 已复制。`, `${displayIdentifier} copied.`),
@@ -401,7 +402,7 @@ export function TaskContextMenu({
                 label={text("复制标题", "Copy title")}
                 onClick={() => closeThen(() => onCopy(
                   task.title,
-                  text("议题标题已复制。", "Issue title copied."),
+                  text("任务标题已复制。", "Issue title copied."),
                 ))}
               />
               <MenuItem
@@ -428,7 +429,7 @@ export function TaskContextMenu({
           <div className="context-menu-divider" role="separator" />
           <div className="context-menu-group">
             <MenuItem
-              label={text("归档议题", "Archive issue")}
+              label={text("归档任务", "Archive issue")}
               icon={<DeleteIcon color="currentColor" />}
               shortcut="⌘⌫"
               danger

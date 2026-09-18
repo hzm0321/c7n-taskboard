@@ -25,11 +25,11 @@ const I18N: Record<TaskboardLanguage, TaskboardI18n> = {
 const STATUS_LABELS: Record<TaskboardLanguage, Record<TaskStatus, string>> = {
   zh: {
     backlog: "待立项",
-    todo: "等待认领",
-    in_progress: "处理中",
-    in_review: "等你确认",
+    todo: "待开发",
+    in_progress: "开发中",
+    in_review: "待确认",
     blocked: "遇到阻碍",
-    done: "完成",
+    done: "完成开发",
     canceled: "取消",
   },
   en: {

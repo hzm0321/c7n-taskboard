@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import "./DashboardView.css";
@@ -343,7 +344,7 @@ function DashboardProgressChart({ progressData, todayValue }: {
         <div className="dashboard-progress-legend">
           <span className="tone-scope"><i />{text("范围", "Scope")} <strong>{progressData.scope}</strong></span>
           <span className="tone-started"><i />{text("已开始", "Started")} <strong>{progressData.started}</strong></span>
-          <span className="tone-completed"><i />{text("已完成", "Completed")} <strong>{progressData.completed}</strong></span>
+          <span className="tone-completed"><i />{text("完成开发", "Completed")} <strong>{progressData.completed}</strong></span>
         </div>
       </header>
       <div className="dashboard-progress-body">
@@ -444,7 +445,7 @@ function DashboardProgressChart({ progressData, todayValue }: {
                 </text>
                 <text x="12" y="40">{text("范围", "Scope")} {hoveredProgressPoint.scope}</text>
                 <text x="12" y="58">{text("已开始", "Started")} {Math.max(0, hoveredProgressPoint.started - hoveredProgressPoint.completed)}</text>
-                <text x="88" y="58">{text("已完成", "Completed")} {hoveredProgressPoint.completed}</text>
+                <text x="88" y="58">{text("完成开发", "Completed")} {hoveredProgressPoint.completed}</text>
                 <text className="dashboard-progress-tooltip-delta" x="88" y="40">
                   Δ {hoveredProgressPoint.scope - (progressChart.points[Math.max(0, progressHoverIndex! - 1)]?.scope ?? hoveredProgressPoint.scope)}
                 </text>
@@ -720,7 +721,7 @@ export function DashboardView({
 
   const summaryBody = isAllProjects
     ? text(
-        `所有项目共有 ${tasks.length} 个议题，${completedTasks.length} 个已完成，${activeTasks.length} 个尚未结束；当前 ${tasks.filter((task) => task.status === "blocked").length} 个遇到阻碍，${overdueTasks.length} 个已逾期。`,
+        `所有项目共有 ${tasks.length} 个任务，${completedTasks.length} 个已完成，${activeTasks.length} 个尚未结束；当前 ${tasks.filter((task) => task.status === "blocked").length} 个遇到阻碍，${overdueTasks.length} 个已逾期。`,
         `Across all projects, ${tasks.length} issues are tracked: ${completedTasks.length} completed and ${activeTasks.length} still open; ${tasks.filter((task) => task.status === "blocked").length} are blocked and ${overdueTasks.length} overdue.`,
       )
     : projectSummary?.summary
@@ -821,7 +822,7 @@ export function DashboardView({
             <header><span>{text("需要关注（未读、阻塞）", "Needs attention (unread, blocked)")}</span></header>
             <div className="dashboard-task-list">
               {attentionItems.length ? attentionItems.map((task) => (
-                <button
+                <Button variant="ghost" size="none"
                   type="button"
                   className="dashboard-attention-row"
                   onClick={() => onOpenTask(task)}
@@ -832,9 +833,9 @@ export function DashboardView({
                   </span>
                   <strong>{task.title}</strong>
                   <small>ID: {task.externalKey ?? task.identifier}</small>
-                </button>
+                </Button>
               )) : (
-                <div className="dashboard-empty">{text("当前没有需要关注的议题", "No issues need attention")}</div>
+                <div className="dashboard-empty">{text("当前没有需要关注的任务", "No issues need attention")}</div>
               )}
             </div>
           </section>
@@ -848,7 +849,7 @@ export function DashboardView({
                   key={task.id}
                   onClick={() => onOpenTask(task)}
                 >
-                  <button
+                  <Button variant="ghost" size="none"
                     type="button"
                     className="dashboard-running-open"
                     onClick={(event) => {
@@ -858,7 +859,7 @@ export function DashboardView({
                   >
                     <small>ID: {task.externalKey ?? task.identifier}</small>
                     <strong>{task.title}</strong>
-                  </button>
+                  </Button>
                   <div className="dashboard-running-footer">
                     <span className="task-processing is-running">
                       <img className="task-processing-glyph" src={processingAnimation} alt="" aria-hidden="true" />
@@ -896,7 +897,7 @@ export function DashboardView({
                       <span className="dashboard-role-copy">
                         <strong>{item.actor.name}</strong>
                         <small>{text(
-                          `${item.count} 个已完成议题`,
+                          `${item.count} 个已完成任务`,
                           `${item.count} completed ${item.count === 1 ? "issue" : "issues"}`,
                         )}</small>
                       </span>
@@ -932,7 +933,7 @@ export function DashboardView({
                     <span style={{ gridRow: 4 }}>{text("三", "W")}</span>
                     <span style={{ gridRow: 6 }}>{text("五", "F")}</span>
                   </div>
-                  <div className="dashboard-contribution-grid" aria-label={text("过去一年议题贡献图", "Issue contributions over the past year")}>
+                  <div className="dashboard-contribution-grid" aria-label={text("过去一年任务贡献图", "Issue contributions over the past year")}>
                     {contributionWeeks.flat().map((day) => {
                       const level = day.count === 0
                         ? 0
@@ -941,7 +942,7 @@ export function DashboardView({
                         <span
                           className={`dashboard-contribution-cell level-${level}${day.future ? " is-future" : ""}`}
                           title={day.future ? undefined : text(
-                            `${contributionDateFormatter.format(day.date)} · ${day.count} 个议题更新`,
+                            `${contributionDateFormatter.format(day.date)} · ${day.count} 个任务更新`,
                             `${contributionDateFormatter.format(day.date)} · ${day.count} issue ${day.count === 1 ? "update" : "updates"}`,
                           )}
                           key={day.key}
@@ -965,7 +966,7 @@ export function DashboardView({
             <header><span>{text("即将到期", "Due soon")}</span></header>
             <div className="dashboard-task-list">
               {upcomingTasks.length ? upcomingTasks.map((task) => (
-                <button
+                <Button variant="ghost" size="none"
                   type="button"
                   className="dashboard-upcoming-row"
                   onClick={() => onOpenTask(task)}
@@ -978,9 +979,9 @@ export function DashboardView({
                   />
                   <strong>{task.title}</strong>
                   <time>ID: {task.externalKey ?? task.identifier} | {shortDate(task.dueDate!, locale)}</time>
-                </button>
+                </Button>
               )) : (
-                <div className="dashboard-empty">{text("近期没有到期议题", "No issues are due soon")}</div>
+                <div className="dashboard-empty">{text("近期没有到期任务", "No issues are due soon")}</div>
               )}
             </div>
           </section>

@@ -1,4 +1,6 @@
 import { agentPlatformLabel, sessionResumeCommand } from "./agentSessions";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { resolveInlineAttachments } from "./inlineAttachments";
 import {
   Fragment,
@@ -27,6 +29,7 @@ import {
   deleteProject as deleteProjectRequest,
   getAiChatCatalog,
   getCodexThreadProgress,
+  getChoerodonConnection,
   getJiraConnection,
   getTaskboardRevision,
   getTaskboardMetadata,
@@ -63,6 +66,10 @@ import { DashboardView } from "./components/DashboardView";
 import { ProjectReadmeView } from "./components/ProjectReadmeView";
 import { IssueListView } from "./components/IssueListView";
 import { JiraConnectionDialog } from "./components/JiraConnectionDialog";
+import { Toaster } from "./components/ui/sonner";
+import { ChoerodonSyncDialog } from "./components/ChoerodonSyncDialog";
+import { ChoerodonConnectionDialog } from "./components/ChoerodonConnectionDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { ArchivedTasksColumn, OtherTasksPanel } from "./components/OtherTasksPanel";
 import {
   type PendingInlineAttachment,
@@ -834,6 +841,9 @@ export function App() {
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [jiraDialogOpen, setJiraDialogOpen] = useState(false);
+  const [choerodonDialogOpen, setChoerodonDialogOpen] = useState(false);
+  const [choerodonSyncProject, setChoerodonSyncProject] = useState<{ id: string; name: string } | null>(null);
+  const [choerodonConfigured, setChoerodonConfigured] = useState(false);
   const [jiraConnection, setJiraConnection] = useState<JiraConnection | null>(null);
   const [jiraSaving, setJiraSaving] = useState(false);
   const [jiraSyncing, setJiraSyncing] = useState(false);
@@ -880,7 +890,7 @@ export function App() {
     if (error instanceof ApiError) return error.message;
     if (error instanceof Error) return error.message;
     return textRef.current(
-      "加载议题时出现问题。",
+      "加载任务时出现问题。",
       "Something went wrong while loading your issues.",
     );
   }
@@ -1973,6 +1983,17 @@ export function App() {
     return () => controller.abort();
   }, [loadProjectList]);
 
+  useEffect(() => {
+    if (!taskboardMetadata || taskboardMetadata.mode === "cloud" || choerodonDialogOpen) return;
+    let active = true;
+    void getChoerodonConnection().then((connection) => {
+      if (active) setChoerodonConfigured(connection.configured);
+    }).catch((error: unknown) => {
+      if (active) setActionError(errorMessage(error));
+    });
+    return () => { active = false; };
+  }, [taskboardMetadata, choerodonDialogOpen]);
+
   const refreshProjectList = useCallback(async () => {
     const requestId = ++projectsRequestRef.current;
     setProjectLoadError((current) => (
@@ -2630,7 +2651,7 @@ export function App() {
       )));
       setActionError(error instanceof ApiError && error.code === "VERSION_CONFLICT"
         ? textRef.current(
-          "该议题已在其他位置更新，看板已重新同步。",
+          "该任务已在其他位置更新，看板已重新同步。",
           "This issue changed elsewhere. The board has been synced.",
         )
         : errorMessage(error));
@@ -2705,7 +2726,7 @@ export function App() {
       )));
       setActionError(error instanceof ApiError && error.code === "VERSION_CONFLICT"
         ? text(
-          "该议题已在其他位置更新，看板已重新同步。",
+          "该任务已在其他位置更新，看板已重新同步。",
           "This issue changed elsewhere. The board has been synced.",
         )
         : errorMessage(error));
@@ -2763,7 +2784,7 @@ export function App() {
     } catch (error) {
       setActionError(error instanceof ApiError && error.code === "VERSION_CONFLICT"
         ? text(
-          "该议题已在其他位置更新，看板已重新同步。",
+          "该任务已在其他位置更新，看板已重新同步。",
           "This issue changed elsewhere. The board has been synced.",
         )
         : errorMessage(error));
@@ -2815,7 +2836,7 @@ export function App() {
     } catch (error) {
       setActionError(error instanceof ApiError && error.code === "VERSION_CONFLICT"
         ? text(
-          "该议题已在其他位置更新，看板已重新同步。",
+          "该任务已在其他位置更新，看板已重新同步。",
           "This issue changed elsewhere. The board has been synced.",
         )
         : errorMessage(error));
@@ -2840,7 +2861,7 @@ export function App() {
     } catch (error) {
       setActionError(error instanceof ApiError && error.code === "VERSION_CONFLICT"
         ? text(
-          "该议题已在其他位置更新，看板已重新同步。",
+          "该任务已在其他位置更新，看板已重新同步。",
           "This issue changed elsewhere. The board has been synced.",
         )
         : errorMessage(error));
@@ -2866,7 +2887,7 @@ export function App() {
     } catch (error) {
       setActionError(error instanceof ApiError && error.code === "VERSION_CONFLICT"
         ? text(
-          "该议题已在其他位置更新，看板已重新同步。",
+          "该任务已在其他位置更新，看板已重新同步。",
           "This issue changed elsewhere. The board has been synced.",
         )
         : errorMessage(error));
@@ -3063,7 +3084,7 @@ export function App() {
           ?? deviceWorkspacePaths[task.projectId]
           ?? taskboardProject?.workspacePath;
     const embeddedInstruction = text(
-      `[$manage-taskboard](${manageTaskboardSkillPath}) 议题 ID：${task.identifier}`,
+      `[$manage-taskboard](${manageTaskboardSkillPath}) 任务 ID：${task.identifier}`,
       `[$manage-taskboard](${manageTaskboardSkillPath}) Issue ID: ${task.identifier}`,
     );
 
@@ -3352,6 +3373,7 @@ export function App() {
 
   return (
     <TaskboardLanguageProvider language={language}>
+      <Toaster theme={theme} position="top-center" />
       <div className={`app-shell${embedded ? " embedded" : ""}`} style={appShellStyle}>
       {taskboardMetadata && taskboardMetadata.mode !== "cloud" && (
         <LocalRealtimeSync
@@ -3366,23 +3388,24 @@ export function App() {
           setReadmeRevision={setReadmeRevision}
         />
       )}
+      <Tabs value={boardView} onValueChange={(value) => selectBoardView(value as BoardView)} asChild>
       <main className="workspace">
         <header className="workspace-header">
           <div className="workspace-title">
             <div className="workspace-kicker">
               {detailTask && (
-                <button
+                <Button variant="ghost" size="none"
                   className="detail-back-button"
                   type="button"
-                  aria-label={text("返回议题看板", "Back to issue board")}
-                  title={text("返回议题看板 (Esc)", "Back to issue board (Esc)")}
+                  aria-label={text("返回任务看板", "Back to issue board")}
+                  title={text("返回任务看板 (Esc)", "Back to issue board (Esc)")}
                   onClick={closeTaskDetail}
                 >
                   <LinearIcon name="chevronLeft" />
-                </button>
+                </Button>
               )}
               {embedded && hostContext?.sidebarCollapsed && (
-                <button
+                <Button variant="ghost" size="none"
                   className="detail-back-button codex-sidebar-expand-button"
                   type="button"
                   aria-label={text("展开 Codex 侧边栏", "Expand Codex sidebar")}
@@ -3390,10 +3413,10 @@ export function App() {
                   onClick={expandCodexSidebar}
                 >
                   <LinearIcon name="codexSidebarExpand" />
-                </button>
+                </Button>
               )}
               <div className="header-project-switcher" data-project-switcher>
-                <button
+                <Button variant="ghost" size="none"
                   className="header-project-button"
                   type="button"
                   aria-label={text("切换项目", "Switch project")}
@@ -3407,7 +3430,7 @@ export function App() {
                 >
                   <span className="project-name">{headerProjectName}</span>
                   <TaskboardIcon className="project-switcher-chevron" name="dropdown" />
-                </button>
+                </Button>
                 {projectMenuOpen && (
                   <div className="header-project-menu" role="menu" aria-label={text("项目", "Projects")}>
                     <span>{text("切换项目", "Switch project")}</span>
@@ -3425,20 +3448,20 @@ export function App() {
                         placeholder={text("筛选项目…", "Filter projects…")}
                       />
                       {projectMenuSearch && (
-                        <button
+                        <Button variant="ghost" size="none"
                           className="search-clear"
                           type="button"
                           aria-label={text("清除项目筛选", "Clear project filter")}
                           onClick={() => setProjectMenuSearch("")}
                         >
                           <LinearIcon name="close" />
-                        </button>
+                        </Button>
                       )}
                     </div>
                     <div className="project-menu-list">
                       {!projectMenuNeedle && (
                         <>
-                          <button
+                          <Button variant="ghost" size="none"
                             type="button"
                             role="menuitemradio"
                             aria-checked={isAllProjects}
@@ -3451,7 +3474,7 @@ export function App() {
                             <TaskboardIcon className="project-avatar" name="projectFolder" />
                             <span>{text("所有项目", "All projects")}</span>
                             {isAllProjects && <span className="project-menu-check" aria-hidden="true"><LinearIcon name="check" /></span>}
-                          </button>
+                          </Button>
                           <div className="project-menu-divider" role="separator" />
                         </>
                       )}
@@ -3460,7 +3483,7 @@ export function App() {
                           {hasProjectsWithIssues && project.id === firstEmptyProjectId && (
                             <div className="project-menu-divider" role="separator" />
                           )}
-                          <button
+                          <Button variant="ghost" size="none"
                             type="button"
                             role="menuitemradio"
                             aria-checked={project.id === selectedProjectId}
@@ -3481,7 +3504,7 @@ export function App() {
                             <TaskboardIcon className="project-avatar" name="projectFolder" />
                             <span>{project.name}</span>
                             {project.id === selectedProjectId && <span className="project-menu-check" aria-hidden="true"><LinearIcon name="check" /></span>}
-                          </button>
+                          </Button>
                         </Fragment>
                       ))}
                       {projectMenuNeedle && projectMenuChoices.length === 0 && (
@@ -3490,7 +3513,7 @@ export function App() {
                     </div>
                     <div className="project-menu-actions">
                       <div className="project-menu-divider" role="separator" />
-                      <button
+                      <Button variant="ghost" size="none"
                         type="button"
                         role="menuitem"
                         disabled={openingProjectId !== null}
@@ -3502,8 +3525,21 @@ export function App() {
                             ? text("Jira 设置", "Jira settings")
                             : text("连接 Jira", "Connect Jira")}
                         </span>
-                      </button>
-                      <button
+                      </Button>
+                      <Button variant="ghost" size="none"
+                        type="button"
+                        role="menuitem"
+                        disabled={openingProjectId !== null}
+                        onClick={() => {
+                          setProjectMenuOpen(false);
+                          setProjectContextMenu(null);
+                          setChoerodonDialogOpen(true);
+                        }}
+                      >
+                        <RelationIcon className="project-avatar" color="currentColor" size={16} />
+                        <span>{text("连接猪齿鱼", "Connect Choerodon")}</span>
+                      </Button>
+                      <Button variant="ghost" size="none"
                         type="button"
                         role="menuitem"
                         disabled={openingProjectId !== null}
@@ -3511,7 +3547,7 @@ export function App() {
                       >
                         <PlusIcon className="project-avatar" color="currentColor" size={16} />
                         <span>{text("创建项目", "Create project")}</span>
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -3522,6 +3558,17 @@ export function App() {
           <div ref={dragRegionRef} className="workspace-drag-region" aria-hidden="true" />
 
           <div className="header-actions">
+            {selectedProject && !isAllProjects && !isJiraProject && choerodonConfigured && (
+              <Button variant="ghost" size="none"
+                className="header-integration-trigger no-drag"
+                type="button"
+                onClick={() => setChoerodonSyncProject({ id: selectedProject.id, name: selectedProject.name })}
+                title={text("同步猪齿鱼", "Sync Choerodon")}
+              >
+                <RefreshIcon color="currentColor" />
+                <span>{text("同步猪齿鱼", "Sync Choerodon")}</span>
+              </Button>
+            )}
             {selectedProject && (
               <ProjectAutomationMenu
                 automation={selectedProjectAutomation}
@@ -3534,7 +3581,7 @@ export function App() {
               />
             )}
             {isJiraProject && (
-              <button
+              <Button variant="ghost" size="none"
                 className="icon-button"
                 type="button"
                 disabled={jiraSyncing}
@@ -3543,81 +3590,46 @@ export function App() {
                 title={text("同步 Jira", "Sync Jira")}
               >
                 <RefreshIcon color="currentColor" />
-              </button>
+              </Button>
             )}
             {selectedProjectId && !isJiraProject && (
-              <button
+              <Button variant="ghost" size="none"
                 className="icon-button header-create-button"
                 type="button"
                 onClick={() => setEditor({ status: "todo" })}
-                aria-label={text("新建议题", "Create issue")}
-                title={text("新建议题 (C)", "Create issue (C)")}
+                aria-label={text("新建任务", "Create issue")}
+                title={text("新建任务 (C)", "Create issue (C)")}
               >
                 <PlusIcon color="currentColor" size={14} />
-              </button>
+              </Button>
             )}
           </div>
         </header>
 
         {selectedProjectId && !detailTask && <div className="board-toolbar">
-          <div className="view-tabs" aria-label={text("看板视图", "Board views")}>
-            <button
-              className={`view-tab${boardView === "dashboard" ? " active" : ""}`}
-              type="button"
-              aria-pressed={boardView === "dashboard"}
-              onClick={() => selectBoardView("dashboard")}
-            >
-              {text("仪表盘", "Dashboard")}
-            </button>
-            <button
-              className={`view-tab${boardView === "issues" ? " active" : ""}`}
-              type="button"
-              aria-pressed={boardView === "issues"}
-              onClick={() => selectBoardView("issues")}
-            >
-              {text("议题看板", "Issue board")}
-            </button>
-            <button
-              className={`view-tab${boardView === "list" ? " active" : ""}`}
-              type="button"
-              aria-pressed={boardView === "list"}
-              onClick={() => selectBoardView("list")}
-            >
-              {text("列表视图", "List")}
-            </button>
-            <button
-              className={`view-tab${boardView === "gantt" ? " active" : ""}`}
-              type="button"
-              aria-pressed={boardView === "gantt"}
-              onClick={() => selectBoardView("gantt")}
-            >
-              {text("甘特图", "Gantt")}
-            </button>
+          <TabsList className="view-tabs" aria-label={text("看板视图", "Board views")}>
+            <TabsTrigger value="dashboard">{text("仪表盘", "Dashboard")}</TabsTrigger>
+            <TabsTrigger value="issues">{text("任务看板", "Issue board")}</TabsTrigger>
+            <TabsTrigger value="list">{text("列表视图", "List")}</TabsTrigger>
+            <TabsTrigger value="gantt">{text("甘特图", "Gantt")}</TabsTrigger>
             {!isAllProjects && (
-              <button
-                className={`view-tab${boardView === "readme" ? " active" : ""}`}
-                type="button"
-                aria-pressed={boardView === "readme"}
-                onClick={() => selectBoardView("readme")}
-              >
-                {text("项目文档", "Project Docs")}
-              </button>
+              <TabsTrigger value="readme">{text("项目文档", "Project Docs")}</TabsTrigger>
             )}
-          </div>
+          </TabsList>
           {(boardView === "issues" || boardView === "list" || boardView === "gantt") && <div className="toolbar-tools">
-            <div className={`search-field${search ? " has-value" : ""}`} title={text("搜索议题 (/)", "Search issues (/)")}>
+            <div className={`search-field${search ? " has-value" : ""}`} title={text("搜索任务 (/)", "Search issues (/)")}>
               <TaskboardIcon className="search-icon" name="search" />
               <input
                 id="task-search"
                 type="search"
-                aria-label={text("搜索议题", "Search issues")}
+                aria-label={text("搜索任务", "Search issues")}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder={text("搜索议题…", "Search issues…")}
+                placeholder={text("搜索任务…", "Search issues…")}
               />
               {!search && <kbd>/</kbd>}
               {search && (
-                <button
+                <Button variant="ghost" size="none"
                   className="search-clear"
                   type="button"
                   aria-label={text("清除搜索", "Clear search")}
@@ -3627,30 +3639,30 @@ export function App() {
                   }}
                 >
                   <LinearIcon name="close" />
-                </button>
+                </Button>
               )}
             </div>
             {boardView === "gantt" && (
               <div className="gantt-toolbar-controls">
                 <label className="gantt-hide-completed">
-                  <input type="checkbox" checked={ganttHideCompleted} onChange={(event) => setGanttHideCompleted(event.target.checked)} />
-                  <i><LinearIcon name="check" /></i>
-                  <span>{text("隐藏已完成", "Hide completed")}</span>
+                  <Switch size="sm" checked={ganttHideCompleted} onCheckedChange={setGanttHideCompleted} aria-label={text("隐藏已完成开发", "Hide completed")} />
+                  <span>{text("隐藏已完成开发", "Hide completed")}</span>
                 </label>
-                <button type="button" className="gantt-today-button" onClick={() => setGanttTodayRequest((current) => current + 1)}>{text("今天", "Today")}</button>
+                <Button variant="ghost" size="none" type="button" className="gantt-today-button" onClick={() => setGanttTodayRequest((current) => current + 1)}>{text("今天", "Today")}</Button>
                 <div className="gantt-view-menu-wrap">
-                  <button type="button" className="gantt-view-menu-trigger" aria-label={text("时间轴视图选项", "Timeline view options")} aria-expanded={ganttViewMenuOpen} onClick={() => setGanttViewMenuOpen((current) => !current)}>
-                    <MoreIcon color="currentColor" />
-                  </button>
+                  <Button variant="ghost" size="none" type="button" className="gantt-view-menu-trigger" aria-label={text("时间轴视图选项", "Timeline view options")} aria-expanded={ganttViewMenuOpen} onClick={() => setGanttViewMenuOpen((current) => !current)}>
+                    <span>{language === "zh" ? { day: "日视图", week: "周视图", month: "月视图" }[ganttZoom] : { day: "Day", week: "Week", month: "Month" }[ganttZoom]}</span>
+                    <LinearIcon name="chevronDown" />
+                  </Button>
                   {ganttViewMenuOpen && (
                     <div className="gantt-view-menu" role="menu">
                       {GANTT_ZOOM_OPTIONS.map((value) => (
-                        <button type="button" role="menuitemradio" aria-checked={ganttZoom === value} className={ganttZoom === value ? "active" : ""} onClick={() => { setGanttZoom(value); setGanttViewMenuOpen(false); }} key={value}>
+                        <Button variant="ghost" size="none" type="button" role="menuitemradio" aria-checked={ganttZoom === value} className={ganttZoom === value ? "active" : ""} onClick={() => { setGanttZoom(value); setGanttViewMenuOpen(false); }} key={value}>
                           <span>{language === "zh"
                             ? { day: "日视图", week: "周视图", month: "月视图" }[value]
                             : { day: "Day", week: "Week", month: "Month" }[value]}</span>
                           {ganttZoom === value && <LinearIcon name="check" />}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}
@@ -3674,7 +3686,7 @@ export function App() {
               />
             )}
             {boardView === "issues" && otherTasksAvailable && (
-              <button
+              <Button variant="ghost" size="none"
                 className={`other-tasks-trigger${otherTasksOpen ? " is-open" : ""}`}
                 type="button"
                 aria-controls="other-tasks-panel"
@@ -3686,7 +3698,7 @@ export function App() {
                 onClick={() => setOtherTasksOpen((current) => !current)}
               >
                 <TaskboardIcon name="panel" />
-              </button>
+              </Button>
             )}
           </div>}
         </div>}
@@ -3695,7 +3707,7 @@ export function App() {
           <div className="error-banner" role="alert">
             <span className="error-mark" aria-hidden="true"><LinearIcon name="alert" /></span>
             <div><strong>{text("任务面板需要处理", "Taskboard needs attention")}</strong><p>{actionErrorText ?? loadError?.message}</p></div>
-            <button
+            <Button variant="ghost" size="none"
               type="button"
               onClick={() => {
                 setActionError(null);
@@ -3707,10 +3719,11 @@ export function App() {
               }}
             >
               {text("重试", "Try again")}
-            </button>
+            </Button>
           </div>
         )}
 
+        <TabsContent value={boardView} className="board-view-content">
         {detailTask && selectedProject ? (
           <TaskDetail
             key={detailTask.id}
@@ -3737,6 +3750,7 @@ export function App() {
             onOpenThread={openThread}
             onOpenLegacyLocalThread={openLegacyLocalThread}
             onOpenInThread={openTaskInThread}
+            onConversationLinked={(updated) => setTasks((current) => current.map((task) => task.id === updated.id ? updated : task))}
             onCopy={(text, message) => void copyText(text, message)}
             openingThread={openingThreadTaskId === detailTask.id}
             onError={setActionError}
@@ -3753,7 +3767,7 @@ export function App() {
               "Ask Codex to inspect conversations for this project directory and organize their task status.",
             )}</p>
             <div className="page-empty-actions">
-              <button
+              <Button variant="default" size="sm"
                 className="button primary"
                 type="button"
                 onClick={() => {
@@ -3762,7 +3776,7 @@ export function App() {
                     projectId: selectedProject.id,
                     issueId: null,
                     composerText: text(
-                      "只检查当前项目目录对应的 Codex 对话。请将其中已完成、处理中和待执行的任务整理并导入当前项目的 Taskboard。",
+                      "只检查当前项目目录对应的 Codex 对话。请将其中已完成、开发中和待执行的任务整理并导入当前项目的 Taskboard。",
                       "Only inspect Codex conversations associated with this project directory. Organize completed, in-progress, and pending tasks, then import them into this project's Taskboard.",
                     ),
                     requestId: aiOpenThreadRequestSequenceRef.current,
@@ -3770,14 +3784,14 @@ export function App() {
                 }}
               >
                 {text("导入当前项目任务状态", "Import current project task status")}
-              </button>
-              <button
+              </Button>
+              <Button variant="outline" size="sm"
                 className="button secondary"
                 type="button"
                 onClick={() => setEditor({ status: "todo" })}
               >
-                {text("添加议题", "Add issue")}
-              </button>
+                {text("添加任务", "Add issue")}
+              </Button>
             </div>
           </div>
         ) : boardView === "readme" && selectedProject ? (
@@ -3840,7 +3854,7 @@ export function App() {
             } as CSSProperties}
           >
             {tasksLoading && !hasLoadedTasks ? (
-              <div className="loading-board" aria-label={text("正在加载议题", "Loading issues")} aria-busy="true">
+              <div className="loading-board" aria-label={text("正在加载任务", "Loading issues")} aria-busy="true">
                 {mainBoardItems.map((item) => (
                   <div className="loading-column" key={item}>
                     <span /><div /><div />
@@ -3849,7 +3863,7 @@ export function App() {
               </div>
             ) : (
               <>
-                <div ref={boardScrollRef} className="board-scroll" aria-label={text("议题看板", "Issue board")}>
+                <div ref={boardScrollRef} className="board-scroll" aria-label={text("任务看板", "Issue board")}>
                   <div className="board">
                     {mainBoardItems.map((item) => item === "archived" ? (
                       <ArchivedTasksColumn
@@ -3871,8 +3885,8 @@ export function App() {
                         tasks={tasksByStatus[item]}
                         presentations={taskPresentations}
                         emptyMessage={hasActiveTaskFilters
-                          ? text("当前筛选下无匹配议题", "No issues match the current filters")
-                          : text("暂无议题", "No issues")}
+                          ? text("当前筛选下无匹配任务", "No issues match the current filters")
+                          : text("暂无任务", "No issues")}
                         isDropTarget={dropTarget === item}
                         draggedTaskId={draggedTaskId}
                         draggedTaskHeight={draggedTaskHeight}
@@ -3945,7 +3959,9 @@ export function App() {
             )}
           </div>
         )}
+        </TabsContent>
       </main>
+      </Tabs>
 
       {projectContextMenu && (
         <div
@@ -3958,7 +3974,7 @@ export function App() {
           )}
           style={{ left: projectContextMenu.x, top: projectContextMenu.y }}
         >
-          <button
+          <Button variant="ghost" size="none"
             className="context-menu-item is-danger"
             type="button"
             role="menuitem"
@@ -3966,8 +3982,23 @@ export function App() {
           >
             <span className="context-menu-icon" aria-hidden="true"><DeleteIcon color="currentColor" /></span>
             <span className="context-menu-label">{text("删除项目", "Delete project")}</span>
-          </button>
+          </Button>
         </div>
+      )}
+
+      {choerodonSyncProject && (
+        <ChoerodonSyncDialog
+          project={choerodonSyncProject}
+          onClose={() => setChoerodonSyncProject(null)}
+          onSynced={async () => {
+            await refreshTasks(choerodonSyncProject.id);
+            await refreshProjectList();
+          }}
+        />
+      )}
+
+      {choerodonDialogOpen && (
+        <ChoerodonConnectionDialog onClose={() => setChoerodonDialogOpen(false)} />
       )}
 
       {jiraDialogOpen && (
@@ -4015,15 +4046,15 @@ export function App() {
             </label>
             {actionErrorText && <p className="project-dialog-error">{actionErrorText}</p>}
             <div>
-              <button
+              <Button variant="outline" size="sm"
                 className="button secondary"
                 type="button"
                 disabled={openingProjectId !== null}
                 onClick={closeCreateProjectDialog}
               >
                 {text("取消", "Cancel")}
-              </button>
-              <button
+              </Button>
+              <Button variant="default" size="sm"
                 className="button primary"
                 type="submit"
                 disabled={!projectName.trim() || openingProjectId !== null}
@@ -4031,7 +4062,7 @@ export function App() {
                 {openingProjectId
                   ? text("创建中…", "Creating…")
                   : text("创建", "Create")}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -4064,15 +4095,15 @@ export function App() {
                   "Only empty projects can be deleted. This cannot be undone.",
                 )}</p>
                 <div>
-                  <button
+                  <Button variant="outline" size="sm"
                     className="button secondary"
                     type="button"
                     disabled={deletingProjectId !== null}
                     onClick={closeProjectDeleteDialog}
                   >
                     {text("取消", "Cancel")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="destructive" size="sm"
                     className="button danger"
                     type="button"
                     disabled={deletingProjectId !== null}
@@ -4081,7 +4112,7 @@ export function App() {
                     {deletingProjectId
                       ? text("删除中…", "Deleting…")
                       : text("删除项目", "Delete project")}
-                  </button>
+                  </Button>
                 </div>
               </>
             ) : (
@@ -4091,13 +4122,13 @@ export function App() {
                   `Cannot delete project “${pendingProjectDelete.name}”`,
                 )}</h2>
                 <p>{text(
-                  `该项目还有 ${projectDeleteIssueCount} 个议题（包含已归档议题）。请先移动或删除这些议题。`,
+                  `该项目还有 ${projectDeleteIssueCount} 个任务（包含已归档任务）。请先移动或删除这些任务。`,
                   `This project still has ${projectDeleteIssueCount} issues, including archived issues. Move or delete them first.`,
                 )}</p>
                 <div>
-                  <button className="button primary" type="button" onClick={closeProjectDeleteDialog}>
+                  <Button variant="default" size="sm" className="button primary" type="button" onClick={closeProjectDeleteDialog}>
                     {text("知道了", "Got it")}
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -4134,15 +4165,15 @@ export function App() {
               `“${pendingArchivedTaskDelete.title}” and its comments and attachments will be permanently deleted. This cannot be undone.`,
             )}</p>
             <div>
-              <button
+              <Button variant="outline" size="sm"
                 className="button secondary"
                 type="button"
                 disabled={deletingArchivedTaskId !== null}
                 onClick={() => setPendingArchivedTaskDelete(null)}
               >
                 {text("取消", "Cancel")}
-              </button>
-              <button
+              </Button>
+              <Button variant="destructive" size="sm"
                 className="button danger"
                 type="button"
                 disabled={deletingArchivedTaskId !== null}
@@ -4151,7 +4182,7 @@ export function App() {
                 {deletingArchivedTaskId
                   ? text("删除中…", "Deleting…")
                   : text("永久删除", "Delete permanently")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -4235,9 +4266,9 @@ export function App() {
         >
           <span aria-hidden="true"><LinearIcon name="check" /></span>
           <span className="undo-toast-message">{undoNotice.message}</span>
-          <button type="button" onClick={() => void performUndo()}>
+          <Button variant="ghost" size="none" type="button" onClick={() => void performUndo()}>
             {text("撤回", "Undo")} <kbd>{undoShortcut}</kbd>
-          </button>
+          </Button>
         </div>
       )}
       {announcement && (

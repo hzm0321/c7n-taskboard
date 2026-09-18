@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { resolveInlineAttachments } from "../inlineAttachments";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -152,7 +153,7 @@ export function ProjectReadmeView({
     return (
       <div className="project-readme-loading" role="alert">
         <p>{loadError}</p>
-        <button
+        <Button variant="outline" size="sm"
           type="button"
           className="button secondary"
           onClick={() => {
@@ -161,7 +162,7 @@ export function ProjectReadmeView({
           }}
         >
           {text("重试", "Try again")}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -182,7 +183,7 @@ export function ProjectReadmeView({
           <div className="project-readme-alert error" role="alert">
             <LinearIcon name="alert" />
             <span>{loadError}</span>
-            <button
+            <Button variant="outline" size="sm"
               type="button"
               className="button secondary"
               onClick={() => {
@@ -191,7 +192,7 @@ export function ProjectReadmeView({
               }}
             >
               {text("重试", "Try again")}
-            </button>
+            </Button>
           </div>
         )}
 

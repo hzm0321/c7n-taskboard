@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { listenForOutsidePointerDown } from "../menuEvents";
 import {
   useEffect,
@@ -165,7 +166,7 @@ export function TaskPropertyPicker<Value extends string>({
     >
       <div className="task-property-options">
         {options.map((option, index) => (
-          <button
+          <Button variant="ghost" size="none"
             type="button"
             role="option"
             aria-selected={option.value === value}
@@ -180,7 +181,7 @@ export function TaskPropertyPicker<Value extends string>({
             {option.value === value && (
               <span className="task-property-option-check"><LinearIcon name="check" /></span>
             )}
-          </button>
+          </Button>
         ))}
       </div>
     </div>,
@@ -189,7 +190,7 @@ export function TaskPropertyPicker<Value extends string>({
 
   return (
     <div ref={rootRef} className={`task-property-picker${className ? ` ${className}` : ""}`} onBlur={closeFromFocusLeave}>
-      <button
+      <Button variant="ghost" size="none"
         ref={triggerRef}
         type="button"
         className={triggerClassName}
@@ -211,7 +212,7 @@ export function TaskPropertyPicker<Value extends string>({
             <span className="task-property-trigger-label">{selected.label}</span>
           </>
         )}
-      </button>
+      </Button>
       {menu}
     </div>
   );

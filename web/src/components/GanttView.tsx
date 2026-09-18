@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Gantt, type GanttStatic, type Task as GanttTask } from "dhtmlx-gantt";
 import "../vendor/dhtmlxgantt.css";
@@ -21,6 +22,7 @@ interface GanttGroupDefinition {
 interface TaskboardGanttTask extends GanttTask {
   taskboardStatus: Task["status"];
   taskboardTitle: string;
+  taskboardIdentifier: string;
   taskboardUnread: boolean;
   taskboardAssigneeType: Task["assignee"]["type"] | null;
   taskboardAssigneeName: string;
@@ -44,11 +46,11 @@ interface GanttViewProps {
 let pendingDetailViewport: { projectId: string; x: number; y: number } | null = null;
 
 const GANTT_GROUPS: GanttGroupDefinition[] = [
-  { id: "in-progress", chineseLabel: "处理中", englishLabel: "In progress", statuses: ["in_progress"], defaultOpen: true },
-  { id: "in-review", chineseLabel: "等你确认", englishLabel: "In review", statuses: ["in_review"], defaultOpen: true },
+  { id: "in-progress", chineseLabel: "开发中", englishLabel: "In progress", statuses: ["in_progress"], defaultOpen: true },
+  { id: "in-review", chineseLabel: "待确认", englishLabel: "In review", statuses: ["in_review"], defaultOpen: true },
   { id: "blocked", chineseLabel: "遇到阻碍", englishLabel: "Blocked", statuses: ["blocked"], defaultOpen: true },
   { id: "todo", chineseLabel: "待处理", englishLabel: "To do", statuses: ["backlog", "todo"], defaultOpen: true },
-  { id: "done", chineseLabel: "已完成", englishLabel: "Completed", statuses: ["done"], defaultOpen: false },
+  { id: "done", chineseLabel: "完成开发", englishLabel: "Completed", statuses: ["done"], defaultOpen: false },
   { id: "canceled", chineseLabel: "已取消", englishLabel: "Canceled", statuses: ["canceled"], defaultOpen: false },
 ];
 
@@ -136,8 +138,8 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
     ganttRef.current = instance;
     instance.config.date_format = "%Y-%m-%d";
     instance.config.xml_date = "%Y-%m-%d";
-    instance.config.row_height = 58;
-    instance.config.bar_height = 44;
+    instance.config.row_height = 72;
+    instance.config.bar_height = 48;
     instance.config.scale_height = 66;
     instance.config.scroll_size = 1;
     instance.config.grid_width = 360;
@@ -153,7 +155,7 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
     instance.config.columns = [
       {
         name: "text",
-        label: i18nRef.current.text("议题", "Issue"),
+        label: i18nRef.current.text("任务", "Issue"),
         tree: true,
         width: "*",
         min_width: 190,
@@ -162,7 +164,7 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
           if (task.taskboardGroup) {
             return `<div class="gantt-grid-group"><strong>${escapeHtml(task.taskboardTitle)}</strong><span>${task.taskboardCount}</span></div>`;
           }
-          return `<div class="gantt-grid-issue"><strong>${escapeHtml(task.taskboardTitle)}</strong>${task.taskboardUnread ? `<i class="task-unread-dot" aria-label="${escapeHtml(i18nRef.current.text("有未读更新", "Unread updates"))}"></i>` : ""}</div>`;
+          return `<div class="gantt-grid-issue"><span class="gantt-grid-issue-copy"><small>${escapeHtml(task.taskboardIdentifier)}${task.unscheduled ? `<span class="gantt-unscheduled-label">${escapeHtml(i18nRef.current.text("未排期", "Unscheduled"))}</span>` : ""}</small><strong title="${escapeHtml(task.taskboardTitle)}">${escapeHtml(task.taskboardTitle)}</strong></span>${task.taskboardUnread ? `<i class="task-unread-dot" aria-label="${escapeHtml(i18nRef.current.text("有未读更新", "Unread updates"))}"></i>` : ""}</div>`;
         },
       },
     ];
@@ -186,11 +188,11 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
         ? `${ganttDate(start, i18nRef.current.locale)} — ${ganttDate(displayEnd, i18nRef.current.locale)}`
         : `${ganttDate(start, i18nRef.current.locale, true)} — ${ganttDate(displayEnd, i18nRef.current.locale, true)}`;
       const avatar = task.taskboardAssigneeType === "agent"
-        ? `<img src="codex-agent-logo.png" alt="">`
+        ? `<img class="actor-avatar-image actor-avatar-agent-image" src="codex-agent-logo.png" alt="">`
         : task.taskboardAssigneeAvatarUrl
-        ? `<img src="${escapeHtml(task.taskboardAssigneeAvatarUrl)}" alt="">`
+        ? `<img class="actor-avatar-image" src="${escapeHtml(task.taskboardAssigneeAvatarUrl)}" alt="" referrerpolicy="no-referrer">`
         : `<span>${escapeHtml(task.taskboardAssigneeInitial)}</span>`;
-      return `<span class="gantt-bar-content"><i class="gantt-bar-assignee${task.taskboardAssigneeType === "agent" ? " is-agent" : ""}" title="${escapeHtml(task.taskboardAssigneeName)}">${avatar}</i><span class="gantt-bar-copy"><strong>${escapeHtml(task.taskboardTitle)}</strong><small>${dateLabel}</small></span></span>`;
+      return `<span class="gantt-bar-content"><span class="actor-avatar actor-avatar-${task.taskboardAssigneeType} task-participant-avatar gantt-bar-assignee" title="${escapeHtml(task.taskboardAssigneeName)}">${avatar}</span><span class="gantt-bar-copy"><strong>${escapeHtml(task.taskboardTitle)}</strong><small>${dateLabel}</small></span></span>`;
     };
     const rowClass = (item: GanttTask) => {
       const task = item as TaskboardGanttTask;
@@ -342,7 +344,7 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
     const showGrid = instance.config.show_grid;
     const gridWidth = instance.config.grid_width;
     const issueColumn = instance.config.columns.find((column) => column.name === "text");
-    if (issueColumn) issueColumn.label = i18nRef.current.text("议题", "Issue");
+    if (issueColumn) issueColumn.label = i18nRef.current.text("任务", "Issue");
 
     for (const group of GANTT_GROUPS) {
       const id = `gantt-group-${group.id}`;
@@ -397,6 +399,7 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
         progress,
         taskboardStatus: group.statuses[0],
         taskboardTitle: groupLabel,
+        taskboardIdentifier: "",
         taskboardUnread: groupTasks.some((task) => presentations[task.id]?.unread),
         taskboardAssigneeType: null,
         taskboardAssigneeName: "",
@@ -413,8 +416,8 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
           id: task.id,
           parent: groupId,
           text: task.title,
-          row_height: 58,
-          bar_height: 44,
+          row_height: 72,
+          bar_height: 48,
           ...(isScheduled ? {
             start_date: localDate(task.startDate!),
             end_date: addDays(localDate(task.dueDate!), 1),
@@ -422,6 +425,7 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
           progress: itemProgress,
           taskboardStatus: task.status,
           taskboardTitle: task.title,
+          taskboardIdentifier: task.externalKey ?? task.identifier,
           taskboardUnread: presentations[task.id]?.unread ?? false,
           taskboardAssigneeType: task.assignee.type,
           taskboardAssigneeName: task.assignee.name,
@@ -501,7 +505,7 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
             <span>{text("今天", "Today")}</span>
           </div>
         )}
-        <button
+        <Button variant="ghost" size="none"
           type="button"
           className={`gantt-grid-toggle${gridCollapsed ? " is-collapsed" : ""}`}
           style={{ left: gridCollapsed ? 14 : gridWidth }}
@@ -515,13 +519,13 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
           onClick={toggleGrid}
         >
           <LinearIcon name={gridCollapsed ? "chevronRight" : "chevronLeft"} />
-        </button>
+        </Button>
         {!visibleTasks.length && (
           <div className="gantt-empty-overlay">
             <DueDateIcon color="currentColor" />
             <span>{hasActiveFilters || hideCompleted
-              ? text("当前条件下没有议题", "No issues match the current conditions")
-              : text("创建议题后，可在这里安排时间线", "Create an issue to schedule it on the timeline")}</span>
+              ? text("当前条件下没有任务", "No issues match the current conditions")
+              : text("创建任务后，可在这里安排时间线", "Create an issue to schedule it on the timeline")}</span>
           </div>
         )}
       </div>

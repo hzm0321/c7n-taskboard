@@ -1,3 +1,4 @@
+import { listCodexConversations } from "./codex-conversations.mjs";
 import {
   parseMove, parseVersionMutation, parseRelationMutation,
   parseCommentCreate, parseCommentPatch, parseTaskCreate,
@@ -12,6 +13,7 @@ import {
   slugify,
   parseProjectLabel,
   parseThreadId,
+  parseVersion,
 } from "../shared/api-fields.mjs";
 import { createHmac, randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -44,6 +46,7 @@ import {
 import { TaskboardDatabase } from "./database.mjs";
 import { createJiraConfigStore } from "./jira-config.mjs";
 import { createJiraIntegration } from "./jira-integration.mjs";
+import { createChoerodonConnection } from "./choerodon-connection.mjs";
 import { ProjectSummaryService } from "./project-summary.mjs";
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -1422,6 +1425,10 @@ export function createTaskboardServer(options = {}) {
     database,
     fetch: options.jiraFetch ?? globalThis.fetch,
   });
+  const choerodon = createChoerodonConnection({
+    configPath: path.join(resolved.dataDirectory, "choerodon-connection.json"),
+    fetch: options.choerodonFetch ?? globalThis.fetch,
+  });
   let hostRuntime = null;
   function currentHostThreadBinding(threadId) {
     if (
@@ -1988,6 +1995,141 @@ export function createTaskboardServer(options = {}) {
         return methodNotAllowed(response, ["GET", "PUT", "DELETE"]);
       }
 
+      if (pathname === "/api/local/codex-conversations") {
+        if (!["GET", "POST", "DELETE"].includes(request.method)) return methodNotAllowed(response, ["GET", "POST", "DELETE"]);
+        if ([...url.searchParams.keys()].some((key) => key !== "projectId")) {
+          throw new ApiError(400, "UNKNOWN_QUERY_PARAMETER", "会话接口只接受 projectId");
+        }
+        const projectId = validateProjectId(url.searchParams.get("projectId"));
+        const project = database.getProject(projectId);
+        if (!project) throw new ApiError(404, "PROJECT_NOT_FOUND", "当前项目不存在");
+        response.setHeader("cache-control", "no-store");
+        if (request.method === "GET") {
+          return sendJson(response, 200, await listCodexConversations(resolved.codexStatePath, project.name));
+        }
+        const input = await readJson(request);
+        assertPlainObject(input);
+        assertAllowedKeys(input, new Set(request.method === "DELETE" ? ["taskId", "version"] : ["taskId", "version", "threadId"]));
+        const taskId = stringField(input.taskId, "taskId", { required: true, maxLength: 256 });
+        const version = parseVersion(input.version);
+        const current = database.getTask(taskId);
+        if (!current || current.projectId !== projectId) throw new ApiError(404, "TASK_NOT_FOUND", "当前项目中未找到该任务");
+        if (request.method === "DELETE") {
+          const task = database.updateTask(taskId, version, {}, null, null, actorFromRequest(request));
+          events.emit("task.updated", { task });
+          return sendJson(response, 200, { task });
+        }
+        const threadId = stringField(input.threadId, "threadId", { required: true, maxLength: 256 });
+        if (current.threadId || current.threadBinding || current.legacyLocalThreadId) {
+          throw new ApiError(409, "THREAD_ALREADY_LINKED", "该任务已经关联了对话，请刷新详情");
+        }
+        const catalog = await listCodexConversations(resolved.codexStatePath, project.name);
+        const thread = catalog.threads.find((candidate) => candidate.id === threadId);
+        if (!thread) throw new ApiError(409, "CODEX_THREAD_UNAVAILABLE", "该会话已不属于当前同名项目分组，请重新打开弹框");
+        const task = database.updateTask(taskId, version, {}, threadId, thread.binding, actorFromRequest(request));
+        events.emit("task.updated", { task });
+        return sendJson(response, 200, { task });
+      }
+
+      if (pathname === "/api/local/choerodon-sync") {
+        if (!["GET", "POST"].includes(request.method)) return methodNotAllowed(response, ["GET", "POST"]);
+        if ([...url.searchParams.keys()].some((key) => key !== "projectId")) {
+          throw new ApiError(400, "UNKNOWN_QUERY_PARAMETER", "同步接口只接受 projectId");
+        }
+        const projectId = validateProjectId(url.searchParams.get("projectId"));
+        const target = database.getProject(projectId);
+        if (!target) throw new ApiError(404, "PROJECT_NOT_FOUND", "当前项目不存在");
+        if (projectId === JIRA_PROJECT_ID) throw new ApiError(400, "INVALID_PROJECT", "请选择本地项目接收猪齿鱼任务");
+        response.setHeader("cache-control", "no-store");
+        let input;
+        if (request.method === "POST") {
+          input = await readJson(request);
+          assertPlainObject(input);
+          assertAllowedKeys(input, new Set(["issueIds", "sourceKey"]));
+          if (!Array.isArray(input.issueIds) || !input.issueIds.length || input.issueIds.some((id) => typeof id !== "string" || !/^\d{1,32}$/.test(id)) || typeof input.sourceKey !== "string") {
+            throw new ApiError(400, "INVALID_FIELD", "请勾选要同步的猪齿鱼任务");
+          }
+        }
+        const preview = await choerodon.boardIssues();
+        const sourceKey = `${preview.organization.id}:${preview.project.id}:${preview.board.id}`;
+        const origin = JSON.stringify([preview.organization.id, preview.project.id, projectId]);
+        const existing = new Map(database.getChoerodonTasks(origin).map((entry) => [entry.externalId, entry.task]));
+        if (request.method === "GET") {
+          return sendJson(response, 200, { ...preview, sourceKey, issues: preview.issues.map((issue) => ({
+            ...issue, localTaskId: existing.get(issue.id)?.id ?? null,
+            localIdentifier: existing.get(issue.id)?.identifier ?? null,
+          })) });
+        }
+        if (input.sourceKey !== sourceKey) throw new ApiError(409, "CHOERODON_BOARD_CHANGED", "猪齿鱼连接配置已变更，请关闭弹框后重新加载");
+        const byId = new Map(preview.issues.map((issue) => [issue.id, issue]));
+        const selected = [...new Set(input.issueIds)].map((id) => {
+          const issue = byId.get(id);
+          if (!issue) throw new ApiError(409, "CHOERODON_ISSUE_CHANGED", "部分任务已不在当前看板，请关闭弹框后重新加载");
+          return issue;
+        });
+        const actor = actorFromRequest(request);
+        const result = { created: 0, updated: 0, unchanged: 0, tasks: [] };
+        for (const issue of selected) {
+          let task = existing.get(issue.id);
+          if (task) {
+            if (task.projectId !== projectId) throw new ApiError(409, "CHOERODON_TASK_MOVED", `关联任务 ${task.identifier} 已移到其他项目`);
+            const fields = { title: issue.title, priority: issue.priority, assignee: issue.assignee, startDate: issue.startDate, dueDate: issue.dueDate };
+            const changes = Object.fromEntries(Object.entries(fields).filter(([key, value]) => JSON.stringify(task[key]) !== JSON.stringify(value)));
+            if (Object.keys(changes).length) {
+              task = database.updateTask(task.id, task.version, changes, undefined, undefined, actor);
+              events.emit("task.updated", { task });
+              result.updated += 1;
+            } else result.unchanged += 1;
+          } else {
+            const { assigneeTarget, ...taskInput } = parseTaskCreate({
+              projectId, title: issue.title, status: "todo", priority: issue.priority,
+              description: `来源：猪齿鱼 / ${preview.project.name} / ${preview.board.name}\n任务编号：${issue.key}\n猪齿鱼任务 ID：${issue.id}`,
+              startDate: issue.startDate, dueDate: issue.dueDate,
+            }, parseDevelopmentContext);
+            task = database.createTask({ ...taskInput, actor, assignee: issue.assignee,
+              external: { source: "choerodon", origin, id: issue.id, key: issue.key },
+            });
+            events.emit("task.created", { task });
+            result.created += 1;
+          }
+          result.tasks.push({ issueId: issue.id, id: task.id, identifier: task.identifier });
+        }
+        return sendJson(response, 200, result);
+      }
+
+      if (pathname === "/api/local/choerodon-connection/login") {
+        assertNoQuery(url.searchParams, pathname);
+        response.setHeader("cache-control", "no-store");
+        if (request.method !== "POST") return methodNotAllowed(response, ["POST"]);
+        const input = await readJson(request);
+        assertPlainObject(input);
+        assertAllowedKeys(input, new Set(["username", "password"]));
+        return sendJson(response, 200, await choerodon.login(input));
+      }
+
+      if (pathname === "/api/local/choerodon-connection" || pathname === "/api/local/choerodon-connection/options") {
+        assertNoQuery(url.searchParams, pathname);
+        response.setHeader("cache-control", "no-store");
+        const isOptions = pathname.endsWith("/options");
+        if (!isOptions && request.method === "GET") {
+          return sendJson(response, 200, { connection: await choerodon.status() });
+        }
+        if (request.method !== (isOptions ? "POST" : "PUT")) {
+          return methodNotAllowed(response, isOptions ? ["POST"] : ["GET", "PUT"]);
+        }
+        const input = await readJson(request);
+        assertPlainObject(input);
+        assertAllowedKeys(input, new Set(isOptions
+          ? ["authorization", "resource", "organizationId", "projectId"]
+          : ["authorization", "organizationId", "projectId", "boardId"]));
+        if (input.authorization !== undefined && typeof input.authorization !== "string") {
+          throw new ApiError(400, "INVALID_FIELD", "Authorization 必须是文本");
+        }
+        return sendJson(response, 200, isOptions
+          ? await choerodon.options(input)
+          : { connection: await choerodon.configure(input) });
+      }
+
       if (pathname === "/api/local/jira-connection") {
         if ([...url.searchParams.keys()].length > 0) {
           throw new ApiError(400, "UNKNOWN_QUERY_PARAMETER", "Jira 连接接口不接受查询参数");
@@ -2484,7 +2626,7 @@ export function createTaskboardServer(options = {}) {
             throw new ApiError(
               409,
               "JIRA_CREATE_UNAVAILABLE",
-              "请在 Jira 中新建议题，Taskboard 当前只同步已分配给你的任务",
+              "请在 Jira 中新建任务，Taskboard 当前只同步已分配给你的任务",
             );
           }
           const task = database.createTask({

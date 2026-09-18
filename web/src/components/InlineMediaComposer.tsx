@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   forwardRef,
   useEffect,
@@ -163,14 +164,14 @@ function PendingImageBlock({
       data-inline-media-segment={segment.id}
     >
       {previewUrl && <img src={previewUrl} alt={segment.file.name} draggable={false} />}
-      <button
+      <Button variant="ghost" size="none"
         type="button"
         disabled={disabled}
         aria-label={text(`移除 ${segment.file.name}`, `Remove ${segment.file.name}`)}
         onClick={onRemove}
       >
         <LinearIcon name="close" />
-      </button>
+      </Button>
     </figure>
   );
 }
@@ -193,14 +194,14 @@ function PersistedImageBlock({
       data-inline-media-segment={segment.id}
     >
       <img src={resolvePersistedAttachmentUrl(segment.url)} alt={segment.alt} draggable={false} />
-      <button
+      <Button variant="ghost" size="none"
         type="button"
         disabled={disabled}
         aria-label={text(`移除 ${segment.alt || "图片"}`, `Remove ${segment.alt || "image"}`)}
         onClick={onRemove}
       >
         <LinearIcon name="close" />
-      </button>
+      </Button>
     </figure>
   );
 }
@@ -230,14 +231,14 @@ function PendingVideoBlock({
       data-inline-media-segment={segment.id}
     >
       {previewUrl && <video src={previewUrl} aria-label={segment.file.name} controls />}
-      <button
+      <Button variant="ghost" size="none"
         type="button"
         disabled={disabled}
         aria-label={text(`移除 ${segment.file.name}`, `Remove ${segment.file.name}`)}
         onClick={onRemove}
       >
         <LinearIcon name="close" />
-      </button>
+      </Button>
     </figure>
   );
 }
@@ -264,14 +265,14 @@ function PersistedVideoBlock({
         aria-label={segment.filename}
         controls
       />
-      <button
+      <Button variant="ghost" size="none"
         type="button"
         disabled={disabled}
         aria-label={text(`移除 ${segment.filename}`, `Remove ${segment.filename}`)}
         onClick={onRemove}
       >
         <LinearIcon name="close" />
-      </button>
+      </Button>
     </figure>
   );
 }
@@ -302,14 +303,14 @@ function AttachmentBlock({
         <strong>{filename}</strong>
         {size !== null && <span>{fileSize(size)}</span>}
       </span>
-      <button
+      <Button variant="ghost" size="none"
         type="button"
         disabled={disabled}
         aria-label={text(`移除 ${filename}`, `Remove ${filename}`)}
         onClick={onRemove}
       >
         <LinearIcon name="close" />
-      </button>
+      </Button>
     </span>
   );
 }
@@ -390,7 +391,7 @@ function ComposerReferenceChip({
       : text("不支持的引用", "Unsupported reference");
 
   return (
-    <button
+    <Button variant="ghost" size="none"
       type="button"
       className={`inline-media-composer-reference is-${segment.type}`}
       contentEditable={false}
@@ -412,7 +413,7 @@ function ComposerReferenceChip({
         ? <ProjectIcon color="currentColor" />
         : <ConversationIcon color="currentColor" />}
       <span>{segment.label}</span>
-    </button>
+    </Button>
   );
 }
 
@@ -1196,7 +1197,7 @@ export const InlineMediaComposer = forwardRef<InlineMediaComposerHandle, InlineM
       for (const selection of completionSelections) {
         const candidate = selection.type === "candidate" ? selection.candidate : null;
         const groupId = candidate ? `codex:${candidate.group}` : "taskboard:issues";
-        const groupLabel = candidate?.group ?? text("Taskboard 议题", "Taskboard issues");
+        const groupLabel = candidate?.group ?? text("Taskboard 任务", "Taskboard issues");
         let group = groupsById.get(groupId);
         if (!group) {
           group = { id: groupId, label: groupLabel, options: [] };
