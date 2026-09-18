@@ -269,13 +269,22 @@ function DashboardSummary({
 
   return (
     <section className="dashboard-codex-summary" aria-label={text("Codex 项目总结", "Codex project summary")}>
+      <div className="dashboard-codex-header">
+        <div className="dashboard-codex-title">
+          <img className="dashboard-codex-mark" src="codex-agent-logo.png" alt="" aria-hidden="true" />
+          <span>{text("Codex 智能简报", "Codex Project Insights")}</span>
+        </div>
+        <span className="dashboard-codex-badge">
+          <span className="dashboard-codex-pulse" aria-hidden="true" />
+          {text("实时洞察", "Live")}
+        </span>
+      </div>
       <div className="dashboard-summary-bubble">
         <p
           className={summaryTyping ? "is-typing" : undefined}
           aria-label={summaryReady ? summary : text("Codex 正在整理项目总结", "Codex is preparing the project summary")}
         >{displayedSummary}</p>
       </div>
-      <img className="dashboard-codex-mark" src="codex-agent-logo.png" alt="" aria-hidden="true" />
     </section>
   );
 }
@@ -656,7 +665,7 @@ export function DashboardView({
       const firstDay = week.find((day) => day.date.getDate() === 1);
       return firstDay ? [{ weekIndex, label: monthFormatter.format(firstDay.date) }] : [];
     });
-    if (monthMarkers[0]?.weekIndex !== 0) {
+    if (monthMarkers.length === 0 || monthMarkers[0].weekIndex >= 3) {
       monthMarkers.unshift({ weekIndex: 0, label: monthFormatter.format(contributionStart) });
     }
 
@@ -782,10 +791,13 @@ export function DashboardView({
             const percent = activeTasks.length ? Math.round((metric.value / activeTasks.length) * 100) : 0;
             return (
               <article className={`dashboard-metric tone-${metric.tone}`} key={metric.label}>
-                <span className="dashboard-metric-label">{metric.label}</span>
+                <div className="dashboard-metric-header">
+                  <span className="dashboard-metric-dot" aria-hidden="true" />
+                  <span className="dashboard-metric-label">{metric.label}</span>
+                </div>
                 <div className="dashboard-metric-value">
                   <strong>{metric.value}</strong>
-                  <b>{percent}%</b>
+                  <b className="dashboard-metric-percent">{percent}%</b>
                 </div>
                 <span className="dashboard-metric-meter" aria-hidden="true">
                   <i style={{ width: `${percent}%` }} />
@@ -901,7 +913,7 @@ export function DashboardView({
                           `${item.count} completed ${item.count === 1 ? "issue" : "issues"}`,
                         )}</small>
                       </span>
-                      <span className={`dashboard-role-share tone-${index % 5}`}>
+                      <span className={`dashboard-role-share${item.count > 0 ? ` tone-${index % 5}` : " is-zero"}`}>
                         {Math.round((item.count / completedTotal) * 100)}%
                       </span>
                     </div>
