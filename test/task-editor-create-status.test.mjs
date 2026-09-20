@@ -34,6 +34,7 @@ test("a new status entry overrides the old draft status and restores the remaini
   const server = await createServer({
     root: projectRoot,
     configFile: false,
+    resolve: { alias: { "@": path.join(projectRoot, "web/src") } },
     logLevel: "error",
     server: { host: "127.0.0.1", port: 0, strictPort: true },
   });
