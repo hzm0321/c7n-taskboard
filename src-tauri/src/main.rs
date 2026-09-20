@@ -75,7 +75,7 @@ const STOP_TIMEOUT: Duration = Duration::from_secs(5);
 const LAUNCHER_STOP_TIMEOUT: Duration = Duration::from_secs(36);
 const UPDATE_CHECK_INTERVAL: Duration = Duration::from_secs(30 * 60);
 const BETA_UPDATER_ENDPOINT: &str =
-    "https://raw.githubusercontent.com/chuspeeism/dashi-taskboard/beta-updater/latest.json";
+    "https://raw.githubusercontent.com/hzm0321/c7n-taskboard/beta-updater/latest.json";
 // Unique whole-directory snapshots shipped from app-v0.2.0 through v1.1.2.
 const KNOWN_TASKBOARD_SKILL_DIGESTS: [&str; 6] = [
     "eeaaa5d71a2c47688bf62a5eb9f45e9138fe49eb636a46cfd6af8a0f8853e2e0",
@@ -239,7 +239,7 @@ struct UpdateDialog {
 impl UpdateDialog {
     fn prompt(_app: &AppHandle, version: &str) -> Option<Self> {
         let message = format!(
-            "发现新版本 Codex Taskboard {version}。是否现在更新并重启？"
+            "发现新版本 C7N Codex {version}。是否现在更新并重启？"
         );
         let (response, result) = std::sync::mpsc::channel();
         let dialog = run_on_main(move |mtm| {
@@ -252,7 +252,7 @@ impl UpdateDialog {
             progress_indicator.setFrameSize(NSSize::new(280.0, 20.0));
             progress_indicator.sizeToFit();
             progress_indicator.setDisplayedWhenStopped(true);
-            alert.setMessageText(&NSString::from_str("Codex Taskboard 更新"));
+            alert.setMessageText(&NSString::from_str("C7N Codex 更新"));
             alert.setInformativeText(&NSString::from_str(&message));
             let install_button = alert.addButtonWithTitle(&NSString::from_str("立即更新"));
             let defer_button = alert.addButtonWithTitle(&NSString::from_str("稍后"));
@@ -359,9 +359,9 @@ impl UpdateDialog {
     fn prompt(app: &AppHandle, version: &str) -> Option<Self> {
         app.dialog()
             .message(format!(
-                "发现新版本 Codex Taskboard {version}。是否现在更新并重启？"
+                "发现新版本 C7N Codex {version}。是否现在更新并重启？"
             ))
-            .title("Codex Taskboard 更新")
+            .title("C7N Codex 更新")
             .kind(MessageDialogKind::Info)
             .buttons(MessageDialogButtons::OkCancelCustom(
                 "立即更新".into(),
@@ -589,7 +589,7 @@ fn take_macos_bundle_migration_marker() -> Result<Option<MacosBundleMigration>, 
         .map_err(|error| format!("无法解析当前可执行文件路径：{error}"))?;
     let current_app = macos_app_path_from_executable(&current_executable)
         .ok_or_else(|| "当前可执行文件不在 macOS App bundle 内".to_string())?;
-    if current_app.file_name() != Some(std::ffi::OsStr::new("Codex Taskboard Beta.app")) {
+    if current_app.file_name() != Some(std::ffi::OsStr::new("C7N Codex Beta.app")) {
         return Err(format!(
             "macOS App bundle migration marker 只能由改名后的 Beta App 恢复：{}",
             current_app.display()
@@ -601,7 +601,7 @@ fn take_macos_bundle_migration_marker() -> Result<Option<MacosBundleMigration>, 
     let expected_source_executable = current_app
         .parent()
         .ok_or_else(|| format!("无法定位 App 上级目录：{}", current_app.display()))?
-        .join("Codex Taskboard.app")
+        .join("C7N Codex.app")
         .join(relative_executable);
     if source_executable != expected_source_executable {
         return Err(format!(
@@ -633,10 +633,10 @@ fn migrate_macos_beta_app_bundle_name() -> Result<Option<MacosBundleMigration>, 
     let Some(current_app) = macos_app_path_from_executable(&current_executable) else {
         return Ok(None);
     };
-    if current_app.file_name() == Some(std::ffi::OsStr::new("Codex Taskboard Beta.app")) {
+    if current_app.file_name() == Some(std::ffi::OsStr::new("C7N Codex Beta.app")) {
         return Ok(None);
     }
-    if current_app.file_name() != Some(std::ffi::OsStr::new("Codex Taskboard.app")) {
+    if current_app.file_name() != Some(std::ffi::OsStr::new("C7N Codex.app")) {
         return Err(format!(
             "Beta App 当前路径名称不受支持：{}",
             current_app.display()
@@ -645,7 +645,7 @@ fn migrate_macos_beta_app_bundle_name() -> Result<Option<MacosBundleMigration>, 
     let destination_app = current_app
         .parent()
         .ok_or_else(|| format!("无法定位 App 上级目录：{}", current_app.display()))?
-        .join("Codex Taskboard Beta.app");
+        .join("C7N Codex Beta.app");
     let executable_name = current_executable
         .file_name()
         .ok_or_else(|| format!("无法定位 App 可执行文件名：{}", current_executable.display()))?
@@ -683,7 +683,7 @@ fn migrate_macos_beta_app_bundle_name() -> Result<Option<MacosBundleMigration>, 
         .map(PathBuf::from)
         .ok_or_else(|| "HOME is unavailable".to_string())?;
     let beta_autostart_was_enabled = home_directory
-        .join("Library/LaunchAgents/Codex Taskboard Beta.plist")
+        .join("Library/LaunchAgents/C7N Codex Beta.plist")
         .is_file();
     let beta_autostart_marker = if beta_autostart_was_enabled { "1" } else { "0" };
 
@@ -837,7 +837,7 @@ fn resolve_legacy_skill_conflict(
             "检测到旧位置中的 manage-taskboard Skill 与当前 App 内置版本不同，可能包含你的修改。\n\n为避免 Codex 同时发现两个版本，Taskboard 会把旧副本完整保留到：\n\n{}\n\n选择退出不会改动旧副本，也不会启动 Codex。",
             backup_path.display()
         ))
-        .title("Codex Taskboard Skill 冲突")
+        .title("C7N Codex Skill 冲突")
         .kind(MessageDialogKind::Warning)
         .buttons(MessageDialogButtons::OkCancelCustom(
             "保留备份并继续".into(),
@@ -981,7 +981,7 @@ fn sync_macos_autostart_path(
     }
 
     let launch_agents = home_directory.join("Library/LaunchAgents");
-    let stable_entry = launch_agents.join("Codex Taskboard.plist");
+    let stable_entry = launch_agents.join("C7N Codex.plist");
     let migrate_stable_entry = macos_launch_agent_executable(&stable_entry).as_deref()
         == Some(migration.source_executable.as_path());
 
@@ -1636,7 +1636,7 @@ fn start_launcher_locked(
         let restart = app
             .dialog()
             .message("需要重新启动 Codex 才能显示任务面板")
-            .title("Codex Taskboard")
+            .title("C7N Codex")
             .kind(MessageDialogKind::Info)
             .buttons(MessageDialogButtons::OkCancelCustom(
                 "重新启动 Codex".into(),
@@ -1887,7 +1887,7 @@ fn start_launcher_locked(
             });
             show_error_dialog(
                 &event_app,
-                "Codex Taskboard 恢复失败",
+                "C7N Codex 恢复失败",
                 &format!("任务面板进程无法恢复：{error}\n\n请重新打开 App。"),
             );
         }
@@ -2268,7 +2268,7 @@ async fn offer_update(
             if show_current_version {
                 show_error_dialog(
                     app,
-                    "Codex Taskboard 更新检查失败",
+                    "C7N Codex 更新检查失败",
                     &format!("无法检查更新。请稍后重试。\n\n{error}"),
                 );
                 finish_update_flow(state, check_update, quit);
@@ -2283,7 +2283,7 @@ async fn offer_update(
         let current_version = state.snapshot.lock().unwrap().version.clone();
         app.dialog()
             .message(format!("当前版本 {current_version} 已是最新版本。"))
-            .title("Codex Taskboard 更新")
+            .title("C7N Codex 更新")
             .buttons(MessageDialogButtons::Ok)
             .blocking_show();
         finish_update_flow(state, check_update, quit);
@@ -2315,7 +2315,7 @@ async fn offer_update(
             update_dialog.close();
             show_error_dialog(
                 app,
-                "Codex Taskboard 更新准备失败",
+                "C7N Codex 更新准备失败",
                 &format!("无法下载或验证更新。请稍后重试。\n\n{error}"),
             );
             finish_update_flow(state, check_update, quit);
@@ -2339,7 +2339,7 @@ async fn offer_update(
             update_dialog.close();
             show_error_dialog(
                 app,
-                "Codex Taskboard 更新失败",
+                "C7N Codex 更新失败",
                 &format!(
                     "更新未完成。{service_message}\n\n请稍后重试。详情见启动日志。\n\n{error}"
                 ),
@@ -2508,7 +2508,7 @@ fn main() {
             TrayIconBuilder::new()
                 .icon(tauri::include_image!("icons/tray-codex.png"))
                 .icon_as_template(true)
-                .tooltip("Codex Taskboard")
+                .tooltip("C7N Codex")
                 .menu(&tray_menu)
                 .on_menu_event(move |app, event| match event.id().as_ref() {
                     "check-update" => {
@@ -2534,7 +2534,7 @@ fn main() {
                                 append_log(&state, &format!("Launcher menu open failed: {error}"));
                                 show_error_dialog(
                                     &app,
-                                    "Codex Taskboard 打开失败",
+                                    "C7N Codex 打开失败",
                                     &format!("{error}\n\n请确认 Codex 正在运行。"),
                                 );
                             }
@@ -2552,7 +2552,7 @@ fn main() {
                                     &state,
                                     &format!("Launcher menu browser open failed: {error}"),
                                 );
-                                show_error_dialog(&app, "Codex Taskboard 网页打开失败", &error);
+                                show_error_dialog(&app, "C7N Codex 网页打开失败", &error);
                             }
                         });
                     }
@@ -2570,7 +2570,7 @@ fn main() {
                                 );
                                 show_error_dialog(
                                     &app,
-                                    "Codex Taskboard 启动失败",
+                                    "C7N Codex 启动失败",
                                     &format!("{error}\n\n请确认官方 Codex/ChatGPT App 已安装。"),
                                 );
                             }
@@ -2606,7 +2606,7 @@ fn main() {
                             }
                         };
                         if let Some(error) = operation_error.or(sync_error) {
-                            show_error_dialog(app, "Codex Taskboard 自启动设置失败", &error);
+                            show_error_dialog(app, "C7N Codex 自启动设置失败", &error);
                         }
                     }
                     "quit" => {
@@ -2654,7 +2654,7 @@ fn main() {
                         Err(error) => {
                             show_error_dialog(
                                 &app_handle,
-                                "Codex Taskboard Skill 更新失败",
+                                "C7N Codex Skill 更新失败",
                                 &format!("无法保留旧 Skill：{error}"),
                             );
                             app_handle.exit(1);
@@ -2670,7 +2670,7 @@ fn main() {
                     });
                     show_error_dialog(
                         &app_handle,
-                        "Codex Taskboard 启动失败",
+                        "C7N Codex 启动失败",
                         &format!(
                             "{error}\n\n请确认官方 Codex/ChatGPT App 已安装。详情见启动日志。"
                         ),
@@ -2688,7 +2688,7 @@ fn main() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("failed to build Codex Taskboard");
+        .expect("failed to build C7N Codex");
 
     app.run(|app_handle, event| match event {
         #[cfg(target_os = "macos")]
@@ -2701,7 +2701,7 @@ fn main() {
                 append_log(&state, &format!("Launcher panel reopen failed: {error}"));
                 show_error_dialog(
                     app_handle,
-                    "Codex Taskboard 打开失败",
+                    "C7N Codex 打开失败",
                     &format!("{error}\n\n请确认官方 Codex/ChatGPT App 已安装。"),
                 );
             }

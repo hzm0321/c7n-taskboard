@@ -1,4 +1,4 @@
-export function releaseMetadata(packageVersion, releaseTag, stableProductName = "Codex Taskboard") {
+export function releaseMetadata(packageVersion, releaseTag, stableProductName = "C7N Codex") {
   const stableTag = `v${packageVersion}`;
   const betaPrefix = `${stableTag}-beta.`;
   const betaNumber = releaseTag.startsWith(betaPrefix)
@@ -9,8 +9,8 @@ export function releaseMetadata(packageVersion, releaseTag, stableProductName = 
   }
 
   const prerelease = Boolean(betaNumber);
-  const productName = prerelease ? "Codex Taskboard Beta" : stableProductName;
-  const prefix = `Codex.Taskboard_${packageVersion}`;
+  const productName = prerelease ? `${stableProductName} Beta` : stableProductName;
+  const prefix = `${stableProductName.replaceAll(" ", ".")}_${packageVersion}`;
   const linuxDeb = `${prefix}_Ubuntu-24.04-x64.deb`;
   const linuxAppImage = `${prefix}_Ubuntu-24.04-x64.AppImage`;
   const macosUpdater = `${prefix}_universal.app.tar.gz`;

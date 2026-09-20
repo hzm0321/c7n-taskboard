@@ -3393,7 +3393,7 @@ async function main() {
           nativeCodexBrowser = false;
           idleAfterNormalExit = true;
           console.error(
-            "Waiting for Codex after exit; open Codex Taskboard again to restart it.",
+            "Waiting for Codex after exit; open C7N Codex again to restart it.",
           );
           emitLauncherEvent("waitingForCodex");
           continue;
@@ -3475,7 +3475,7 @@ async function main() {
             codexProcess = null;
             idleAfterNormalExit = true;
             console.error(
-              "Waiting for Codex after normal exit; open Codex Taskboard again to restart it.",
+              "Waiting for Codex after normal exit; open C7N Codex again to restart it.",
             );
             emitLauncherEvent("waitingForCodex");
             continue;
@@ -3511,7 +3511,7 @@ async function main() {
             if (exitCode === 0) {
               idleAfterNormalExit = true;
               console.error(
-                "Waiting for Codex after normal exit; open Codex Taskboard again to restart it.",
+                "Waiting for Codex after normal exit; open C7N Codex again to restart it.",
               );
               emitLauncherEvent("waitingForCodex");
               continue;
@@ -3539,7 +3539,7 @@ async function main() {
           codexAppPid = null;
           idleAfterNormalExit = true;
           console.error(
-            "Waiting for Codex after exit; open Codex Taskboard again to restart it.",
+            "Waiting for Codex after exit; open C7N Codex again to restart it.",
           );
           emitLauncherEvent("waitingForCodex");
           continue;
