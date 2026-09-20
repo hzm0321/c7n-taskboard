@@ -8,14 +8,12 @@ import path from "node:path";
 const scriptPath = fileURLToPath(import.meta.url);
 const projectRoot = path.resolve(path.dirname(scriptPath), "..");
 const appPath = process.argv[2] ? path.resolve(process.argv[2]) : null;
-const identity = process.env.APPLE_SIGNING_IDENTITY?.trim();
 const releasePolicy = JSON.parse(readFileSync(
   path.join(projectRoot, "src-tauri", "release.json"),
   "utf8",
 ));
 
 if (!appPath) throw new Error("Usage: sign-macos-app.mjs <App.app>");
-if (!identity) throw new Error("APPLE_SIGNING_IDENTITY is required");
 
 const nodePath = path.join(appPath, "Contents", "MacOS", "node");
 const launcherPath = path.join(appPath, "Contents", "MacOS", "codex-taskboard-launcher");
@@ -62,24 +60,24 @@ for (const entitlement of [
 run("/usr/bin/xattr", ["-crs", appPath]);
 run("/usr/bin/codesign", [
   "--force",
-  "--timestamp",
+  "--timestamp=none",
   "--options",
   "runtime",
   "--entitlements",
   entitlementsPath,
   "--sign",
-  identity,
+  "-",
   launcherPath,
 ]);
 run("/usr/bin/codesign", [
   "--force",
-  "--timestamp",
+  "--timestamp=none",
   "--options",
   "runtime",
   "--entitlements",
   entitlementsPath,
   "--sign",
-  identity,
+  "-",
   appPath,
 ]);
 
@@ -91,8 +89,8 @@ if (!signingDetails(nodePath).includes(`TeamIdentifier=${releasePolicy.nodeTeamI
   throw new Error("Signing the App replaced the Node.js Foundation signature");
 }
 for (const targetPath of [launcherPath, appPath]) {
-  if (!signingDetails(targetPath).includes(`TeamIdentifier=${releasePolicy.appleTeamId}`)) {
-    throw new Error(`Signed target does not use Apple Team ${releasePolicy.appleTeamId}`);
+  if (!signingDetails(targetPath).includes("Signature=adhoc")) {
+    throw new Error(`Signed target does not have an ad-hoc signature: ${targetPath}`);
   }
 }
 const signedNodeEntitlements = entitlements(nodePath);
@@ -110,4 +108,4 @@ run(nodePath, [
   "let total=0; const add=(value)=>value+1; for(let i=0;i<5000000;i+=1) total=add(total); if(total!==5000000) process.exit(1)",
 ]);
 
-console.log(`Signed and verified ${appPath}`);
+console.log(`Ad-hoc signed and verified ${appPath}`);

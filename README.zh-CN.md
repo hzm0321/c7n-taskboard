@@ -109,15 +109,36 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 npm run app:build
 ```
 
-从 Finder 打开 `src-tauri/target/universal-apple-darwin/release/bundle/macos/Codex Taskboard.app`。DMG 位于 `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`。如果只需安装稳定版，请从 [GitHub Releases](https://github.com/chuspeeism/dashi-taskboard/releases/latest) 下载当前 DMG。
+从 Finder 打开 `src-tauri/target/universal-apple-darwin/release/bundle/macos/C7N Codex.app`。DMG 位于 `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`。如果只需安装稳定版，请从 [GitHub Releases](https://github.com/hzm0321/c7n-taskboard/releases/latest) 下载当前 DMG。
 
 该 App 包含自己的 Node 运行时、Taskboard 服务、构建后的 Web UI、Skill、CLI 包装器和注入脚本。它会启动服务，复用已打开且有可用 CDP 渲染器的 Codex；普通 Codex 没有 CDP 时，它会在该实例的原生浏览面板中打开 Taskboard；没有打开 Codex 时，它会启动官方 Codex App。有可用 CDP 时，它会等待渲染器并注入侧边栏入口，然后在不显示终端窗口的情况下打开面板。该 App 可以复制到本检出目录之外；目标 Mac 只需安装官方 Codex App，不需要此仓库、系统 Node 安装或单独的 Codex CLI 安装。Taskboard 数据存储在 `~/Library/Application Support/Codex Taskboard`，启动器输出写入 `~/Library/Logs/Codex Taskboard/codex-taskboard-launcher.log`。
 
-本地构建使用 ad-hoc 代码签名进行直接验证。公开的 macOS 下载仍需要 Developer ID 签名和 Apple 公证。
+### macOS 首次打开
+
+本地构建和 GitHub Releases 均使用 **Ad-hoc 签名，不进行 Apple 公证**，无需 Apple 开发者账号。App 和 DMG 均会签名，内置 Node 保留官方签名；自动更新使用独立的 Tauri 签名密钥。
+
+从本仓库 Releases 下载 DMG，将 App 拖入「应用程序」。macOS 15 及以上首次被拦截后，进入「系统设置 → 隐私与安全性」，点击对应 App 的「仍要打开」并确认；macOS 14 可尝试 Control 点击 App →「打开」。
+
+遇到“应用已损坏”时，先重新下载并检查来源、签名；确认是下载隔离导致后，可仅移除该 App 的隔离属性。完整步骤见 [macOS 首次打开指引](docs/macos-first-open.md)，发布流程也会自动将这份指引加入 Release Notes。
+
+### 开发热更新与 GitHub 自动更新
+
+`npm run dev` 使用 Vite 更新浏览器中的前端模块，并通过 Node `--watch` 在后端文件变化后重启服务，不依赖 GitHub。桌面 App 则在启动时、每 30 分钟及点击“检查更新”时检查版本，下载并验证签名后安装、重启。
+
+本仓库的稳定版更新源为 `https://github.com/hzm0321/c7n-taskboard/releases/latest/download/latest.json`，Beta 更新源为 `https://raw.githubusercontent.com/hzm0321/c7n-taskboard/beta-updater/latest.json`。上传源码不会生成这些更新文件，需要运行 `.github/workflows/release-macos.yml` 发布流程。
+
+首次发布前需要完成以下配置：
+
+- 配置自己的 Tauri 更新签名密钥，将公钥写入 `src-tauri/tauri.conf.json` 的 `plugins.updater.pubkey`，私钥及密码保存为 Actions Secrets `TAURI_SIGNING_PRIVATE_KEY`、`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`。本仓库已配置独立公钥，发布时必须使用与它匹配的私钥；不要提交私钥或在后续发布时随意重新生成密钥。
+- macOS 使用 Ad-hoc 签名，无需配置 `APPLE_*` 或 `KEYCHAIN_PASSWORD` Secrets。首次安装需要按上述指引在系统中放行。
+- 配置发布环境 `macos-release` 和可读取仓库 Ruleset 的 `RELEASE_RULESET_TOKEN`；启用 immutable releases，并为 `v*` 标签配置禁止更新和删除的规则，排除列表和绕过者列表均为空。
+- 在仓库默认分支（当前为 `c7n`）上准备一致的应用版本，先推送 `v<版本>-beta.1` 发布 Beta，再从同一提交推送 `v<版本>` 发布稳定版；版本必须高于已发布的稳定版。
+
+已安装的上游 App 仍使用其内置更新地址和公钥，需要先手动安装一次本仓库构建的 App，后续才能接收本仓库的更新。
 
 ### Linux App：Ubuntu 24.04 x64 软件包
 
-Linux 桌面版第一版仅支持 Ubuntu 24.04 LTS x64。请先安装官方 ChatGPT 桌面版 `.deb`，并确认运行 `chatgpt` 可以打开它。然后从 [GitHub Releases](https://github.com/chuspeeism/dashi-taskboard/releases/latest) 下载 Codex Taskboard `.deb` 或 `.AppImage`。请将以下命令中的 `<file>` 替换为下载的文件名。
+Linux 桌面版第一版仅支持 Ubuntu 24.04 LTS x64。请先安装官方 ChatGPT 桌面版 `.deb`，并确认运行 `chatgpt` 可以打开它。然后从 [GitHub Releases](https://github.com/hzm0321/c7n-taskboard/releases/latest) 下载 C7N Codex `.deb` 或 `.AppImage`。请将以下命令中的 `<file>` 替换为下载的文件名。
 
 安装 `.deb` 软件包：
 

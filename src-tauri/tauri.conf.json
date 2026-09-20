@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Codex Taskboard",
+  "productName": "C7N Codex",
   "version": "1.1.24",
   "identifier": "com.chuspeeism.codex-taskboard",
   "app": {
@@ -25,9 +25,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIzOTE3QTI2OTdFNUNDOUQKUldTZHpPV1hKbnFSSStlc3dBblBhVzEydlRGR29seE5EeDhyUFR4NUZDT29kSHQ3MTFES2xuK0IK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc5OTIxQjczN0Q4NENFOUMKUldTY3pvUjljeHVTZVZRNDVRUmJYeDRsZnJ1cW95aHZRblZTMm5CaU5pTk9uVHgxZGhNYzFTRUEK",
       "endpoints": [
-        "https://github.com/chuspeeism/dashi-taskboard/releases/latest/download/latest.json"
+        "https://github.com/hzm0321/c7n-taskboard/releases/latest/download/latest.json"
       ]
     }
   }

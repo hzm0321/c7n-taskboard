@@ -1792,6 +1792,10 @@
 
   function mountActivePage() {
     if (!active) return false;
+    if (document.querySelector('nav[aria-label="Settings"], nav[aria-label="设置"]')) {
+      closeTaskboard(false);
+      return false;
+    }
     if (!page) page = createPage();
     const mount = findPageMount();
     if (!mount) return false;

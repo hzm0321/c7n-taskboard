@@ -41,6 +41,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_BRANCH: ${{ github.event.repository.default_branch }}
           TAG_CREATED: ${{ github.event.created }}
           TAG_DELETED: ${{ github.event.deleted }}
           TAG_FORCED: ${{ github.event.forced }}
@@ -50,13 +51,13 @@ jobs:
             echo "发布标签必须是首次创建，不能删除或强制更新。" >&2
             exit 1
           fi
-          git fetch --no-tags origin main
+          git fetch --no-tags origin "$RELEASE_BRANCH"
           TAG_COMMIT="$(git rev-parse "$RELEASE_TAG^{}")"
           if [[ "$TAG_COMMIT" != "$GITHUB_SHA" ]]; then
             echo "标签提交与当前工作流提交不一致。" >&2
             exit 1
           fi
-          git merge-base --is-ancestor "$TAG_COMMIT" origin/main
+          git merge-base --is-ancestor "$TAG_COMMIT" "origin/$RELEASE_BRANCH"
 
           REMOTE_TAG_COMMIT="$(git ls-remote origin "refs/tags/$RELEASE_TAG^{}" | awk 'NR == 1 { print $1 }')"
           if [[ -z "$REMOTE_TAG_COMMIT" ]]; then
@@ -368,43 +369,9 @@ jobs:
       - name: Prepare universal app resources
         run: npm run app:prepare -- --target universal-apple-darwin
 
-      - name: Import Developer ID certificate
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: |
-          umask 077
-          CERTIFICATE_PATH="$RUNNER_TEMP/developer-id.p12"
-          KEYCHAIN_PATH="$RUNNER_TEMP/codex-taskboard-signing.keychain-db"
-
-          printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$CERTIFICATE_PATH"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security default-keychain -s "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security import "$CERTIFICATE_PATH" \
-            -k "$KEYCHAIN_PATH" \
-            -P "$APPLE_CERTIFICATE_PASSWORD" \
-            -T /usr/bin/codesign \
-            -T /usr/bin/security
-          security set-key-partition-list \
-            -S apple-tool:,apple:,codesign: \
-            -s \
-            -k "$KEYCHAIN_PASSWORD" \
-            "$KEYCHAIN_PATH"
-          security list-keychains -d user -s "$KEYCHAIN_PATH"
-
-      - name: Prepare App Store Connect API key
-        env:
-          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
-        run: |
-          umask 077
-          APPLE_API_KEY_PATH="$RUNNER_TEMP/app-store-connect.p8"
-          printf '%s' "$APPLE_API_PRIVATE_KEY" > "$APPLE_API_KEY_PATH"
-          echo "APPLE_API_KEY_PATH=$APPLE_API_KEY_PATH" >> "$GITHUB_ENV"
-
       - name: Build unsigned universal App and DMG layout
+        env:
+          CARGO_PROFILE_RELEASE_STRIP: none
         run: >-
           CI=true node scripts/tauri-build.mjs
           --target universal-apple-darwin
@@ -412,63 +379,8 @@ jobs:
           --no-sign
           --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
-      - name: Sign App with separate Node.js policy
-        env:
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-        run: node scripts/sign-macos-app.mjs "src-tauri/target/universal-apple-darwin/release/bundle/macos/$APP_NAME"
-
-      - name: Notarize and staple App
-        env:
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-        run: |
-          APP_PATH="src-tauri/target/universal-apple-darwin/release/bundle/macos/$APP_NAME"
-          APP_ZIP="$RUNNER_TEMP/Codex.Taskboard.app.zip"
-          /usr/bin/ditto -c -k --keepParent --sequesterRsrc "$APP_PATH" "$APP_ZIP"
-          xcrun notarytool submit "$APP_ZIP" \
-            --key-id "$APPLE_API_KEY" \
-            --key "$APPLE_API_KEY_PATH" \
-            --issuer "$APPLE_API_ISSUER" \
-            --wait
-          xcrun stapler staple -v "$APP_PATH"
-          xcrun stapler validate "$APP_PATH"
-          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
-          spctl -a -t exec -vv "$APP_PATH"
-
-      - name: Create, sign, notarize, and staple DMG
-        env:
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-        run: |
-          BUNDLE_ROOT="src-tauri/target/universal-apple-darwin/release/bundle"
-          RAW_DMG_NAME="$(jq -r '.rawDmgName' <<< "$RELEASE_METADATA")"
-          RELEASE_DMG_NAME="$(jq -r '.buildDmgName' <<< "$RELEASE_METADATA")"
-          rm -f "$BUNDLE_ROOT/dmg/$RAW_DMG_NAME" "$BUNDLE_ROOT/macos/$RAW_DMG_NAME"
-          (
-            cd "$BUNDLE_ROOT/macos"
-            ../dmg/bundle_dmg.sh \
-              --volname "Codex Taskboard" \
-              --icon "$APP_NAME" 180 170 \
-              --app-drop-link 480 170 \
-              --window-size 660 400 \
-              --hide-extension "$APP_NAME" \
-              --volicon ../dmg/icon.icns \
-              --skip-jenkins \
-              "$RAW_DMG_NAME" "$APP_NAME"
-          )
-          mv "$BUNDLE_ROOT/macos/$RAW_DMG_NAME" "$BUNDLE_ROOT/dmg/$RELEASE_DMG_NAME"
-          DMG_PATH="$BUNDLE_ROOT/dmg/$RELEASE_DMG_NAME"
-          codesign --force --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$DMG_PATH"
-          xcrun notarytool submit "$DMG_PATH" \
-            --key-id "$APPLE_API_KEY" \
-            --key "$APPLE_API_KEY_PATH" \
-            --issuer "$APPLE_API_ISSUER" \
-            --wait
-          xcrun stapler staple -v "$DMG_PATH"
-          xcrun stapler validate "$DMG_PATH"
-          codesign --verify --strict --verbose=2 "$DMG_PATH"
-          spctl -a -t open --context context:primary-signature -vv "$DMG_PATH"
+      - name: Ad-hoc sign App and package DMG
+        run: node scripts/package-macos-app.mjs
 
       - name: Create signed updater files
         env:
@@ -512,13 +424,6 @@ jobs:
           path: ${{ runner.temp }}/macos-release
           if-no-files-found: error
           retention-days: 1
-
-      - name: Remove temporary signing files
-        if: always()
-        run: |
-          security delete-keychain "$RUNNER_TEMP/codex-taskboard-signing.keychain-db" 2>/dev/null || true
-          rm -f "$RUNNER_TEMP/developer-id.p12"
-          rm -f "$RUNNER_TEMP/app-store-connect.p8"
 
   draft-release:
     name: Create draft release
@@ -573,8 +478,8 @@ jobs:
           jq \
             --rawfile deb_signature "$LINUX_DEB.sig" \
             --rawfile appimage_signature "$LINUX_APPIMAGE.sig" \
-            --arg deb_url "https://github.com/chuspeeism/dashi-taskboard/releases/download/$RELEASE_TAG/$LINUX_DEB_NAME" \
-            --arg appimage_url "https://github.com/chuspeeism/dashi-taskboard/releases/download/$RELEASE_TAG/$LINUX_APPIMAGE_NAME" \
+            --arg deb_url "https://github.com/hzm0321/c7n-taskboard/releases/download/$RELEASE_TAG/$LINUX_DEB_NAME" \
+            --arg appimage_url "https://github.com/hzm0321/c7n-taskboard/releases/download/$RELEASE_TAG/$LINUX_APPIMAGE_NAME" \
             '.platforms["linux-x86_64-deb"] = {signature: $deb_signature, url: $deb_url}
              | .platforms["linux-x86_64-appimage"] = {signature: $appimage_signature, url: $appimage_url}' \
             "$LATEST_PATH" > "$LATEST_PATH.linux"
@@ -652,7 +557,8 @@ jobs:
             --verify-tag \
             --target "$GITHUB_SHA" \
             "${RELEASE_FLAGS[@]}" \
-            --title "Codex Taskboard $RELEASE_TAG" \
+            --title "C7N Codex $RELEASE_TAG" \
+            --notes-file docs/macos-first-open.md \
             --generate-notes \
             "${ASSET_PATHS[0]}"
           gh release upload "$RELEASE_TAG" \
@@ -851,8 +757,16 @@ jobs:
           FIRST_ASSET_NAME="$(awk 'NR == 1 { print $2 }' "$MANIFEST_PATH")"
           FINAL_RELEASE="$(gh api --header "$API_VERSION_HEADER" \
             "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
-          LATEST_RELEASE="$(gh api --header "$API_VERSION_HEADER" \
-            "repos/$GITHUB_REPOSITORY/releases/latest")"
+          LATEST_RELEASE_PATH="$RUNNER_TEMP/latest-release.json"
+          LATEST_STATUS="$(curl --silent --show-error \
+            --output "$LATEST_RELEASE_PATH" --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "$API_VERSION_HEADER" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/latest")"
+          if [[ "$LATEST_STATUS" != "200" && !( "$EXPECTED_PRERELEASE" == "true" && "$LATEST_STATUS" == "404" ) ]]; then
+            echo "无法确认 GitHub latest，HTTP $LATEST_STATUS。" >&2
+            exit 1
+          fi
           EXPECTED_ASSET_COUNT="$(wc -l < "$MANIFEST_PATH" | tr -d ' ')"
 
           if ! jq -e \
@@ -875,15 +789,15 @@ jobs:
           fi
 
           if [[ "$EXPECTED_PRERELEASE" == "true" ]]; then
-            if ! jq -e --arg tag "$RELEASE_TAG" \
+            if [[ "$LATEST_STATUS" == "200" ]] && ! jq -e --arg tag "$RELEASE_TAG" \
               '.draft == false and .prerelease == false and .tag_name != $tag' \
-              <<< "$LATEST_RELEASE" >/dev/null; then
+              "$LATEST_RELEASE_PATH" >/dev/null; then
               echo "Beta Release 不得成为 GitHub latest。" >&2
               exit 1
             fi
           elif ! jq -e --arg tag "$RELEASE_TAG" \
             '.draft == false and .prerelease == false and .tag_name == $tag' \
-            <<< "$LATEST_RELEASE" >/dev/null; then
+            "$LATEST_RELEASE_PATH" >/dev/null; then
             echo "正式 Release 必须成为 GitHub latest。" >&2
             exit 1
           fi

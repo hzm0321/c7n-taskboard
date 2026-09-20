@@ -109,13 +109,34 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 npm run app:build
 ```
 
-Open `src-tauri/target/universal-apple-darwin/release/bundle/macos/Codex Taskboard.app` from Finder. The DMG is in `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`. If you only want the stable App, download the current DMG from [GitHub Releases](https://github.com/chuspeeism/dashi-taskboard/releases/latest).
+Open `src-tauri/target/universal-apple-darwin/release/bundle/macos/C7N Codex.app` from Finder. The DMG is in `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`. If you only want the stable App, download the current DMG from [GitHub Releases](https://github.com/hzm0321/c7n-taskboard/releases/latest).
 
 The App contains its own Node runtime, Taskboard service, built web UI, Skill, CLI wrapper, and injection script. It starts the service, reuses an open Codex with a reachable CDP renderer, opens Taskboard in the native browser panel of an ordinary Codex without CDP, or launches the official Codex app when no Codex is open. It waits for the renderer, injects the sidebar entry when CDP is available, and opens the panel without showing a terminal window. The App can be copied away from this checkout; the target Mac only needs the official Codex app and does not need this repository, a system Node installation, or a separate Codex CLI installation. Taskboard data is stored in `~/Library/Application Support/Codex Taskboard`, and launcher output is written to `~/Library/Logs/Codex Taskboard/codex-taskboard-launcher.log`.
 
+### First launch on macOS
+
+Local builds and GitHub Releases use **ad-hoc signing without Apple notarization**; no Apple Developer account is required. Both the App and DMG are signed, the bundled Node keeps its official signature, and automatic updates use a separate Tauri signing key.
+
+Download the DMG from this repository's Releases and drag the App into Applications. On macOS 15 or later, attempt to open it, then use **System Settings → Privacy & Security → Open Anyway**. On macOS 14, try Control-click → **Open**.
+
+If the App is reported as damaged, download it again and check its source and signature first. Remove only its quarantine attribute if quarantine is the cause. See the [full first-launch instructions](docs/macos-first-open.md), which are also automatically included in Release Notes.
+
+### Development reload and GitHub updates
+
+`npm run dev` uses Vite to update frontend modules and Node `--watch` to restart the backend when its files change; GitHub is not involved. The desktop App checks on startup, every 30 minutes, and through **Check for updates**, then downloads, verifies the signature, installs, and restarts.
+
+Stable updates use `https://github.com/hzm0321/c7n-taskboard/releases/latest/download/latest.json`; Beta updates use `https://raw.githubusercontent.com/hzm0321/c7n-taskboard/beta-updater/latest.json`. Pushing source code alone does not create these files. Before using `.github/workflows/release-macos.yml`:
+
+- Set your Tauri public key in `src-tauri/tauri.conf.json` at `plugins.updater.pubkey` and store its private key and password in Actions Secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. This repository now has its own public key; releases must use the matching private key. Never commit private keys or regenerate the key pair for routine releases.
+- macOS uses ad-hoc signing and requires no `APPLE_*` or `KEYCHAIN_PASSWORD` Secrets. Follow the first-launch instructions above when installing.
+- Configure the `macos-release` environment and a `RELEASE_RULESET_TOKEN` that can read repository rulesets. Enable immutable releases and protect `v*` tags against updates and deletion, with empty exclusion and bypass lists.
+- Prepare matching application versions on the default branch (currently `c7n`). Publish `v<version>-beta.1` first, then `v<version>` from the same commit. The version must exceed existing stable releases.
+
+An installed upstream App retains its embedded update endpoint and public key. Manually install an App built from this repository once to receive subsequent updates from this repository.
+
 ### Linux App: Ubuntu 24.04 x64 packages
 
-The first Linux desktop release supports Ubuntu 24.04 LTS on x64 only. Install the official ChatGPT desktop `.deb` first and confirm that `chatgpt` opens it. Then download either the Codex Taskboard `.deb` or `.AppImage` from [GitHub Releases](https://github.com/chuspeeism/dashi-taskboard/releases/latest). Replace `<file>` below with the downloaded filename.
+The first Linux desktop release supports Ubuntu 24.04 LTS on x64 only. Install the official ChatGPT desktop `.deb` first and confirm that `chatgpt` opens it. Then download either the C7N Codex `.deb` or `.AppImage` from [GitHub Releases](https://github.com/hzm0321/c7n-taskboard/releases/latest). Replace `<file>` below with the downloaded filename.
 
 Install the `.deb` package:
 
@@ -142,8 +163,6 @@ This first release does not support ARM64, Fedora, RPM packages, or other Linux 
 ### Windows code signing
 
 For official Windows releases after the application is approved: **Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).** Current Windows CI artifacts remain unsigned until that approval. See the [Code signing policy](docs/code-signing-policy.md), [Privacy policy](PRIVACY.md), and [Windows uninstall instructions](docs/windows-uninstall.md).
-
-The local build uses ad-hoc code signing for direct verification. A public macOS download still needs Developer ID signing and Apple notarization.
 
 ### Windows App: tray launcher and bundled Taskboard
 

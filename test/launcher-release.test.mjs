@@ -54,9 +54,8 @@ test("release signing is tag-only and PR CI builds the real unsigned app bundle"
   assert.match(releaseWorkflow, /Cargo\.toml/);
   assert.match(releaseWorkflow, /tauri\.conf\.json/);
   assert.match(releaseWorkflow, /TAG_FORCED/);
-  assert.match(releaseWorkflow, /sign-macos-app\.mjs/);
-  assert.match(releaseWorkflow, /notarytool submit/);
-  assert.match(releaseWorkflow, /stapler validate/);
+  assert.match(releaseWorkflow, /package-macos-app\.mjs/);
+  assert.doesNotMatch(releaseWorkflow, /notarytool|stapler|secrets\.APPLE_/);
   assert.match(checkWorkflow, /tauri -- build/);
   assert.match(checkWorkflow, /--bundles app/);
   assert.match(checkWorkflow, /--no-sign/);
