@@ -4,7 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="" />
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/src-tauri/dmg/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src-tauri/dmg/background.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src-tauri/dmg/background.tiff" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src-tauri/dmg/background@2x.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src-tauri/dmg/build-dmg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/___.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/package-macos-app.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/package-macos-app.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src-tauri/icons/icon.icns" beforeDir="false" afterPath="$PROJECT_DIR$/src-tauri/icons/icon.icns" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/public/codex-app-icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/public/codex-app-icon.png" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,6 +29,31 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitToolBoxStore">
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="codex/dmg-install-design" />
+                    <option name="lastUsedInstant" value="1789884182" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="c7n" />
+                    <option name="lastUsedInstant" value="1789874422" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2,
   &quot;fromUser&quot;: false
@@ -27,28 +63,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Git.Working.Tree.Tab.closed.by.user&quot;: &quot;closed&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Git.Working.Tree.Tab.closed.by.user": "closed",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/hzm/WorkSpace/Github/c7n-taskboard",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-904411bcf1be-intellij.indexing.shared.core-IU-263.4732.28" />
-        <option value="bundled-js-predefined-d6986cc7102b-31b97525b52c-JavaScript-IU-263.4732.28" />
+        <option value="bundled-jdk-30f59d01ecdd-a203e0a19954-intellij.indexing.shared.core-IU-262.10968.63" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.10968.63" />
       </set>
     </attachedChunks>
   </component>
@@ -76,7 +113,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="codex/choerodon-connection" />
+                        <option value="c7n" />
                       </list>
                     </value>
                   </entry>
