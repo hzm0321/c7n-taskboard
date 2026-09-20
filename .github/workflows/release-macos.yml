@@ -757,8 +757,16 @@ jobs:
           FIRST_ASSET_NAME="$(awk 'NR == 1 { print $2 }' "$MANIFEST_PATH")"
           FINAL_RELEASE="$(gh api --header "$API_VERSION_HEADER" \
             "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
-          LATEST_RELEASE="$(gh api --header "$API_VERSION_HEADER" \
-            "repos/$GITHUB_REPOSITORY/releases/latest")"
+          LATEST_RELEASE_PATH="$RUNNER_TEMP/latest-release.json"
+          LATEST_STATUS="$(curl --silent --show-error \
+            --output "$LATEST_RELEASE_PATH" --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "$API_VERSION_HEADER" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/latest")"
+          if [[ "$LATEST_STATUS" != "200" && !( "$EXPECTED_PRERELEASE" == "true" && "$LATEST_STATUS" == "404" ) ]]; then
+            echo "无法确认 GitHub latest，HTTP $LATEST_STATUS。" >&2
+            exit 1
+          fi
           EXPECTED_ASSET_COUNT="$(wc -l < "$MANIFEST_PATH" | tr -d ' ')"
 
           if ! jq -e \
@@ -781,15 +789,15 @@ jobs:
           fi
 
           if [[ "$EXPECTED_PRERELEASE" == "true" ]]; then
-            if ! jq -e --arg tag "$RELEASE_TAG" \
+            if [[ "$LATEST_STATUS" == "200" ]] && ! jq -e --arg tag "$RELEASE_TAG" \
               '.draft == false and .prerelease == false and .tag_name != $tag' \
-              <<< "$LATEST_RELEASE" >/dev/null; then
+              "$LATEST_RELEASE_PATH" >/dev/null; then
               echo "Beta Release 不得成为 GitHub latest。" >&2
               exit 1
             fi
           elif ! jq -e --arg tag "$RELEASE_TAG" \
             '.draft == false and .prerelease == false and .tag_name == $tag' \
-            <<< "$LATEST_RELEASE" >/dev/null; then
+            "$LATEST_RELEASE_PATH" >/dev/null; then
             echo "正式 Release 必须成为 GitHub latest。" >&2
             exit 1
           fi
