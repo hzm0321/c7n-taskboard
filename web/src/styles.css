@@ -7137,7 +7137,7 @@ kbd {
 
 .app-shell.embedded .search-field:focus-within,
 .app-shell.embedded .search-field.has-value {
-  width: min(140px, 20vw);
+  width: min(180px, 26vw);
 }
 
 @media (max-width: 1040px) {
@@ -7211,7 +7211,7 @@ kbd {
 
   .search-field:focus-within,
   .search-field.has-value {
-    width: min(150px, 42vw);
+    width: min(180px, 42vw);
   }
 
   .board-scroll {
@@ -7495,7 +7495,7 @@ kbd {
 
 .search-field:focus-within,
 .search-field.has-value {
-  width: min(176px, 24vw);
+  width: min(210px, 28vw);
 }
 
 .search-field input {
@@ -8725,7 +8725,7 @@ kbd {
 
   .search-field:focus-within,
   .search-field.has-value {
-    width: min(150px, 42vw);
+    width: min(180px, 42vw);
   }
 
   .board-scroll {

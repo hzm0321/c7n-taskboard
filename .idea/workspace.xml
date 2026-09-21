@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: enhance UI components with tooltips and tabs for better user experience">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.zh-CN.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/assets/codex-taskboard.png" beforeDir="false" afterPath="$PROJECT_DIR$/docs/assets/codex-taskboard.png" afterDir="false" />
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: update workspace configuration and add English README">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/components/DashboardView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/DashboardView.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,6 +130,7 @@
     <MESSAGE value="feat: implement feedback dialog and tooltip components" />
     <MESSAGE value="feat: add supplementary description support and update task handling" />
     <MESSAGE value="feat: enhance UI components with tooltips and tabs for better user experience" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: enhance UI components with tooltips and tabs for better user experience" />
+    <MESSAGE value="feat: update workspace configuration and add English README" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: update workspace configuration and add English README" />
   </component>
 </project>

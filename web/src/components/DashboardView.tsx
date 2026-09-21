@@ -768,8 +768,8 @@ export function DashboardView({
               <strong>{projectCompletion.percentage}%</strong>
               <span>{text(
                 projectCompletion.parentCount > 0
-                  ? `${projectCompletion.completedParents}/${projectCompletion.parentCount} 个顶层议题完成 · ${completedTasks.length} 个议题已完成`
-                  : "暂无可计算的议题",
+                  ? `${projectCompletion.completedParents}/${projectCompletion.parentCount} 个顶层任务完成 · ${completedTasks.length} 个任务已完成`
+                  : "暂无可计算的任务",
                 projectCompletion.parentCount > 0
                   ? `${projectCompletion.completedParents}/${projectCompletion.parentCount} top-level issues complete · ${completedTasks.length} issues complete`
                   : "No issues to calculate",
