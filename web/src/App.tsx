@@ -2256,6 +2256,7 @@ export function App() {
     const current = candidate && candidate.version >= changed.version ? candidate : changed;
     const restored = await updateTaskRequest(current, {
       ...taskToDraft(snapshot),
+      ...(snapshot.externalSource === "choerodon" ? { supplementaryDescription: snapshot.supplementaryDescription ?? "" } : {}),
       ...(assigneeTarget ? { assigneeTarget } : {}),
     });
     setTasks((tasks) => sortTasks(tasks.map((task) => task.id === restored.id ? restored : task)));

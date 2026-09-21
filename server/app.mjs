@@ -2050,7 +2050,7 @@ export function createTaskboardServer(options = {}) {
             throw new ApiError(400, "INVALID_FIELD", "请勾选要同步的猪齿鱼任务");
           }
         }
-        const preview = await choerodon.boardIssues();
+        const preview = await choerodon.boardIssues(input?.issueIds);
         const sourceKey = `${preview.organization.id}:${preview.project.id}:${preview.board.id}`;
         const origin = JSON.stringify([preview.organization.id, preview.project.id, projectId]);
         const existing = new Map(database.getChoerodonTasks(origin).map((entry) => [entry.externalId, entry.task]));
@@ -2073,7 +2073,7 @@ export function createTaskboardServer(options = {}) {
           let task = existing.get(issue.id);
           if (task) {
             if (task.projectId !== projectId) throw new ApiError(409, "CHOERODON_TASK_MOVED", `关联任务 ${task.identifier} 已移到其他项目`);
-            const fields = { title: issue.title, priority: issue.priority, assignee: issue.assignee, startDate: issue.startDate, dueDate: issue.dueDate };
+            const fields = { title: issue.title, description: issue.description, priority: issue.priority, assignee: issue.assignee, startDate: issue.startDate, dueDate: issue.dueDate };
             const changes = Object.fromEntries(Object.entries(fields).filter(([key, value]) => JSON.stringify(task[key]) !== JSON.stringify(value)));
             if (Object.keys(changes).length) {
               task = database.updateTask(task.id, task.version, changes, undefined, undefined, actor);
@@ -2083,7 +2083,7 @@ export function createTaskboardServer(options = {}) {
           } else {
             const { assigneeTarget, ...taskInput } = parseTaskCreate({
               projectId, title: issue.title, status: "todo", priority: issue.priority,
-              description: `来源：猪齿鱼 / ${preview.project.name} / ${preview.board.name}\n任务编号：${issue.key}\n猪齿鱼任务 ID：${issue.id}`,
+              description: issue.description,
               startDate: issue.startDate, dueDate: issue.dueDate,
             }, parseDevelopmentContext);
             task = database.createTask({ ...taskInput, actor, assignee: issue.assignee,

@@ -4,12 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: update project settings and improve environment configuration">
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: implement feedback dialog and tooltip components">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/prepare-tauri-app.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/prepare-tauri-app.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/app.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/app.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/choerodon-connection.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/choerodon-connection.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/database.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/database.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared/task-input.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/shared/task-input.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skills/manage-taskboard/SKILL.md" beforeDir="false" afterPath="$PROJECT_DIR$/skills/manage-taskboard/SKILL.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/ProjectAutomationMenu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/ProjectAutomationMenu.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/components/TaskDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/TaskDetail.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/types.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wrangler.jsonc" beforeDir="false" afterPath="$PROJECT_DIR$/wrangler.jsonc" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,6 +32,10 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitLabServerManager">
+    <selected>-1</selected>
+    <servers />
   </component>
   <component name="GitToolBoxStore">
     <option name="recentBranches">
@@ -125,6 +138,7 @@
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <MESSAGE value="feat: add DMG build script and artwork for macOS installer" />
     <MESSAGE value="feat: update project settings and improve environment configuration" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: update project settings and improve environment configuration" />
+    <MESSAGE value="feat: implement feedback dialog and tooltip components" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: implement feedback dialog and tooltip components" />
   </component>
 </project>

@@ -79,6 +79,7 @@ function taskFromRow(row) {
     projectId: row.project_id,
     title: row.title,
     description: row.description,
+    supplementaryDescription: row.supplementary_description,
     status: row.status,
     priority: row.priority,
     labels: JSON.parse(row.labels),
@@ -104,6 +105,7 @@ function taskFromRow(row) {
       ? { interval: row.recurrence_interval, unit: row.recurrence_unit }
       : null,
     source: row.external_source === "jira" ? "jira" : "local",
+    externalSource: row.external_source ?? null,
     externalOrigin: row.external_origin ?? null,
     externalKey: row.external_key ?? null,
     externalUrl: row.external_url ?? null,
@@ -535,6 +537,9 @@ export class TaskboardDatabase {
     }
     this.#migrateTaskStatuses();
     const migratedTaskColumns = this.database.prepare("PRAGMA table_info(tasks)").all();
+    if (!migratedTaskColumns.some((column) => column.name === "supplementary_description")) {
+      this.database.exec("ALTER TABLE tasks ADD COLUMN supplementary_description TEXT NOT NULL DEFAULT ''");
+    }
     if (!migratedTaskColumns.some((column) => column.name === "agent_session")) {
       this.database.exec("ALTER TABLE tasks ADD COLUMN agent_session TEXT");
     }
@@ -1959,6 +1964,7 @@ export class TaskboardDatabase {
       projectId: "project_id",
       title: "title",
       description: "description",
+      supplementaryDescription: "supplementary_description",
       status: "status",
       priority: "priority",
       labels: "labels",
@@ -2032,7 +2038,7 @@ export class TaskboardDatabase {
       if (result.changes !== 1) {
         this.#throwMissingOrConflict(id, version);
       }
-      if (Object.hasOwn(changes, "description")) {
+      if (Object.hasOwn(changes, "description") || Object.hasOwn(changes, "supplementaryDescription")) {
         this.#consumeAttachmentBodyFallback(current.id, null);
       }
       if (projectChanged) {

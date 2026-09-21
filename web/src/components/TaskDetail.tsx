@@ -100,6 +100,7 @@ import { postEmbeddedHostMessage } from "../embeddedHost.mjs";
 import copyIdIcon from "../assets/figma-taskboard/copy-id.svg";
 import copyLinkIcon from "../assets/figma-taskboard/copy-link.svg";
 import { DescriptionDocument } from "./DescriptionDocument";
+import { SupplementaryDescription } from "./SupplementaryDescription";
 
 type TaskDetailError = string | readonly [string, string];
 
@@ -225,6 +226,7 @@ const ACTIVITY_FIELD_LABELS: Record<string, readonly [string, string]> = {
   projectId: ["项目", "project"],
   title: ["标题", "title"],
   description: ["描述", "description"],
+  supplementaryDescription: ["补充描述", "supplementary description"],
   status: ["状态", "status"],
   priority: ["优先级", "priority"],
   labels: ["标签", "labels"],
@@ -1209,6 +1211,22 @@ export function TaskDetail({
                       : text("添加描述…", "Add description…")}
                   </div>
                 )}
+                {currentTask.externalSource === "choerodon" && (
+                  <SupplementaryDescription
+                    key={currentTask.id}
+                    task={currentTask}
+                    attachments={attachments}
+                    referenceTasks={referenceTasks}
+                    onOpenTask={onOpenTask}
+                    onOpenAttachment={handleAttachmentDownload}
+                    onError={onError}
+                    onSave={async (supplementaryDescription, uploaded) => {
+                      const saved = await onUpdate(currentTask, { supplementaryDescription });
+                      setCurrentTask(saved);
+                      setAttachments((current) => [...current, ...uploaded.filter((item) => !current.some((existing) => existing.id === item.id))]);
+                    }}
+                  />
+                )}
                 {(currentTask.threadBinding || currentTask.legacyLocalThreadId) && (
                   <div
                     className="issue-conversation-list"
@@ -1311,6 +1329,8 @@ export function TaskDetail({
                           {" "}
                           {change.field === "description" ? (
                             <>{text("更新了描述", "updated the description")}</>
+                          ) : change.field === "supplementaryDescription" ? (
+                            <>{text("更新了补充描述", "updated the supplementary description")}</>
                           ) : change.field === "relation" && change.before === null ? (
                             <>{text("添加了 ", "added ")}<span className="activity-change-value">{afterValue}</span></>
                           ) : change.field === "relation" && change.after === null ? (

@@ -183,7 +183,7 @@ export function parseTaskCreate(body, parseDevelopmentContext) {
 function assertTaskPatchBody(body) {
   assertPlainObject(body);
   assertAllowedKeys(body, new Set([
-    "version", "projectId", "title", "description", "status", "priority", "labels", "threadId", "threadBinding", "agentSession",
+    "version", "projectId", "title", "description", "supplementaryDescription", "status", "priority", "labels", "threadId", "threadBinding", "agentSession",
     "assigneeTarget", "developmentContext", "startDate", "dueDate", "recurrence",
   ]));
 }
@@ -193,6 +193,7 @@ function parseTaskPatchChanges(body, parseDevelopmentContext) {
   if (body.projectId !== undefined) changes.projectId = validateProjectId(body.projectId);
   if (body.title !== undefined) changes.title = stringField(body.title, "title", { required: true, maxLength: 240 });
   if (body.description !== undefined) changes.description = stringField(body.description, "description", { maxLength: 100_000 });
+  if (body.supplementaryDescription !== undefined) changes.supplementaryDescription = stringField(body.supplementaryDescription, "supplementaryDescription", { maxLength: 100_000 });
   if (body.status !== undefined) changes.status = parseStatus(body.status);
   if (body.priority !== undefined) changes.priority = parsePriority(body.priority);
   if (body.labels !== undefined) changes.labels = parseLabels(body.labels);

@@ -422,6 +422,7 @@ export interface Task {
   projectId: string;
   title: string;
   description: string;
+  supplementaryDescription?: string;
   status: TaskStatus;
   priority: TaskPriority;
   labels: string[];
@@ -445,6 +446,7 @@ export interface Task {
   dueDate: string | null;
   recurrence: Recurrence | null;
   source: "local" | "jira";
+  externalSource?: string | null;
   externalOrigin?: string | null;
   externalKey?: string | null;
   externalUrl: string | null;
@@ -592,6 +594,7 @@ export interface HostContext {
 export interface TaskDraft {
   title: string;
   description: string;
+  supplementaryDescription?: string;
   status: TaskStatus;
   priority: TaskPriority;
   labels: string[];

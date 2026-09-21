@@ -1,10 +1,12 @@
 import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { constants, publicEncrypt, randomUUID } from "node:crypto";
+import TurndownService from "turndown";
 
 import { ApiError, stringField, parseDueDate } from "../shared/api-fields.mjs";
 
 const API_ORIGIN = "https://api.choerodon.com.cn";
+const descriptionMarkdown = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced" });
 
 function remoteId(value) {
   const id = String(value ?? "");
@@ -240,7 +242,7 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
     );
   }
 
-  async function boardIssues() {
+  async function boardIssues(issueIds = []) {
     const config = await read();
     if (!config) throw new ApiError(400, "CHOERODON_NOT_CONFIGURED", "请先连接猪齿鱼");
     const { organization, project, board } = config;
@@ -278,6 +280,17 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
           });
         }
       }
+    }
+    for (const id of new Set(issueIds)) {
+      const issue = issues.get(id);
+      if (!issue) continue;
+      const detail = await request(config.authorization,
+        `/agile/v1/projects/${project.id}/issues/${id}?organizationId=${organization.id}`,
+        organization.id);
+      const description = typeof detail?.description === "string"
+        ? descriptionMarkdown.turndown(detail.description).trim()
+        : "";
+      issue.description = stringField(description || `来源：猪齿鱼 / ${project.name} / ${board.name}\n任务编号：${issue.key}\n猪齿鱼任务 ID：${issue.id}`, "description", { maxLength: 100_000 });
     }
     return { organization, project, board, groups, issues: [...issues.values()] };
   }
