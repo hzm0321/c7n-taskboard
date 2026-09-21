@@ -200,16 +200,11 @@ export function BoardCardDisplayMenu({
       </div>
       <div className="project-automation-switch">
         <span>{text("创建时间", "Creation date")}</span>
-        <button
-          type="button"
-          className={"board-setting-switch" + (settings.createdAt ? " is-on" : "")}
-          role="switch"
+        <Switch
           aria-label={text("显示创建时间", "Show creation date")}
-          aria-checked={Boolean(settings.createdAt)}
-          onClick={() => onChange({ ...settings, createdAt: !settings.createdAt })}
-        >
-          <span aria-hidden="true" />
-        </button>
+          checked={Boolean(settings.createdAt)}
+          onCheckedChange={(checked) => onChange({ ...settings, createdAt: checked })}
+        />
       </div>
       <Button variant="ghost" size="none"
         className="display-settings-more"

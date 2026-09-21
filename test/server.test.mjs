@@ -726,6 +726,7 @@ test("project and task CRUD flow", async () => {
   });
   assert.equal(created.dueDate, "2026-07-24");
   assert.deepEqual(created.recurrence, { interval: 2, unit: "week" });
+  assert.equal(created.automationEnabled, false);
 
   const projectsAfterCreate = await request(baseUrl, "/api/projects");
   const websiteProject = projectsAfterCreate.body.projects.find((project) => project.id === "website");
@@ -750,6 +751,7 @@ test("project and task CRUD flow", async () => {
       priority: "urgent",
       threadId: "thread-456",
       developmentContext: { type: "branch", branch: "feature/polish" },
+      automationEnabled: true,
     },
   });
   assert.equal(patchResult.response.status, 200);
@@ -758,6 +760,7 @@ test("project and task CRUD flow", async () => {
   assert.equal(updated.priority, "urgent");
   assert.equal(updated.threadId, "thread-456");
   assert.deepEqual(updated.developmentContext, { type: "branch", branch: "feature/polish" });
+  assert.equal(updated.automationEnabled, true);
   assert.equal(updated.version, 2);
 
   const archiveResult = await request(baseUrl, `/api/tasks/${created.id}/archive`, {

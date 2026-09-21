@@ -153,7 +153,7 @@ export function parseTaskCreate(body, parseDevelopmentContext) {
   assertPlainObject(body);
   assertAllowedKeys(body, new Set([
     "projectId", "title", "description", "status", "priority", "labels", "sortOrder", "threadId", "threadBinding", "agentSession",
-    "assigneeTarget", "developmentContext", "startDate", "dueDate", "recurrence",
+    "assigneeTarget", "developmentContext", "startDate", "dueDate", "recurrence", "automationEnabled",
   ]));
   const projectId = validateProjectId(body.projectId ?? DEFAULT_PROJECT_ID);
   const task = {
@@ -172,6 +172,7 @@ export function parseTaskCreate(body, parseDevelopmentContext) {
     startDate: parseDueDate(body.startDate ?? null, "startDate"),
     dueDate: parseDueDate(body.dueDate ?? null),
     recurrence: parseRecurrence(body.recurrence ?? null),
+    automationEnabled: body.automationEnabled === undefined ? false : Boolean(body.automationEnabled),
   };
   if (task.recurrence && !task.dueDate) {
     throw new ApiError(400, "INVALID_FIELD", "A recurring issue requires 'dueDate'");
@@ -184,7 +185,7 @@ function assertTaskPatchBody(body) {
   assertPlainObject(body);
   assertAllowedKeys(body, new Set([
     "version", "projectId", "title", "description", "supplementaryDescription", "status", "priority", "labels", "threadId", "threadBinding", "agentSession",
-    "assigneeTarget", "developmentContext", "startDate", "dueDate", "recurrence",
+    "assigneeTarget", "developmentContext", "startDate", "dueDate", "recurrence", "automationEnabled",
   ]));
 }
 
@@ -201,6 +202,7 @@ function parseTaskPatchChanges(body, parseDevelopmentContext) {
   if (body.startDate !== undefined) changes.startDate = parseDueDate(body.startDate, "startDate");
   if (body.dueDate !== undefined) changes.dueDate = parseDueDate(body.dueDate);
   if (body.recurrence !== undefined) changes.recurrence = parseRecurrence(body.recurrence);
+  if (body.automationEnabled !== undefined) changes.automationEnabled = Boolean(body.automationEnabled);
   return changes;
 }
 

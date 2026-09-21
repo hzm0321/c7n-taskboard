@@ -7804,9 +7804,20 @@ kbd {
   min-height: 16px;
 }
 
-.task-card.status-in_review .card-topline {
+.task-card.status-in_review .card-topline,
+.task-card.status-todo .card-topline {
   height: 20px;
   min-height: 20px;
+}
+
+.task-card-automation-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-left: auto;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .task-card-complete {
@@ -8959,7 +8970,7 @@ kbd {
 
 .issue-list-column-headings {
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) 400px 76px;
+  grid-template-columns: minmax(230px, 1fr) 400px 76px 60px;
   gap: 20px;
   padding: 10px 16px 12px;
   color: var(--text-secondary);
@@ -9037,7 +9048,7 @@ kbd {
 
 .issue-list-row {
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) 400px 76px;
+  grid-template-columns: minmax(230px, 1fr) 400px 76px 60px;
   align-items: center;
   min-width: 0;
   min-height: 76px;
@@ -9252,6 +9263,13 @@ kbd {
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
+}
+
+.issue-list-automation-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .issue-list-empty {
@@ -9745,7 +9763,7 @@ kbd {
   .dashboard-metric:nth-child(n+3) { border-top: var(--border-hairline) solid var(--border); }
   .issue-list-row,
   .issue-list-column-headings {
-    grid-template-columns: minmax(180px, 1fr) 320px 64px;
+    grid-template-columns: minmax(180px, 1fr) 320px 64px 50px;
     gap: 12px;
   }
   .issue-list-metadata-headings,
@@ -9767,9 +9785,9 @@ kbd {
   .dashboard-role-panel { min-height: 0; }
   .issue-list-row {
     grid-template-areas:
-      "title time"
-      "metadata metadata";
-    grid-template-columns: minmax(0, 1fr) auto;
+      "title time automation"
+      "metadata metadata metadata";
+    grid-template-columns: minmax(0, 1fr) auto auto;
     min-height: 88px;
     gap: 10px 12px;
     padding: 12px 8px;
@@ -9777,6 +9795,7 @@ kbd {
   .issue-list-title-cell { grid-area: title; }
   .issue-list-metadata { grid-area: metadata; display: flex; flex-wrap: wrap; justify-content: flex-start; }
   .issue-list-row > time { grid-area: time; }
+  .issue-list-automation-cell { grid-area: automation; }
   .issue-list-labels > i:nth-child(n+2) { display: inline-flex; }
   .gantt-hide-completed > span { display: none; }
 }

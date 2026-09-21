@@ -1345,6 +1345,7 @@ function eligibleRemoteAutomationTask(task) {
     && task.threadId === task.threadBinding.threadId;
   return task?.status === "todo"
     && task.archivedAt === null
+    && Boolean(task.automationEnabled)
     && ((!task.threadId && !task.threadBinding) || remoteBinding)
     && (task.relations?.blockedBy ?? []).every((dependency) => dependency.status === "done");
 }

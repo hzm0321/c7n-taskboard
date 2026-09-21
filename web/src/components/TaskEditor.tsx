@@ -195,6 +195,7 @@ export function TaskEditor({
   const [relatedIds, setRelatedIds] = useState<string[]>(initialDraft?.relations.relatedIds ?? []);
   const [subIssueIds, setSubIssueIds] = useState<string[]>(initialDraft?.relations.subIssueIds ?? []);
   const [createMore, setCreateMore] = useState(false);
+  const [automationEnabled, setAutomationEnabled] = useState(false);
   const [menu, setMenu] = useState<"project" | "status" | "priority" | "assignee" | "labels" | "development" | "more" | "due" | "recurrence" | null>(null);
   const [relationMenu, setRelationMenu] = useState<DraftRelationMenu | null>(null);
   const [moreMenuPosition, setMoreMenuPosition] = useState<{ right: number; bottom: number } | null>(null);
@@ -388,6 +389,7 @@ export function TaskEditor({
         startDate: startDate || null,
         dueDate: dueDate || null,
         recurrence,
+        automationEnabled,
       }, inlineMediaFiles(descriptionSegments), inlineMediaImages(descriptionSegments), {
         keepOpen: createMore,
         relations: { parentId, relatedIds, subIssueIds },
@@ -398,6 +400,7 @@ export function TaskEditor({
         setSubIssueIds([]);
         setRelationMenu(null);
         setAttachmentError(null);
+        setAutomationEnabled(false);
         if (attachmentInputRef.current) attachmentInputRef.current.value = "";
         requestAnimationFrame(() => titleRef.current?.focus());
       }
@@ -764,6 +767,15 @@ export function TaskEditor({
             </Button>
             <input ref={attachmentInputRef} type="file" multiple hidden onChange={(event) => { if (event.currentTarget.files) descriptionComposerRef.current?.addFiles(event.currentTarget.files); event.currentTarget.value = ""; }} />
             <div className="dialog-actions">
+              <div className="create-more-control">
+                <span>{text("自动化", "Automation")}</span>
+                <Switch size="sm"
+                  aria-label={text("自动化", "Automation")}
+                  checked={automationEnabled}
+                  disabled={saving}
+                  onCheckedChange={setAutomationEnabled}
+                />
+              </div>
               <div className="create-more-control">
                 <span>{text("创建更多", "Create more")}</span>
                 <Switch size="sm"

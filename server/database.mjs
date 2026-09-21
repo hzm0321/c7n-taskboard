@@ -109,6 +109,7 @@ function taskFromRow(row) {
     externalOrigin: row.external_origin ?? null,
     externalKey: row.external_key ?? null,
     externalUrl: row.external_url ?? null,
+    automationEnabled: Boolean(row.automation_enabled),
     archivedAt: row.archived_at,
     version: row.version,
     createdAt: row.created_at,
@@ -318,6 +319,7 @@ export class TaskboardDatabase {
         external_id TEXT,
         external_key TEXT,
         external_url TEXT,
+        automation_enabled INTEGER NOT NULL DEFAULT 0 CHECK (automation_enabled IN (0, 1)),
         archived_at TEXT,
         version INTEGER NOT NULL DEFAULT 1 CHECK (version > 0),
         created_at TEXT NOT NULL,
@@ -585,6 +587,9 @@ export class TaskboardDatabase {
       WHERE thread_id IS NOT NULL AND version = 1 AND creator_id = 'local-user'
     `);
     const identityTaskColumns = this.database.prepare("PRAGMA table_info(tasks)").all();
+    if (!identityTaskColumns.some((current) => current.name === "automation_enabled")) {
+      this.database.exec("ALTER TABLE tasks ADD COLUMN automation_enabled INTEGER NOT NULL DEFAULT 0 CHECK (automation_enabled IN (0, 1))");
+    }
     const assigneeMigrations = [
       ["assignee_type", "TEXT CHECK (assignee_type IN ('user', 'agent'))", "creator_type"],
       ["assignee_id", "TEXT", "creator_id"],
@@ -1884,8 +1889,8 @@ export class TaskboardDatabase {
           assignee_type, assignee_id, assignee_name, assignee_avatar_url,
           git_branch, worktree_path, worktree_branch,
           start_date, due_date, recurrence_interval, recurrence_unit,
-          archived_at, version, created_at, updated_at, agent_session
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, ?, ?, ?)
+          automation_enabled, archived_at, version, created_at, updated_at, agent_session
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, ?, ?, ?)
       `).run(
         id,
         identifier,
@@ -1912,6 +1917,7 @@ export class TaskboardDatabase {
         input.dueDate,
         input.recurrence?.interval ?? null,
         input.recurrence?.unit ?? null,
+        input.automationEnabled ? 1 : 0,
         timestamp,
         timestamp,
         input.agentSession ? JSON.stringify(input.agentSession) : null,
@@ -1978,6 +1984,7 @@ export class TaskboardDatabase {
       labels: "labels",
       startDate: "start_date",
       dueDate: "due_date",
+      automationEnabled: "automation_enabled",
     };
     const assignments = [];
     const values = [];
@@ -2007,7 +2014,13 @@ export class TaskboardDatabase {
         continue;
       }
       assignments.push(`${columns[key]} = ?`);
-      values.push(key === "labels" ? JSON.stringify(value) : value);
+      values.push(
+        key === "labels"
+          ? JSON.stringify(value)
+          : key === "automationEnabled"
+            ? (value ? 1 : 0)
+            : value,
+      );
     }
     if (Object.hasOwn(changes, "status") && changes.status !== current.status) {
       const placementProjectId = projectChanged ? targetProject.id : current.projectId;

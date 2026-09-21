@@ -576,6 +576,7 @@ function taskToDraft(task: Task): TaskDraft {
     startDate: task.startDate,
     dueDate: task.dueDate,
     recurrence: task.recurrence,
+    automationEnabled: task.automationEnabled,
   };
 }
 
@@ -3384,7 +3385,8 @@ export function App() {
   return (
     <TaskboardLanguageProvider language={language}>
       <Toaster theme={theme} position="top-center" />
-      <div className={`app-shell${embedded ? " embedded" : ""}`} style={appShellStyle}>
+      <TooltipProvider delayDuration={150}>
+        <div className={`app-shell${embedded ? " embedded" : ""}`} style={appShellStyle}>
       {taskboardMetadata && taskboardMetadata.mode !== "cloud" && (
         <LocalRealtimeSync
           selectedProjectId={taskScopeProjectId}
@@ -4324,6 +4326,7 @@ export function App() {
         </div>
       )}
       </div>
+      </TooltipProvider>
     </TaskboardLanguageProvider>
   );
 }

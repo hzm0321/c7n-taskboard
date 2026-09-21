@@ -883,3 +883,18 @@ export async function unlinkCodexConversation(task: Task): Promise<Task> {
   });
   return data.task;
 }
+
+export type AppUpdateStatus = {
+  supported?: boolean;
+  available?: boolean;
+  busy?: boolean;
+  message?: string;
+};
+
+export async function getAppUpdateStatus(): Promise<AppUpdateStatus> {
+  return { supported: false };
+}
+
+export async function startAppUpdate(): Promise<AppUpdateStatus> {
+  return { supported: false };
+}

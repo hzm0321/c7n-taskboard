@@ -450,6 +450,7 @@ export interface Task {
   externalOrigin?: string | null;
   externalKey?: string | null;
   externalUrl: string | null;
+  automationEnabled: boolean;
   archivedAt: string | null;
   relations: TaskRelations;
   version: number;
@@ -606,6 +607,7 @@ export interface TaskDraft {
   startDate: string | null;
   dueDate: string | null;
   recurrence: Recurrence | null;
+  automationEnabled?: boolean;
 }
 
 export interface CodexConversationCatalog {

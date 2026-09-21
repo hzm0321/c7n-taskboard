@@ -164,6 +164,8 @@ test("the stable name and generated prompt are project-scoped and encode the cla
   assert.match(prompt, /--binding-thread-id "\$CODEX_THREAD_ID"/);
   assert.match(prompt, /认领后的每一次 issue move.*五个完整 binding 字段/);
   assert.match(prompt, /不要省略 binding，避免把完整绑定降级为 legacy local/);
+  assert.match(prompt, /automationEnabled 为 true/);
+  assert.match(prompt, /未开启自动化开关的任务绝对不得认领或执行/);
   assert.doesNotMatch(prompt, /automation_update/);
   assert.match(prompt, /Taskboard 主机侧会暂停当前自动化/);
 });
@@ -201,6 +203,8 @@ test("the remote automation prompt keeps taskctl local and delegates work to the
   assert.match(prompt, /wait_threads 失败[\s\S]*完整保存 binding[\s\S]*移动到 blocked/);
   assert.match(prompt, /worker 确认后的每一次 issue move 都必须显式传完整远程 binding/);
   assert.match(prompt, /不得扫描或接管其他 in_progress/);
+  assert.match(prompt, /automationEnabled 为 true/);
+  assert.match(prompt, /未开启自动化开关的任务绝对不得认领或执行/);
   assert.match(prompt, /移动到 in_review/);
 });
 

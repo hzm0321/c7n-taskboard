@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { useState, type KeyboardEvent, type MouseEvent, type RefObject } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useState, type RefObject, type SyntheticEvent } from "react";
 import { assigneeTargetForActor } from "../actors";
 import { taskPriorityLabel, taskStatusLabel, useTaskboardI18n } from "../i18n";
 import { labelPresentation } from "../labels";
@@ -47,7 +49,7 @@ export function IssueListView({
   const [collapsed, setCollapsed] = useState(() => new Set(COLLAPSED_BY_DEFAULT));
   const [priorityMenuTaskId, setPriorityMenuTaskId] = useState<string | null>(null);
 
-  function stopRow(event: MouseEvent | KeyboardEvent) {
+  function stopRow(event: SyntheticEvent) {
     event.stopPropagation();
   }
 
@@ -72,6 +74,7 @@ export function IssueListView({
           <span>{text("负责人", "Assignee")}</span>
         </span>
         <span>{text("创建日期", "Created")}</span>
+        <span>{text("自动化", "Automation")}</span>
       </div>
       <div className="issue-list-groups">
         {TASK_STATUSES.map((status) => {
@@ -179,6 +182,39 @@ export function IssueListView({
                         >
                           {createdDate(task.createdAt, locale)}
                         </time>
+                        <span
+                          className="issue-list-automation-cell"
+                          onClick={stopRow}
+                          onKeyDown={stopRow}
+                          onPointerDown={stopRow}
+                          onMouseDown={stopRow}
+                        >
+                          {task.status === "todo" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span
+                                  className="inline-flex"
+                                  onClick={stopRow}
+                                  onPointerDown={stopRow}
+                                  onMouseDown={stopRow}
+                                >
+                                  <Switch
+                                    size="sm"
+                                    aria-label={task.automationEnabled ? text("关闭自动化", "Disable automation") : text("开启自动化", "Enable automation")}
+                                    checked={Boolean(task.automationEnabled)}
+                                    onClick={stopRow}
+                                    onPointerDown={stopRow}
+                                    onMouseDown={stopRow}
+                                    onCheckedChange={(checked) => void onUpdate(task, { automationEnabled: checked }).catch(() => {})}
+                                  />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                {task.automationEnabled ? text("关闭自动化", "Disable automation") : text("开启自动化", "Enable automation")}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </span>
                       </div>
                     );
                   }) : (

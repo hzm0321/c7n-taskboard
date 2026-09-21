@@ -2089,6 +2089,7 @@ export function createTaskboardServer(options = {}) {
               projectId, title: issue.title, status: "todo", priority: issue.priority,
               description: issue.description,
               startDate: issue.startDate, dueDate: issue.dueDate,
+              automationEnabled: false,
             }, parseDevelopmentContext);
             task = database.createTask({ ...taskInput, actor, assignee: issue.assignee,
               external: { source: "choerodon", origin, id: issue.id, key: issue.key },

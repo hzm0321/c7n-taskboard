@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
@@ -428,7 +430,7 @@ export function TaskCard({
   const { locale, text } = useTaskboardI18n();
   const displayIdentifier = task.externalKey ?? task.identifier;
   const [propertyMenu, setPropertyMenu] = useState<"priority" | "labels" | "assignee" | null>(null);
-  const [savingProperty, setSavingProperty] = useState<"priority" | "labels" | "dueDate" | "assignee" | null>(null);
+  const [savingProperty, setSavingProperty] = useState<"priority" | "labels" | "dueDate" | "assignee" | "automation" | null>(null);
   const creator: ActorIdentity = {
     type: task.creatorType,
     id: task.creatorId,
@@ -497,6 +499,41 @@ export function TaskCard({
           <span className="task-identifier">ID: {displayIdentifier}</span>
         </span>
         {presentation.unread && <span className="task-unread-dot" aria-label={text("有未读更新", "Unread updates")} />}
+        {task.status === "todo" && (
+          <div
+            className="task-card-automation-control"
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="inline-flex"
+                  onClick={(event) => event.stopPropagation()}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
+                >
+                  <Switch
+                    size="sm"
+                    aria-label={task.automationEnabled ? text("关闭自动化", "Disable automation") : text("开启自动化", "Enable automation")}
+                    checked={Boolean(task.automationEnabled)}
+                    disabled={propertyDisabled}
+                    onClick={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    onCheckedChange={(checked) => {
+                      updateProperty({ automationEnabled: checked }, "automation");
+                    }}
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {task.automationEnabled ? text("关闭自动化", "Disable automation") : text("开启自动化", "Enable automation")}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
         {task.status === "in_review" && onComplete && (
           <Button variant="ghost" size="none"
             className="task-card-complete"
