@@ -66,6 +66,14 @@ import { DashboardView } from "./components/DashboardView";
 import { ProjectReadmeView } from "./components/ProjectReadmeView";
 import { IssueListView } from "./components/IssueListView";
 import { JiraConnectionDialog } from "./components/JiraConnectionDialog";
+import { FeedbackDialog } from "./components/FeedbackDialog";
+import { MessageSquareText } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./components/ui/tooltip";
 import { Toaster } from "./components/ui/sonner";
 import { ChoerodonSyncDialog } from "./components/ChoerodonSyncDialog";
 import { ChoerodonConnectionDialog } from "./components/ChoerodonConnectionDialog";
@@ -841,6 +849,7 @@ export function App() {
   const [projectCreateOpen, setProjectCreateOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [jiraDialogOpen, setJiraDialogOpen] = useState(false);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [choerodonDialogOpen, setChoerodonDialogOpen] = useState(false);
   const [choerodonSyncProject, setChoerodonSyncProject] = useState<{ id: string; name: string } | null>(null);
   const [choerodonConfigured, setChoerodonConfigured] = useState(false);
@@ -3545,51 +3554,79 @@ export function App() {
           <div ref={dragRegionRef} className="workspace-drag-region" aria-hidden="true" />
 
           <div className="header-actions">
-            {selectedProject && !isAllProjects && !isJiraProject && choerodonConfigured && (
-              <Button variant="ghost" size="none"
-                className="header-integration-trigger no-drag"
-                type="button"
-                onClick={() => setChoerodonSyncProject({ id: selectedProject.id, name: selectedProject.name })}
-                title={text("同步猪齿鱼", "Sync Choerodon")}
-              >
-                <RefreshIcon color="currentColor" />
-                <span>{text("同步猪齿鱼", "Sync Choerodon")}</span>
-              </Button>
-            )}
-            {selectedProject && (
-              <ProjectAutomationMenu
-                automation={selectedProjectAutomation}
-                models={automationModels}
-                pending={automationPending || automationCatalogLoading}
-                error={automationCatalogError ?? automationError}
-                unavailableReason={automationProjectContext.unavailableReason}
-                onOpen={() => void reconcileProjectAutomation()}
-                onChange={(options) => void saveProjectAutomation(options)}
-              />
-            )}
-            {isJiraProject && (
-              <Button variant="ghost" size="none"
-                className="icon-button"
-                type="button"
-                disabled={jiraSyncing}
-                onClick={() => void syncJiraNow()}
-                aria-label={text("同步 Jira", "Sync Jira")}
-                title={text("同步 Jira", "Sync Jira")}
-              >
-                <RefreshIcon color="currentColor" />
-              </Button>
-            )}
-            {selectedProjectId && !isJiraProject && (
-              <Button variant="ghost" size="none"
-                className="icon-button header-create-button"
-                type="button"
-                onClick={() => setEditor({ status: "todo" })}
-                aria-label={text("新建任务", "Create issue")}
-                title={text("新建任务 (C)", "Create issue (C)")}
-              >
-                <PlusIcon color="currentColor" size={14} />
-              </Button>
-            )}
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="none"
+                    className="icon-button header-feedback-button"
+                    type="button"
+                    onClick={() => setFeedbackDialogOpen(true)}
+                    aria-label={text("问题反馈", "Feedback")}
+                  >
+                    <MessageSquareText size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{text("问题反馈", "Feedback")}</TooltipContent>
+              </Tooltip>
+              {selectedProject && !isAllProjects && !isJiraProject && choerodonConfigured && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="none"
+                      className="header-integration-trigger no-drag"
+                      type="button"
+                      onClick={() => setChoerodonSyncProject({ id: selectedProject.id, name: selectedProject.name })}
+                      aria-label={text("同步猪齿鱼", "Sync Choerodon")}
+                    >
+                      <RefreshIcon color="currentColor" />
+                      <span>{text("同步猪齿鱼", "Sync Choerodon")}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{text("同步猪齿鱼", "Sync Choerodon")}</TooltipContent>
+                </Tooltip>
+              )}
+              {selectedProject && (
+                <ProjectAutomationMenu
+                  automation={selectedProjectAutomation}
+                  models={automationModels}
+                  pending={automationPending || automationCatalogLoading}
+                  error={automationCatalogError ?? automationError}
+                  unavailableReason={automationProjectContext.unavailableReason}
+                  onOpen={() => void reconcileProjectAutomation()}
+                  onChange={(options) => void saveProjectAutomation(options)}
+                />
+              )}
+              {isJiraProject && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="none"
+                      className="icon-button"
+                      type="button"
+                      disabled={jiraSyncing}
+                      onClick={() => void syncJiraNow()}
+                      aria-label={text("同步 Jira", "Sync Jira")}
+                    >
+                      <RefreshIcon color="currentColor" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{text("同步 Jira", "Sync Jira")}</TooltipContent>
+                </Tooltip>
+              )}
+              {selectedProjectId && !isJiraProject && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="none"
+                      className="icon-button header-create-button"
+                      type="button"
+                      onClick={() => setEditor({ status: "todo" })}
+                      aria-label={text("新建任务", "Create issue")}
+                    >
+                      <PlusIcon color="currentColor" size={14} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{text("新建任务 (C)", "Create issue (C)")}</TooltipContent>
+                </Tooltip>
+              )}
+            </TooltipProvider>
           </div>
         </header>
 
@@ -3986,6 +4023,10 @@ export function App() {
 
       {choerodonDialogOpen && (
         <ChoerodonConnectionDialog onClose={() => setChoerodonDialogOpen(false)} />
+      )}
+
+      {feedbackDialogOpen && (
+        <FeedbackDialog onClose={() => setFeedbackDialogOpen(false)} />
       )}
 
       {jiraDialogOpen && (

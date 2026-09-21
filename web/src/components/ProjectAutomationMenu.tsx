@@ -1,5 +1,6 @@
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LinearIcon } from "./LinearIcon";
@@ -292,32 +293,38 @@ export function ProjectAutomationMenu({
 
   return (
     <>
-      <Button variant="ghost" size="none"
-        ref={triggerRef}
-        type="button"
-        className={`project-automation-trigger no-drag ${status === "ACTIVE" ? "is-active" : "is-paused"}`}
-        aria-label={status === "ACTIVE"
-          ? text("自动认领中", "Auto-claiming")
-          : text("自动化", "Automation")}
-        aria-busy={pending}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        title={status === "ACTIVE"
-          ? text("自动认领中", "Auto-claiming")
-          : text("自动化", "Automation")}
-        onClick={() => {
-          if (!open) {
-            setPosition((current) => ({ ...current, ready: false }));
-            onOpen();
-          }
-          setOpen((current) => !current);
-        }}
-      >
-        <TaskboardIcon name={status === "ACTIVE" ? "automationPause" : "automationPlay"} />
-        <span>{status === "ACTIVE"
-          ? text("自动认领中", "Auto-claiming")
-          : text("自动化", "Automation")}</span>
-      </Button>
+      <Tooltip open={open ? false : undefined}>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="none"
+            ref={triggerRef}
+            type="button"
+            className={`project-automation-trigger no-drag ${status === "ACTIVE" ? "is-active" : "is-paused"}`}
+            aria-label={status === "ACTIVE"
+              ? text("自动认领中", "Auto-claiming")
+              : text("自动化", "Automation")}
+            aria-busy={pending}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            onClick={() => {
+              if (!open) {
+                setPosition((current) => ({ ...current, ready: false }));
+                onOpen();
+              }
+              setOpen((current) => !current);
+            }}
+          >
+            <TaskboardIcon name={status === "ACTIVE" ? "automationPause" : "automationPlay"} />
+            <span>{status === "ACTIVE"
+              ? text("自动认领中", "Auto-claiming")
+              : text("自动化", "Automation")}</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {status === "ACTIVE"
+            ? text("自动认领中", "Auto-claiming")
+            : text("自动化", "Automation")}
+        </TooltipContent>
+      </Tooltip>
       {menu}
     </>
   );

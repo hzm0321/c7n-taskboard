@@ -4,13 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/dev.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/dev.mjs" afterDir="false" />
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: update project settings and improve environment configuration">
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/DashboardView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/DashboardView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/vite.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/components/ProjectAutomationMenu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/ProjectAutomationMenu.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/styles.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,24 +58,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Git.Working.Tree.Tab.closed.by.user&quot;: &quot;closed&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/hzm/WorkSpace/Github/c7n-taskboard&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Git.Working.Tree.Tab.closed.by.user": "closed",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/hzm/WorkSpace/Github/c7n-taskboard",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "ts.external.directory.path": "/Users/hzm/WorkSpace/Github/c7n-taskboard/node_modules/@typescript/typescript-darwin-arm64/lib"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -122,7 +122,9 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <MESSAGE value="feat: add DMG build script and artwork for macOS installer" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: add DMG build script and artwork for macOS installer" />
+    <MESSAGE value="feat: update project settings and improve environment configuration" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: update project settings and improve environment configuration" />
   </component>
 </project>
