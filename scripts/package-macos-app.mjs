@@ -26,7 +26,6 @@ function run(command, args, options = {}) {
 }
 
 run(process.execPath, [path.join(projectRoot, "scripts", "sign-macos-app.mjs"), appPath]);
-run("/usr/bin/SetFile", ["-a", "E", appPath]);
 // Tauri's initial DMG predates the App signature; recreate it from the signed App.
 await rm(path.join(dmgDirectory, rawDmgName), { force: true });
 await rm(path.join(appDirectory, rawDmgName), { force: true });
