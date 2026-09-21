@@ -7,6 +7,31 @@ import { ApiError, stringField, parseDueDate } from "../shared/api-fields.mjs";
 
 const API_ORIGIN = "https://api.choerodon.com.cn";
 const descriptionMarkdown = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced" });
+descriptionMarkdown.addRule("strikethrough", {
+  filter: ["del", "s", "strike"],
+  replacement: (content) => `~~${content}~~`,
+});
+
+function commentDate(value) {
+  const date = new Date(typeof value === "string" && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
+    ? `${value.replace(" ", "T")}+08:00` : value);
+  if (!Number.isFinite(date.getTime())) throw new ApiError(502, "INVALID_CHOERODON_RESPONSE", "猪齿鱼评论时间无效");
+  return date.toISOString();
+}
+
+function normalizedComment(comment, parentId = null) {
+  return {
+    id: remoteId(comment.commentId),
+    parentId: comment.parentId && String(comment.parentId) !== "0" ? remoteId(comment.parentId) : parentId,
+    body: stringField(descriptionMarkdown.turndown(typeof comment.commentText === "string" ? comment.commentText : ""), "commentText", { maxLength: 100_000 }),
+    authorId: `choerodon:${remoteId(comment.userId)}`,
+    authorName: stringField(comment.userRealName || comment.userName || comment.userLoginName, "commentAuthor", { required: true, maxLength: 240 }),
+    authorAvatarUrl: comment.userImageUrl || null,
+    replyToAuthorName: comment.replyToUserRealName || comment.replyToUserName || null,
+    createdAt: commentDate(comment.creationDate ?? comment.lastUpdateDate),
+    updatedAt: commentDate(comment.lastUpdateDate),
+  };
+}
 
 function remoteId(value) {
   const id = String(value ?? "");
@@ -291,6 +316,19 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
         ? descriptionMarkdown.turndown(detail.description).trim()
         : "";
       issue.description = stringField(description || `来源：猪齿鱼 / ${project.name} / ${board.name}\n任务编号：${issue.key}\n猪齿鱼任务 ID：${issue.id}`, "description", { maxLength: 100_000 });
+      const commentsPath = `/agile/v1/projects/${project.id}/issue_comment`;
+      const comments = await request(config.authorization, `${commentsPath}/${id}`, organization.id);
+      if (!Array.isArray(comments)) throw new ApiError(502, "INVALID_CHOERODON_RESPONSE", "猪齿鱼未返回有效的评论列表");
+      issue.comments = [];
+      for (const comment of comments) {
+        const normalized = normalizedComment(comment);
+        issue.comments.push(normalized);
+        if (comment.replySize > 0) {
+          const replies = await request(config.authorization, `${commentsPath}/reply/${normalized.id}`, organization.id);
+          if (!Array.isArray(replies)) throw new ApiError(502, "INVALID_CHOERODON_RESPONSE", "猪齿鱼未返回有效的回复列表");
+          issue.comments.push(...replies.map((reply) => normalizedComment(reply, normalized.id)));
+        }
+      }
     }
     return { organization, project, board, groups, issues: [...issues.values()] };
   }

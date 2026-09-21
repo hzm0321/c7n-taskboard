@@ -3160,6 +3160,21 @@ kbd {
   padding: 8px 0;
 }
 
+.comment-entry.is-reply {
+  padding-inline-start: 12px;
+  border-inline-start: 2px solid var(--border);
+}
+
+.comment-reply-label,
+.comment-source {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.comment-entry.is-reply .comment-header {
+  flex-wrap: wrap;
+}
+
 .actor-avatar {
   z-index: 1;
   display: grid;

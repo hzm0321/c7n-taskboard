@@ -140,6 +140,9 @@ function commentFromRow(row) {
     id: row.id,
     taskId: row.task_id,
     body: row.body,
+    externalSource: row.external_source ?? null,
+    parentCommentId: row.parent_comment_id ?? null,
+    replyToAuthorName: row.reply_to_author_name ?? null,
     threadId: row.thread_id,
     threadBinding: threadBindingFromRow(row),
     legacyLocalThreadId: legacyLocalThreadIdFromRow(row),
@@ -703,6 +706,11 @@ export class TaskboardDatabase {
     }
 
     const commentColumns = this.database.prepare("PRAGMA table_info(comments)").all();
+    for (const column of ["external_source", "parent_comment_id", "reply_to_author_name"]) {
+      if (!commentColumns.some((candidate) => candidate.name === column)) {
+        this.database.exec(`ALTER TABLE comments ADD COLUMN ${column} TEXT`);
+      }
+    }
     if (!commentColumns.some((column) => column.name === "agent_session")) {
       this.database.exec("ALTER TABLE comments ADD COLUMN agent_session TEXT");
     }
@@ -2408,6 +2416,49 @@ export class TaskboardDatabase {
       ORDER BY change_revision
     `).all(task.id, after.revision);
     return this.#commentsWithAttachments(rows);
+  }
+
+  syncChoerodonComments(taskId, comments) {
+    const task = this.#requireTask(taskId);
+    const localId = (remoteId) => `choerodon:${task.id}:${remoteId}`;
+    const changed = [];
+    this.database.exec("BEGIN IMMEDIATE");
+    try {
+      for (const comment of comments) {
+        const id = localId(comment.id);
+        const current = this.getComment(id);
+        const fields = {
+          body: comment.body,
+          authorId: comment.authorId,
+          authorName: comment.authorName,
+          authorAvatarUrl: comment.authorAvatarUrl,
+          parentCommentId: comment.parentId ? localId(comment.parentId) : null,
+          replyToAuthorName: comment.replyToAuthorName,
+          updatedAt: comment.updatedAt,
+        };
+        if (current && Object.entries(fields).every(([key, value]) => current[key] === value)) continue;
+        const revision = this.#nextCommentAttachmentRevision();
+        this.database.prepare(`
+          INSERT INTO comments (
+            id, task_id, body, author_type, author_id, author_name, author_avatar_url,
+            external_source, parent_comment_id, reply_to_author_name,
+            version, created_at, updated_at, change_revision
+          ) VALUES (?, ?, ?, 'user', ?, ?, ?, 'choerodon', ?, ?, 1, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            body = excluded.body, author_id = excluded.author_id,
+            author_name = excluded.author_name, author_avatar_url = excluded.author_avatar_url,
+            parent_comment_id = excluded.parent_comment_id, reply_to_author_name = excluded.reply_to_author_name,
+            version = comments.version + 1, updated_at = excluded.updated_at, change_revision = excluded.change_revision
+        `).run(id, task.id, fields.body, fields.authorId, fields.authorName, fields.authorAvatarUrl,
+          fields.parentCommentId, fields.replyToAuthorName, comment.createdAt, fields.updatedAt, revision);
+        changed.push({ type: current ? "comment.updated" : "comment.created", comment: this.getComment(id) });
+      }
+      this.database.exec("COMMIT");
+    } catch (error) {
+      this.database.exec("ROLLBACK");
+      throw error;
+    }
+    return changed;
   }
 
   createComment(taskId, input) {

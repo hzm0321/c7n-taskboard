@@ -30,8 +30,8 @@ export const DEFAULT_BOARD_DISPLAY_SETTINGS: BoardDisplaySettings = {
   cover: true,
   body: false,
   createdAt: false,
-  mainStatuses: [...MAIN_STATUSES],
-  sidebarStatuses: [...SECONDARY_STATUSES, "archived"],
+  mainStatuses: [...MAIN_STATUSES, "done"],
+  sidebarStatuses: [...SECONDARY_STATUSES.filter((status) => status !== "done"), "archived"],
   hiddenStatuses: [],
 };
 

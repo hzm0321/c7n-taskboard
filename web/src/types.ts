@@ -525,6 +525,9 @@ export interface Comment {
   id: string;
   taskId: string;
   body: string;
+  externalSource?: string | null;
+  parentCommentId?: string | null;
+  replyToAuthorName?: string | null;
   authorType: ActorType;
   authorId: string;
   authorName: string;

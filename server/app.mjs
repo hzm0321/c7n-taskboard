@@ -2071,6 +2071,7 @@ export function createTaskboardServer(options = {}) {
         const result = { created: 0, updated: 0, unchanged: 0, tasks: [] };
         for (const issue of selected) {
           let task = existing.get(issue.id);
+          let taskUnchanged = false;
           if (task) {
             if (task.projectId !== projectId) throw new ApiError(409, "CHOERODON_TASK_MOVED", `关联任务 ${task.identifier} 已移到其他项目`);
             const fields = { title: issue.title, description: issue.description, priority: issue.priority, assignee: issue.assignee, startDate: issue.startDate, dueDate: issue.dueDate };
@@ -2079,7 +2080,10 @@ export function createTaskboardServer(options = {}) {
               task = database.updateTask(task.id, task.version, changes, undefined, undefined, actor);
               events.emit("task.updated", { task });
               result.updated += 1;
-            } else result.unchanged += 1;
+            } else {
+              result.unchanged += 1;
+              taskUnchanged = true;
+            }
           } else {
             const { assigneeTarget, ...taskInput } = parseTaskCreate({
               projectId, title: issue.title, status: "todo", priority: issue.priority,
@@ -2091,6 +2095,12 @@ export function createTaskboardServer(options = {}) {
             });
             events.emit("task.created", { task });
             result.created += 1;
+          }
+          const commentChanges = database.syncChoerodonComments(task.id, issue.comments);
+          for (const change of commentChanges) events.emit(change.type, { comment: change.comment, task });
+          if (taskUnchanged && commentChanges.length) {
+            result.unchanged -= 1;
+            result.updated += 1;
           }
           result.tasks.push({ issueId: issue.id, id: task.id, identifier: task.identifier });
         }

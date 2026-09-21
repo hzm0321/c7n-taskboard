@@ -1005,6 +1005,14 @@ export function TaskDetail({
     .filter((actor, index, actors) => (
       actors.findIndex((candidate) => actorKey(candidate) === actorKey(actor)) === index
     ));
+  const commentIds = new Set(comments.map((comment) => comment.id));
+  function commentThread(comment: Comment, depth = 0): { kind: "comment"; id: string; createdAt: string; comment: Comment; depth: number }[] {
+    return [
+      { kind: "comment", id: comment.id, createdAt: comment.createdAt, comment, depth },
+      ...comments.filter((reply) => reply.parentCommentId === comment.id)
+        .flatMap((reply) => commentThread(reply, depth + 1)),
+    ];
+  }
   const activityTimeline = [
     ...taskActivities.flatMap((activity) => activity.changes.map((change, index) => ({
       kind: "change" as const,
@@ -1013,7 +1021,7 @@ export function TaskDetail({
       activity,
       change,
     }))),
-    ...comments.map((comment) => ({
+    ...comments.filter((comment) => !comment.parentCommentId || !commentIds.has(comment.parentCommentId)).map((comment) => ({
       kind: "comment" as const,
       id: comment.id,
       createdAt: comment.createdAt,
@@ -1021,7 +1029,7 @@ export function TaskDetail({
     })),
   ].sort((left, right) => (
     left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id)
-  ));
+  )).map((item) => item.kind === "comment" ? commentThread(item.comment) : [item]).flat();
 
   return (
     <section
@@ -1367,7 +1375,8 @@ export function TaskDetail({
                       };
                   return (
                   <article
-                    className={`comment-entry is-${comment.authorType}`}
+                    className={`comment-entry is-${comment.authorType}${item.depth > 0 ? " is-reply" : ""}`}
+                    style={item.depth > 0 ? { marginInlineStart: `${Math.min(item.depth, 4) * 24}px` } : undefined}
                     key={comment.id}
                     id={`comment-${comment.id}`}
                   >
@@ -1378,7 +1387,11 @@ export function TaskDetail({
                           actor={commentActor}
                         />
                         <strong>{commentActor.name}</strong>
+                        {comment.replyToAuthorName && (
+                          <span className="comment-reply-label">{text("回复", "replied to")} {comment.replyToAuthorName}</span>
+                        )}
                         <time title={exactTime(comment.createdAt, locale)}>{relativeTime(comment.createdAt, locale)}</time>
+                        {comment.externalSource === "choerodon" && <span className="comment-source">{text("猪齿鱼", "Choerodon")}</span>}
                         {comment.version > 1 && (
                           <span
                             className="comment-edited"
@@ -1390,7 +1403,7 @@ export function TaskDetail({
                             {text("已编辑", "Edited")}
                           </span>
                         )}
-                        {editingId !== comment.id && (
+                        {editingId !== comment.id && comment.externalSource !== "choerodon" && (
                           <div className="comment-actions" data-comment-menu-root={comment.id}>
                             <Button variant="ghost" size="none"
                               type="button"
