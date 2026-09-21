@@ -27,7 +27,7 @@ test("the taskboard skill disambiguates companion terminology for agents", () =>
 test("the taskboard skill coordinates safe issue execution and review handoff", () => {
   assert.match(
     skillSource,
-    /first run `issue get` and `comment list`[\s\S]*Read the description and latest comments before deciding whether to start[\s\S]*If they say to wait, not execute, or not start now, stop and report without changing the status/i,
+    /first run `issue get` and `comment list`[\s\S]*Read `description` and the latest comments before deciding whether to start[\s\S]*If they say to wait, not execute, or not start now, stop and report without changing the status/i,
   );
   assert.match(skillSource, /Treat comments as current requirements, including returned work/i);
   assert.match(

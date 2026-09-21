@@ -119,9 +119,6 @@ def main():
             subprocess.call(["/usr/bin/SetFile", "-c", "icnC", target_icon])
             subprocess.call(["/usr/bin/SetFile", "-a", "C", mount_point])
 
-        # 7. Hide .app extension
-        subprocess.call(["/usr/bin/SetFile", "-a", "E", target_app])
-
         # 8. Configure Finder layout via AppleScript
         # macOS title bar height is ~28pt. Outer window bounds height must be window_h + 28
         # so that the inner content area exactly matches the 752x436 background image.
