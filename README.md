@@ -1,18 +1,22 @@
-[English](README.md) | [简体中文](README.zh-CN.md)
+[简体中文](README.md) | [English](README.en.md)
+
+<p align="center">
+  <img src="web/public/c7n-insights-icon.png" alt="C7N Taskboard Logo" width="128">
+</p>
 
 # Codex Taskboard
 
-A local-first issue board that runs in a browser and can be embedded in Codex through the standalone CDP launcher or its injection script. The same HTTP API powers the React UI and the `taskctl` CLI used by the bundled Codex Skill.
+一个本地优先的任务面板，可在浏览器中运行，也可通过独立 CDP 启动器或其注入脚本嵌入 Codex。同一套 HTTP API 为 React UI 和随附 Codex Skill 使用的 `taskctl` CLI 提供支持。
 
-![Codex Taskboard product screenshot](docs/assets/codex-taskboard.png)
+![Codex Taskboard 产品截图](docs/assets/codex-taskboard.png)
 
-## Requirements
+## 系统要求
 
-- Node.js 22.5 or newer
-- macOS App and DMG builds: Xcode Command Line Tools and Rust 1.88 or newer with the `aarch64-apple-darwin` and `x86_64-apple-darwin` targets. `npm install` installs the Tauri CLI used by this project.
-- Windows NSIS builds: the Microsoft Store Codex App, Rust 1.88 or newer, and Visual Studio Build Tools with the C++ workload and Windows SDK.
+- Node.js 22.5 或更高版本
+- 构建 macOS App 和 DMG：Xcode Command Line Tools、Rust 1.88 或更高版本，以及 `aarch64-apple-darwin` 和 `x86_64-apple-darwin` target。`npm install` 会安装本项目使用的 Tauri CLI。
+- 构建 Windows NSIS：Microsoft Store 版 Codex App、Rust 1.88 或更高版本，以及带 C++ 工作负载和 Windows SDK 的 Visual Studio Build Tools。
 
-## Run locally
+## 本地运行
 
 ```bash
 npm install
@@ -20,19 +24,19 @@ npm run build
 npm start
 ```
 
-Open <http://127.0.0.1:47823>. The SQLite database is stored at `.data/taskboard.sqlite`.
+打开 <http://127.0.0.1:47823>。SQLite 数据库存储在 `.data/taskboard.sqlite`。
 
-For development with live frontend reload:
+如需在前端实时重载模式下开发：
 
 ```bash
 npm run dev
 ```
 
-The Vite UI runs at <http://127.0.0.1:5173> and proxies API requests to the local service.
+Vite UI 运行在 <http://127.0.0.1:5173>，并将 API 请求代理到本地服务。
 
-## Use the CLI
+## 使用 CLI
 
-Run it from the project:
+在项目中运行：
 
 ```bash
 npm run taskctl -- project create \
@@ -48,24 +52,24 @@ npm run taskctl -- issue create \
   --labels product,mvp
 ```
 
-Use `npm link` if you want `taskctl` on your shell path. Set `CODEX_TASKBOARD_URL` to point the CLI at another local or LAN service. Cloud deployments are configured through the **loopback companion** (device-local loopback service for auth and path mapping—not a chat persona) with `taskctl cloud login`.
+请运行 `npm link`，以便在 shell 路径中使用 `taskctl`。设置 `CODEX_TASKBOARD_URL`，可让 CLI 指向另一个本地或局域网服务。云端部署通过**回环 companion**（本机 loopback 配套服务，不是「伴侣」）使用 `taskctl cloud login` 配置。
 
-## Install the Codex Skill
+## 安装 Codex Skill
 
-Copy or symlink `skills/manage-taskboard` into the Codex skills directory, then start a new Codex task:
+将 `skills/manage-taskboard` 复制或符号链接到 Codex Skill 目录，然后启动一个新的 Codex 任务：
 
 ```bash
 ln -s /absolute/path/to/codex-taskboard/skills/manage-taskboard \
   ~/.agents/skills/manage-taskboard
 ```
 
-The desktop app keeps this same directory synchronized with its bundled Skill. The Skill teaches Codex to inspect an issue, move it to `in_progress`, use optimistic versions, verify the work, and then move it to `in_review`; it moves the issue to `done` only after the user explicitly confirms acceptance or asks to mark it complete.
+桌面 App 会让该目录与内置 Skill 保持同步。该 Skill 会指导 Codex 检查任务，将其移到 `in_progress`，使用乐观版本控制，验证工作，然后将其移到 `in_review`；只有在用户明确确认接受或要求将任务标记为完成后，才会将任务移到 `done`。
 
-## Embed in Codex
+## 嵌入 Codex
 
-### Manual: use a dedicated CDP port
+### 手动：使用专用 CDP 端口
 
-Keep the existing Codex window open. From the Taskboard repository, start a second Codex instance with a dedicated CDP port:
+让现有 Codex 窗口保持打开。在 Taskboard 仓库中，使用专用 CDP 端口启动第二个 Codex 实例：
 
 ```bash
 open -n -a /Applications/ChatGPT.app --args \
@@ -73,165 +77,153 @@ open -n -a /Applications/ChatGPT.app --args \
   --remote-allow-origins=http://127.0.0.1:9231
 ```
 
-After the new Codex window appears, run the injector in another terminal:
+新 Codex 窗口出现后，在另一个终端中运行注入器：
 
 ```bash
 CODEX_TASKBOARD_HOST=127.0.0.1 \
 npm run codex:inject -- --port 9231 --open
 ```
 
-Keep the injector terminal running while using the embedded panel. The original Codex window remains unchanged, and the new window receives the Taskboard sidebar entry. If port `9231` is occupied, use another port in both commands.
+使用嵌入式面板时，让注入器终端保持运行。原 Codex 窗口不会变化，新窗口会显示 Taskboard 侧边栏入口。如果端口 `9231` 已被占用，请在两个命令中使用另一个端口。
 
-### Recommended: launch an independent Taskboard window with one command
+### 推荐：用一个命令启动独立 Taskboard 窗口
 
-Keep existing Codex windows open and run:
+让现有 Codex 窗口保持打开，然后运行：
 
 ```bash
 CODEX_TASKBOARD_HOST=127.0.0.1 npm run codex
 ```
 
-This starts the local Taskboard service when needed. It reuses an open Codex with a reachable CDP renderer, opens Taskboard in the native browser panel of an ordinary Codex without CDP, or launches the official macOS Codex app with an independent profile and loopback-only port `9231` when no Codex is open. It injects a native-looking Taskboard entry after Plugins when CDP is available and keeps watching both the service and replacement renderers. Keep this command running while using the embedded panel. The launcher does not modify `ChatGPT.app` or its `app.asar`.
+该命令会在需要时启动本地 Taskboard 服务。它会复用已打开且有可用 CDP 渲染器的 Codex；普通 Codex 没有 CDP 时，它会在该实例的原生浏览面板中打开 Taskboard；没有打开 Codex 时，它会使用独立配置文件和仅限回环访问的端口 `9231` 启动官方 macOS Codex App。有可用 CDP 时，它会在 Plugins 后注入一个原生外观的 Taskboard 入口，并持续监视服务和替换后的渲染器。使用嵌入式面板时，请让该命令保持运行。启动器不会修改 `ChatGPT.app` 或其 `app.asar`。
 
-The source launcher writes its authenticated endpoint to `.data/launcher-runtime.json`. A `taskctl` command installed with `npm link` reads this file by default, so a normal shell and a Codex task opened from the panel use the same Taskboard service without an extra environment variable.
+源码启动器会把带身份信息的服务地址写入 `.data/launcher-runtime.json`。通过 `npm link` 安装的 `taskctl` 默认读取此文件。因此，普通 shell 和从面板打开的 Codex 任务无需设置额外环境变量，即可使用同一个 Taskboard 服务。
 
-### macOS App: open and inject without a terminal
+### macOS App：无需终端即可打开和注入
 
-For Tauri development, run:
+如需进行 Tauri 开发，请运行：
 
 ```bash
 npm run app:dev
 ```
 
-To build the local App and DMG, install the two Rust targets once, then run the build:
+如需构建本地 App 和 DMG，请先安装两个 Rust target，然后运行构建：
 
 ```bash
 rustup target add aarch64-apple-darwin x86_64-apple-darwin
 npm run app:build
 ```
 
-Open `src-tauri/target/universal-apple-darwin/release/bundle/macos/C7N Codex.app` from Finder. The DMG is in `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`. If you only want the stable App, download the current DMG from [GitHub Releases](https://github.com/hzm0321/c7n-taskboard/releases/latest).
+从 Finder 打开 `src-tauri/target/universal-apple-darwin/release/bundle/macos/C7N Codex.app`。DMG 位于 `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`。如果只需安装稳定版，请从 [GitHub Releases](https://github.com/hzm0321/c7n-taskboard/releases/latest) 下载当前 DMG。
 
-The App contains its own Node runtime, Taskboard service, built web UI, Skill, CLI wrapper, and injection script. It starts the service, reuses an open Codex with a reachable CDP renderer, opens Taskboard in the native browser panel of an ordinary Codex without CDP, or launches the official Codex app when no Codex is open. It waits for the renderer, injects the sidebar entry when CDP is available, and opens the panel without showing a terminal window. The App can be copied away from this checkout; the target Mac only needs the official Codex app and does not need this repository, a system Node installation, or a separate Codex CLI installation. Taskboard data is stored in `~/Library/Application Support/Codex Taskboard`, and launcher output is written to `~/Library/Logs/Codex Taskboard/codex-taskboard-launcher.log`.
+该 App 包含自己的 Node 运行时、Taskboard 服务、构建后的 Web UI、Skill、CLI 包装器和注入脚本。它会启动服务，复用已打开且有可用 CDP 渲染器的 Codex；普通 Codex 没有 CDP 时，它会在该实例的原生浏览面板中打开 Taskboard；没有打开 Codex 时，它会启动官方 Codex App。有可用 CDP 时，它会等待渲染器并注入侧边栏入口，然后在不显示终端窗口的情况下打开面板。该 App 可以复制到本检出目录之外；目标 Mac 只需安装官方 Codex App，不需要此仓库、系统 Node 安装或单独的 Codex CLI 安装。Taskboard 数据存储在 `~/Library/Application Support/Codex Taskboard`，启动器输出写入 `~/Library/Logs/Codex Taskboard/codex-taskboard-launcher.log`。
 
-### First launch on macOS
+### macOS 首次打开
 
-Local builds and GitHub Releases use **ad-hoc signing without Apple notarization**; no Apple Developer account is required. Both the App and DMG are signed, the bundled Node keeps its official signature, and automatic updates use a separate Tauri signing key.
+本地构建和 GitHub Releases 均使用 **Ad-hoc 签名，不进行 Apple 公证**，无需 Apple 开发者账号。App 和 DMG 均会签名，内置 Node 保留官方签名；自动更新使用独立的 Tauri 签名密钥。
 
-Download the DMG from this repository's Releases and drag the App into Applications. On macOS 15 or later, attempt to open it, then use **System Settings → Privacy & Security → Open Anyway**. On macOS 14, try Control-click → **Open**.
+从本仓库 Releases 下载 DMG，将 App 拖入「应用程序」。macOS 15 及以上首次被拦截后，进入「系统设置 → 隐私与安全性」，点击对应 App 的「仍要打开」并确认；macOS 14 可尝试 Control 点击 App →「打开」。
 
-If the App is reported as damaged, download it again and check its source and signature first. Remove only its quarantine attribute if quarantine is the cause. See the [full first-launch instructions](docs/macos-first-open.md), which are also automatically included in Release Notes.
+遇到“应用已损坏”时，先重新下载并检查来源、签名；确认是下载隔离导致后，可仅移除该 App 的隔离属性。完整步骤见 [macOS 首次打开指引](docs/macos-first-open.md)，发布流程也会自动将这份指引加入 Release Notes。
 
-### Development reload and GitHub updates
+### 开发热更新与 GitHub 自动更新
 
-`npm run dev` uses Vite to update frontend modules and Node `--watch` to restart the backend when its files change; GitHub is not involved. The desktop App checks on startup, every 30 minutes, and through **Check for updates**, then downloads, verifies the signature, installs, and restarts.
+`npm run dev` 使用 Vite 更新浏览器中的前端模块，并通过 Node `--watch` 在后端文件变化后重启服务，不依赖 GitHub。桌面 App 则在启动时、每 30 分钟及点击“检查更新”时检查版本，下载并验证签名后安装、重启。
 
-Stable updates use `https://github.com/hzm0321/c7n-taskboard/releases/latest/download/latest.json`; Beta updates use `https://raw.githubusercontent.com/hzm0321/c7n-taskboard/beta-updater/latest.json`. Pushing source code alone does not create these files. Before using `.github/workflows/release-macos.yml`:
+本仓库的稳定版更新源为 `https://github.com/hzm0321/c7n-taskboard/releases/latest/download/latest.json`，Beta 更新源为 `https://raw.githubusercontent.com/hzm0321/c7n-taskboard/beta-updater/latest.json`。上传源码不会生成这些更新文件，需要运行 `.github/workflows/release-macos.yml` 发布流程。
 
-- Set your Tauri public key in `src-tauri/tauri.conf.json` at `plugins.updater.pubkey` and store its private key and password in Actions Secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. This repository now has its own public key; releases must use the matching private key. Never commit private keys or regenerate the key pair for routine releases.
-- macOS uses ad-hoc signing and requires no `APPLE_*` or `KEYCHAIN_PASSWORD` Secrets. Follow the first-launch instructions above when installing.
-- Configure the `macos-release` environment and a `RELEASE_RULESET_TOKEN` that can read repository rulesets. Enable immutable releases and protect `v*` tags against updates and deletion, with empty exclusion and bypass lists.
-- Prepare matching application versions on the default branch (currently `c7n`). Publish `v<version>-beta.1` first, then `v<version>` from the same commit. The version must exceed existing stable releases.
+首次发布前需要完成以下配置：
 
-An installed upstream App retains its embedded update endpoint and public key. Manually install an App built from this repository once to receive subsequent updates from this repository.
+- 配置自己的 Tauri 更新签名密钥，将公钥写入 `src-tauri/tauri.conf.json` 的 `plugins.updater.pubkey`，私钥及密码保存为 Actions Secrets `TAURI_SIGNING_PRIVATE_KEY`、`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`。本仓库已配置独立公钥，发布时必须使用与它匹配的私钥；不要提交私钥或在后续发布时随意重新生成密钥。
+- macOS 使用 Ad-hoc 签名，无需配置 `APPLE_*` 或 `KEYCHAIN_PASSWORD` Secrets。首次安装需要按上述指引在系统中放行。
+- 配置发布环境 `macos-release` 和可读取仓库 Ruleset 的 `RELEASE_RULESET_TOKEN`；启用 immutable releases，并为 `v*` 标签配置禁止更新和删除的规则，排除列表和绕过者列表均为空。
+- 在仓库默认分支（当前为 `c7n`）上准备一致的应用版本，先推送 `v<版本>-beta.1` 发布 Beta，再从同一提交推送 `v<版本>` 发布稳定版；版本必须高于已发布的稳定版。
 
-### Linux App: Ubuntu 24.04 x64 packages
+已安装的上游 App 仍使用其内置更新地址和公钥，需要先手动安装一次本仓库构建的 App，后续才能接收本仓库的更新。
 
-The first Linux desktop release supports Ubuntu 24.04 LTS on x64 only. Install the official ChatGPT desktop `.deb` first and confirm that `chatgpt` opens it. Then download either the C7N Codex `.deb` or `.AppImage` from [GitHub Releases](https://github.com/hzm0321/c7n-taskboard/releases/latest). Replace `<file>` below with the downloaded filename.
+### Linux App：Ubuntu 24.04 x64 软件包
 
-Install the `.deb` package:
+Linux 桌面版第一版仅支持 Ubuntu 24.04 LTS x64。请先安装官方 ChatGPT 桌面版 `.deb`，并确认运行 `chatgpt` 可以打开它。然后从 [GitHub Releases](https://github.com/hzm0321/c7n-taskboard/releases/latest) 下载 C7N Codex `.deb` 或 `.AppImage`。请将以下命令中的 `<file>` 替换为下载的文件名。
+
+安装 `.deb` 软件包：
 
 ```bash
 sudo apt install ./<file>.deb
 ```
 
-Or run the AppImage:
+或者运行 AppImage：
 
 ```bash
 chmod +x ./<file>.AppImage
 ./<file>.AppImage
 ```
 
-To build both packages on Ubuntu 24.04 x64, run:
+如需在 Ubuntu 24.04 x64 上构建这两种软件包，请运行：
 
 ```bash
 npm ci
 npm run app:build:linux:x64
 ```
 
-This first release does not support ARM64, Fedora, RPM packages, or other Linux distributions.
+第一版不支持 ARM64、Fedora、RPM 软件包或其他 Linux 发行版。
 
-### Windows code signing
+### Windows App：托盘启动器与内置 Taskboard
 
-For official Windows releases after the application is approved: **Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).** Current Windows CI artifacts remain unsigned until that approval. See the [Code signing policy](docs/code-signing-policy.md), [Privacy policy](PRIVACY.md), and [Windows uninstall instructions](docs/windows-uninstall.md).
-
-### Windows App: tray launcher and bundled Taskboard
-
-Install the official Codex App from the Microsoft Store. To build the current-user NSIS installer on Windows x64, run:
+先从 Microsoft Store 安装官方 Codex App。在 Windows x64 上运行以下命令构建当前用户级 NSIS 安装包：
 
 ```powershell
 npm ci
 npm run app:build:windows
 ```
 
-The installer is written to `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/`. It installs a tray launcher, bundled Node runtime, local service, built web UI, Skill, `taskctl.cmd`, and injection script. Taskboard data is stored in `%APPDATA%\Codex Taskboard`; logs are stored in `%LOCALAPPDATA%\Codex Taskboard\Logs`; the Skill is copied to `%USERPROFILE%\.agents\skills\manage-taskboard`.
+安装包位于 `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/`。它包含托盘启动器、内置 Node、本地服务、构建后的 Web UI、Skill、`taskctl.cmd` 和注入脚本。Taskboard 数据存储在 `%APPDATA%\Codex Taskboard`，日志存储在 `%LOCALAPPDATA%\Codex Taskboard\Logs`，Skill 会复制到 `%USERPROFILE%\.agents\skills\manage-taskboard`。
 
-Windows CI artifacts are intentionally unsigned and do not auto-update. Review [the code-signing policy](docs/code-signing-policy.md) before distributing a build. See [Windows uninstall](docs/windows-uninstall.md) for retained-data behavior.
+Windows CI 产物目前有意保持未签名，也不支持自动更新。分发前请阅读[代码签名策略](docs/code-signing-policy.md)。保留数据的行为见 [Windows 卸载说明](docs/windows-uninstall.md)。
 
-Codex 26.715.52143 ships a renderer CSP that blocks arbitrary HTTP iframes. The launcher therefore enables CDP CSP bypass, reloads that renderer once, installs the document-start script, and waits until the Taskboard OOPIF is actually loaded. CDP is unauthenticated to other processes on the same machine, so only run trusted local code while the launcher is active.
+Codex 26.715.52143 的渲染器 CSP 会阻止任意 HTTP iframe。因此，启动器会启用 CDP CSP 绕过，重新加载该渲染器一次，安装文档启动脚本，并等待 Taskboard OOPIF 实际加载。同一台机器上的其他进程访问 CDP 时不需要身份验证，因此启动器运行时只能运行受信任的本地代码。
 
-To inject into a Codex instance that was already launched with CDP by another method, run:
+要注入一个已经通过其他方式使用 CDP 启动的 Codex 实例，请运行：
 
 ```bash
 npm run codex:inject -- --port 9229 --open
 ```
 
-This command also stays resident so the injected tab can restart Taskboard after a service exit. Stop it with `Ctrl-C`.
+该命令也会保持驻留，因此服务退出后，注入的标签页可以重新启动 Taskboard。使用 `Ctrl-C` 停止该命令。
 
-The script adds a Taskboard entry to the Codex sidebar and renders the iframe across Codex's complete main workspace, including the contextual titlebar area so Taskboard's own header does not leave an empty strip. That full rectangular header is placed above Electron's draggable layer and marked `no-drag`; because the native contextual actions are suppressed while Taskboard is active, its own actions use their normal edge padding without an artificial right-side gap. The native sidebar stays mounted, while the previous page selection and contextual header are temporarily suppressed; choosing another Codex page restores them.
+该脚本会在 Codex 侧边栏添加 Taskboard 入口，并在 Codex 的整个主工作区渲染 iframe，包括上下文标题栏区域，因此 Taskboard 自己的页眉不会留下空白条。这个完整的矩形页眉位于 Electron 可拖动层之上，并标记为 `no-drag`；由于 Taskboard 活动时会隐藏原生上下文操作，它自己的操作可以使用正常的边缘内边距，不会产生人为的右侧空隙。原生侧边栏保持挂载，此前页面的选中状态和上下文页眉会暂时隐藏；选择另一个 Codex 页面会恢复它们。
 
-“在对话中打开” selects the corresponding native Codex project when one is available and opens an unsent native composer with an `e-taskboard` instruction and the issue's actual identifier. The installed Skill is selected implicitly from that instruction, so the composer does not add a `$manage-taskboard` mention. A conversation is attributed only after it actually processes the issue: `taskctl` reads Codex's `CODEX_THREAD_ID` and records that ID on the issue or comment mutation. Recorded IDs are clickable through Codex's native route bridge. Each issue can bind either one Git branch or one worktree; the options are scanned from the selected Codex project's repository instead of being typed by hand. The integration uses Codex's existing project, composer, and route markers; it does not patch React, replace `fetch`, load private chunks, or edit Codex data files.
+“在对话中打开”会在可用时选择对应的原生 Codex 项目，并打开一个未发送的原生 composer，其中包含 `e-taskboard` 指令和任务的真实标识符。已安装的 Skill 会根据该指令隐式选中，因此 composer 不会添加 `$manage-taskboard` 提及。只有在会话实际处理该任务后，才会记录该会话的归属关系：`taskctl` 读取 Codex 的 `CODEX_THREAD_ID`，并在任务或评论变更上记录该 ID。记录的 ID 可通过 Codex 的原生路由桥接点击。每个任务可以绑定一个 Git 分支或一个 worktree；选项从所选 Codex 项目的仓库扫描，而不是手动输入。该集成使用 Codex 现有的项目、composer 和路由标记；它不会修改 React、替换 `fetch`、加载私有 chunk 或编辑 Codex 数据文件。
 
-To use a different UI origin, set `window.__CODEX_TASKBOARD_URL__` before the user script runs.
+要使用不同的 UI 来源，请在用户脚本运行前设置 `window.__CODEX_TASKBOARD_URL__`。
 
-## Configuration
+## 配置
 
-| Variable | Default | Purpose |
+| 变量 | 默认值 | 用途 |
 | --- | --- | --- |
-| `CODEX_TASKBOARD_HOST` | `0.0.0.0` | HTTP bind address; use `127.0.0.1` to disable LAN access |
-| `CODEX_TASKBOARD_PORT` | `47823` | Local HTTP port |
-| `CODEX_TASKBOARD_TRUSTED_ORIGINS` | unset | Comma-separated exact HTTPS origins allowed through a loopback reverse tunnel |
-| `CODEX_TASKBOARD_DATA_DIR` | `.data` | SQLite data directory |
-| `CODEX_TASKBOARD_URL` | `http://127.0.0.1:47823` | CLI API origin |
+| `CODEX_TASKBOARD_HOST` | `0.0.0.0` | HTTP 绑定地址；使用 `127.0.0.1` 可禁用局域网访问 |
+| `CODEX_TASKBOARD_PORT` | `47823` | 本地 HTTP 端口 |
+| `CODEX_TASKBOARD_DATA_DIR` | `.data` | SQLite 数据目录 |
+| `CODEX_TASKBOARD_URL` | `http://127.0.0.1:47823` | CLI API 源地址 |
 
-`npm start` prints both the local URL and the available LAN URLs. Teammates on the same trusted network can open one of those LAN URLs and use the same taskboard service. Task, comment, and attachment changes are broadcast to every open client through server-sent events; reconnecting clients perform a full refresh so changes made while disconnected are not missed. A teammate using `taskctl` can point it at the shared service with `CODEX_TASKBOARD_URL=http://<host-ip>:47823`.
+`npm start` 会输出本地 URL 和可用的局域网 URL。同一受信任网络中的协作者可以打开其中一个局域网 URL，并使用同一个 Taskboard 服务。任务、评论和附件变化通过服务器发送事件广播到所有打开的客户端；客户端重连后会执行完整刷新，因此不会遗漏断开连接期间发生的变化。使用 `taskctl` 的协作者可以通过 `CODEX_TASKBOARD_URL=http://<host-ip>:47823` 指向共享服务。
 
-LAN mode has no account authentication: anyone on the trusted local network who can reach the URL can read and write the taskboard. Public internet and cloud deployment require an authenticated deployment boundary.
+局域网模式没有账户身份验证：受信任本地网络中任何能访问该 URL 的人都可以读取和写入 Taskboard。公网和云端部署需要经过身份验证的部署边界。
 
-For a reverse tunnel that connects to the local listener, set `CODEX_TASKBOARD_TRUSTED_ORIGINS` to the tunnel's public HTTPS origin, for example `https://board.example.test`. Multiple origins are comma-separated. The variable cannot be empty, and duplicate origins (including normalized forms such as a trailing slash or default HTTPS port) are rejected at startup. Entries must otherwise be exact HTTPS origins; paths, queries, fragments, credentials, and wildcards are rejected. A reverse proxy or tunnel can preserve that public `Host`: Taskboard derives its canonical HTTPS origin and requires an exact configured match. If the browser supplies an `Origin`, that header is validated independently; the proxy must preserve it rather than fabricate one. Forwarded headers are not used for either decision. Configured public hosts and trusted origins can use ordinary Taskboard HTTP and realtime endpoints, but device-local capability routes remain unavailable even though the tunnel socket is loopback. Requests using only direct local or private-LAN hosts and origins keep their existing behavior.
+## 通过 Cloudflare 共享
 
-## Share through Cloudflare
+对于两名受信任的协作者，Taskboard 可以在 Cloudflare 上运行，使用 Worker Static Assets 和 API 路由，以 D1 作为权威业务数据库，并使用私有 R2 bucket 存储附件。该部署使用带共享密码的 HTTPS Basic 身份验证，并在全局修订号变化后刷新已打开的面板。
 
-For two trusted collaborators, the taskboard can run on Cloudflare with Worker Static Assets and API routes, D1 as the authoritative business database, and a private R2 bucket for attachments. The deployment uses HTTPS Basic Authentication with a shared password and refreshes open boards after a global revision changes.
+每台设备保留自己的项目检出映射，并继续使用**本地 companion**（本机配套服务 / 环回代理）提供 Codex、Git/worktree、Skill 和 MCP 能力。请勿将 companion 译为「伴侣」，也不要把普通 Taskboard HTTP 接口称为「伴侣 API」。云端模式绝不会回退到本地 SQLite 数据库，也不会同时写入本地数据库。
 
-Each device keeps its own project checkout mapping and continues to use a local companion for Codex, Git/worktree, Skill, and MCP capabilities. Cloud mode never falls back to or double-writes the local SQLite database.
+请参阅[云端协作](docs/cloud-collaboration.md)，了解所有者部署、现有 GitHub 安装设置、密码轮换、本地路径映射和一次性本地数据迁移流程。
 
-See [Cloud collaboration](docs/cloud-collaboration.md) for owner deployment, existing GitHub installation setup, password rotation, local path mapping, and the one-time local-data migration flow.
-
-## Verify
+## 验证
 
 ```bash
 npm run check
 ```
 
-This runs TypeScript checking, a production frontend build, the component tests, and the server/CLI/injection test suite.
+该命令会运行 TypeScript 检查、生产前端构建、组件测试，以及服务器/CLI/注入测试套件。
 
-## Task Markdown
+## 任务 Markdown
 
-Task descriptions and comments support GFM, including tables and task lists. Fenced `mermaid` blocks are rendered as read-only diagrams after the viewer loads; the diagram source remains available when rendering fails. Markdown HTML comments, such as `<!-- trace-analysis:v1 ... -->`, are hidden from the rendered document. Raw HTML is not enabled.
-
-## Acknowledgements
-
-Thanks to [Lingshan21](https://github.com/Lingshan21) for:
-
-- The parent-based project completion proposal and initial implementation in [#371](https://github.com/chuspeeism/dashi-taskboard/pull/371), which weighted top-level parent issues equally regardless of how many children each had.
-- The priority organization proposal and initial implementation in [#372](https://github.com/chuspeeism/dashi-taskboard/pull/372). The final board sorting controls were adapted to the maintainer's requirements instead of adopting the proposed priority swimlanes.
+任务描述和评论支持 GFM，包括表格和任务列表。`mermaid` 围栏代码块会在查看器加载后渲染成只读图；渲染失败时仍可阅读原始图表源码。Markdown HTML 注释（例如 `<!-- trace-analysis:v1 ... -->`）不会出现在渲染后的正文中，且不会启用原始 HTML。
