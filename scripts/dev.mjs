@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
 
+process.env.CODEX_TASKBOARD_PORT ??= "47824";
+
 const children = [
   spawn(process.execPath, ["--watch", "server/index.mjs", "--dev"], {
     stdio: "inherit",

@@ -268,11 +268,11 @@ function DashboardSummary({
   }, [animateSummaryOnMount, projectId, summary, summaryReady]);
 
   return (
-    <section className="dashboard-codex-summary" aria-label={text("Codex 项目总结", "Codex project summary")}>
+    <section className="dashboard-codex-summary" aria-label={text("C7N 项目总结", "C7N project summary")}>
       <div className="dashboard-codex-header">
         <div className="dashboard-codex-title">
-          <img className="dashboard-codex-mark" src="codex-agent-logo.png" alt="" aria-hidden="true" />
-          <span>{text("Codex 智能简报", "Codex Project Insights")}</span>
+          <img className="dashboard-codex-mark" src="c7n-insights-icon.png" alt="" aria-hidden="true" />
+          <span>{text("C7N 智能简报", "C7N Project Insights")}</span>
         </div>
         <span className="dashboard-codex-badge">
           <span className="dashboard-codex-pulse" aria-hidden="true" />

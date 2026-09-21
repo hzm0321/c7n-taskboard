@@ -3,6 +3,8 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
+const apiPort = process.env.CODEX_TASKBOARD_PORT ?? "47823";
+
 export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
   base: "./",
@@ -17,7 +19,7 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      "/api": "http://127.0.0.1:47823",
+      "/api": `http://127.0.0.1:${apiPort}`,
     },
   },
 });

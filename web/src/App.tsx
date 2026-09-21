@@ -3517,19 +3517,6 @@ export function App() {
                         type="button"
                         role="menuitem"
                         disabled={openingProjectId !== null}
-                        onClick={openJiraDialog}
-                      >
-                        <RelationIcon className="project-avatar" color="currentColor" size={16} />
-                        <span>
-                          {jiraConnection?.configured
-                            ? text("Jira 设置", "Jira settings")
-                            : text("连接 Jira", "Connect Jira")}
-                        </span>
-                      </Button>
-                      <Button variant="ghost" size="none"
-                        type="button"
-                        role="menuitem"
-                        disabled={openingProjectId !== null}
                         onClick={() => {
                           setProjectMenuOpen(false);
                           setProjectContextMenu(null);
