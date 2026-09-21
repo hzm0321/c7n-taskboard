@@ -1442,6 +1442,7 @@ kbd {
 }
 
 .other-tasks-panel {
+  gap: 0;
   border-left: var(--border-hairline) solid var(--border);
 }
 
@@ -1451,33 +1452,6 @@ kbd {
 
 .other-tasks-tabs::-webkit-scrollbar {
   display: none;
-}
-
-.other-tasks-tab {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 0 4px;
-  overflow: hidden;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font: inherit;
-  white-space: nowrap;
-}
-
-.other-tasks-tab:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.other-tasks-tab:focus-visible {
-  box-shadow: 0 0 0 2px var(--accent-soft);
-}
-
-.other-tasks-tab.is-active {
-  font-weight: 550;
 }
 
 .other-tasks-tab-label {
@@ -1514,7 +1488,7 @@ kbd {
   align-items: center;
   justify-content: center;
   min-height: 160px;
-  gap: 6px;
+  gap: 8px;
   padding: 24px 16px;
   color: var(--text-tertiary);
   text-align: center;
@@ -1522,20 +1496,21 @@ kbd {
 }
 
 .other-tasks-empty > svg {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
 }
 
 .other-tasks-empty strong {
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 550;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
 }
 
 .other-tasks-empty span {
   max-width: 220px;
-  font-size: 10px;
-  line-height: 15px;
+  font-size: 12px;
+  line-height: 18px;
 }
 
 .board-column {
@@ -7427,7 +7402,9 @@ kbd {
 }
 
 .project-automation-trigger:hover,
-.project-automation-trigger:focus-visible {
+.project-automation-trigger:focus-visible,
+.header-integration-trigger:hover,
+.header-integration-trigger:focus-visible {
   border-color: var(--border-strong);
   background: var(--surface-hover);
 }
@@ -8441,7 +8418,7 @@ kbd {
   flex-direction: column;
   width: var(--other-tasks-width, 400px);
   max-width: 400px;
-  min-width: 300px;
+  min-width: 360px;
   height: auto;
   min-height: 0;
   overflow: hidden;
@@ -8470,27 +8447,25 @@ kbd {
 .other-tasks-tabs {
   display: grid;
   grid-template-columns: repeat(var(--other-task-tab-count, 4), minmax(70px, 1fr));
-  flex: 0 0 48px;
+  flex: 0 0 36px;
+  width: calc(100% - 16px);
   gap: 3px;
-  height: 48px;
-  padding: 7px 8px;
+  height: 36px;
+  margin: 7px 8px 5px;
+  padding: 3px;
   overflow-x: auto;
   border-bottom: 0;
+  border-radius: 8px;
 }
 
-.other-tasks-tab {
-  height: 26px;
-  gap: 3px;
-  border-radius: 13px;
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
-.other-tasks-tab.is-active {
-  border: var(--border-hairline) solid var(--border);
-  background: var(--surface);
-  color: var(--text-primary);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+.other-tasks-tabs [data-slot="tabs-trigger"] {
+  min-width: 0;
+  height: 29px;
+  gap: 2px;
+  padding-inline: 2px;
+  overflow: hidden;
+  border-radius: 6px;
+  font-size: 13px;
 }
 
 .other-tasks-tab-count {
@@ -8498,31 +8473,25 @@ kbd {
 }
 
 .other-tasks-add {
-  display: grid;
-  place-items: center;
-  flex: 0 0 24px;
+  flex: 0 0 32px;
   width: calc(100% - 16px);
-  height: 24px;
+  height: 32px;
   margin: 0 8px 8px;
-  padding: 0;
-  border: 0;
-  border-radius: 12px;
-  background: #eaeaeb;
-  color: var(--text-quaternary);
-}
-
-:root[data-theme="dark"] .other-tasks-add {
-  background: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .other-tasks-add:hover {
-  background: var(--surface-active);
-  color: var(--text-secondary);
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .other-tasks-add svg {
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
 }
 
 .other-tasks-list {
@@ -8793,8 +8762,8 @@ kbd {
     top: 0;
     right: 0;
     bottom: 0;
-    width: 300px;
-    max-width: 300px;
+    width: min(360px, calc(100vw - 16px));
+    max-width: 360px;
     border-radius: 18px 0 0 18px;
     transform: translateX(100%);
     box-shadow: -12px 0 30px rgba(0, 0, 0, 0.09);

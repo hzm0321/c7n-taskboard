@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { listenForOutsidePointerDown, listenForMenuViewportChange } from "../menuEvents";
 import {
   useEffect,
@@ -556,23 +557,27 @@ export function TaskFilterMenu({ tasks, search, labels, filters, onChange, sort,
 
   return (
     <>
-      <Button variant="ghost" size="none"
-        ref={triggerRef}
-        type="button"
-        className={`task-filter-trigger${activeCount ? " is-active" : ""}${open ? " is-open" : ""}`}
-        aria-label={activeCount
-          ? text(`筛选任务，已启用 ${activeCount} 个条件`, `Filter issues, ${activeCount} active`)
-          : text("筛选任务", "Filter issues")}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        title={activeCount
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="none"
+            ref={triggerRef}
+            type="button"
+            className={`task-filter-trigger${activeCount ? " is-active" : ""}${open ? " is-open" : ""}`}
+            aria-label={activeCount
+              ? text(`筛选任务，已启用 ${activeCount} 个条件`, `Filter issues, ${activeCount} active`)
+              : text("筛选任务", "Filter issues")}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            onClick={() => open ? closeMenu() : openMenu()}
+          >
+            <TaskboardIcon name="filter" className="filter-icon" />
+            {activeCount > 0 && <span className="task-filter-active-dot" aria-hidden="true" />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{activeCount
           ? text(`已启用 ${activeCount} 个筛选条件 (F)`, `${activeCount} active filters (F)`)
-          : text("筛选任务 (F)", "Filter issues (F)")}
-        onClick={() => open ? closeMenu() : openMenu()}
-      >
-        <TaskboardIcon name="filter" className="filter-icon" />
-        {activeCount > 0 && <span className="task-filter-active-dot" aria-hidden="true" />}
-      </Button>
+          : text("筛选任务 (F)", "Filter issues (F)")}</TooltipContent>
+      </Tooltip>
       {menu}
     </>
   );

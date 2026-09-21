@@ -2375,7 +2375,7 @@ export function App() {
   const mainBoardMinWidth = (mainColumnCount * 300) + ((mainColumnCount - 1) * 24);
   const mainBoardMaxWidth = (mainColumnCount * 400) + ((mainColumnCount - 1) * 24);
   const otherTasksColumnCount = mainColumnCount + 1;
-  const otherTasksWidth = `clamp(300px, calc(${100 / otherTasksColumnCount}% - ${(36 + (mainColumnCount * 24)) / otherTasksColumnCount}px), 400px)`;
+  const otherTasksWidth = `clamp(360px, calc(${100 / otherTasksColumnCount}% - ${(36 + (mainColumnCount * 24)) / otherTasksColumnCount}px), 400px)`;
   const otherTaskTabs = boardDisplaySettings.sidebarStatuses;
   const otherTaskTabsKey = otherTaskTabs.join(",");
   const otherTasksAvailable = otherTaskTabs.length > 0;
@@ -3641,91 +3641,109 @@ export function App() {
               <TabsTrigger value="readme">{text("项目文档", "Project Docs")}</TabsTrigger>
             )}
           </TabsList>
-          {(boardView === "issues" || boardView === "list" || boardView === "gantt") && <div className="toolbar-tools">
-            <div className={`search-field${search ? " has-value" : ""}`} title={text("搜索任务 (/)", "Search issues (/)")}>
-              <TaskboardIcon className="search-icon" name="search" />
-              <input
-                id="task-search"
-                type="search"
-                aria-label={text("搜索任务", "Search issues")}
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={text("搜索任务…", "Search issues…")}
+          {(boardView === "issues" || boardView === "list" || boardView === "gantt") && <TooltipProvider delayDuration={150}>
+            <div className="toolbar-tools">
+              <div className={`search-field${search ? " has-value" : ""}`}>
+                <TaskboardIcon className="search-icon" name="search" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <input
+                      id="task-search"
+                      type="search"
+                      aria-label={text("搜索任务", "Search issues")}
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder={text("搜索任务…", "Search issues…")}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>{text("搜索任务 (/)", "Search issues (/)")}</TooltipContent>
+                </Tooltip>
+                {!search && <kbd>/</kbd>}
+                {search && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="none"
+                        className="search-clear"
+                        type="button"
+                        aria-label={text("清除搜索", "Clear search")}
+                        onClick={() => {
+                          setSearch("");
+                          document.getElementById("task-search")?.focus();
+                        }}
+                      >
+                        <LinearIcon name="close" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{text("清除搜索", "Clear search")}</TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+              {boardView === "gantt" && (
+                <div className="gantt-toolbar-controls">
+                  <label className="gantt-hide-completed">
+                    <Switch size="sm" checked={ganttHideCompleted} onCheckedChange={setGanttHideCompleted} aria-label={text("隐藏已完成开发", "Hide completed")} />
+                    <span>{text("隐藏已完成开发", "Hide completed")}</span>
+                  </label>
+                  <Button variant="ghost" size="none" type="button" className="gantt-today-button" onClick={() => setGanttTodayRequest((current) => current + 1)}>{text("今天", "Today")}</Button>
+                  <div className="gantt-view-menu-wrap">
+                    <Button variant="ghost" size="none" type="button" className="gantt-view-menu-trigger" aria-label={text("时间轴视图选项", "Timeline view options")} aria-expanded={ganttViewMenuOpen} onClick={() => setGanttViewMenuOpen((current) => !current)}>
+                      <span>{language === "zh" ? { day: "日视图", week: "周视图", month: "月视图" }[ganttZoom] : { day: "Day", week: "Week", month: "Month" }[ganttZoom]}</span>
+                      <LinearIcon name="chevronDown" />
+                    </Button>
+                    {ganttViewMenuOpen && (
+                      <div className="gantt-view-menu" role="menu">
+                        {GANTT_ZOOM_OPTIONS.map((value) => (
+                          <Button variant="ghost" size="none" type="button" role="menuitemradio" aria-checked={ganttZoom === value} className={ganttZoom === value ? "active" : ""} onClick={() => { setGanttZoom(value); setGanttViewMenuOpen(false); }} key={value}>
+                            <span>{language === "zh"
+                              ? { day: "日视图", week: "周视图", month: "月视图" }[value]
+                              : { day: "Day", week: "Week", month: "Month" }[value]}</span>
+                            {ganttZoom === value && <LinearIcon name="check" />}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <TaskFilterMenu
+                tasks={tasks}
+                search={search}
+                labels={availableLabels}
+                filters={filters}
+                onChange={setFilters}
+                sort={taskSort}
+                onSortChange={setTaskSort}
               />
-              {!search && <kbd>/</kbd>}
-              {search && (
-                <Button variant="ghost" size="none"
-                  className="search-clear"
-                  type="button"
-                  aria-label={text("清除搜索", "Clear search")}
-                  onClick={() => {
-                    setSearch("");
-                    document.getElementById("task-search")?.focus();
-                  }}
-                >
-                  <LinearIcon name="close" />
-                </Button>
+              {boardView === "issues" && (isAllProjects || selectedProject) && (
+                <BoardCardDisplayMenu
+                  settings={boardDisplaySettings}
+                  onChange={updateProjectBoardDisplaySettings}
+                  onReset={resetProjectBoardDisplaySettings}
+                />
+              )}
+              {boardView === "issues" && otherTasksAvailable && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="none"
+                      className={`other-tasks-trigger${otherTasksOpen ? " is-open" : ""}`}
+                      type="button"
+                      aria-controls="other-tasks-panel"
+                      aria-expanded={otherTasksOpen}
+                      aria-label={otherTasksOpen
+                        ? text("关闭其他任务", "Close other issues")
+                        : text("打开其他任务", "Open other issues")}
+                      onClick={() => setOtherTasksOpen((current) => !current)}
+                    >
+                      <TaskboardIcon name="panel" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{otherTasksOpen
+                    ? text("关闭其他任务", "Close other issues")
+                    : text("打开其他任务", "Open other issues")}</TooltipContent>
+                </Tooltip>
               )}
             </div>
-            {boardView === "gantt" && (
-              <div className="gantt-toolbar-controls">
-                <label className="gantt-hide-completed">
-                  <Switch size="sm" checked={ganttHideCompleted} onCheckedChange={setGanttHideCompleted} aria-label={text("隐藏已完成开发", "Hide completed")} />
-                  <span>{text("隐藏已完成开发", "Hide completed")}</span>
-                </label>
-                <Button variant="ghost" size="none" type="button" className="gantt-today-button" onClick={() => setGanttTodayRequest((current) => current + 1)}>{text("今天", "Today")}</Button>
-                <div className="gantt-view-menu-wrap">
-                  <Button variant="ghost" size="none" type="button" className="gantt-view-menu-trigger" aria-label={text("时间轴视图选项", "Timeline view options")} aria-expanded={ganttViewMenuOpen} onClick={() => setGanttViewMenuOpen((current) => !current)}>
-                    <span>{language === "zh" ? { day: "日视图", week: "周视图", month: "月视图" }[ganttZoom] : { day: "Day", week: "Week", month: "Month" }[ganttZoom]}</span>
-                    <LinearIcon name="chevronDown" />
-                  </Button>
-                  {ganttViewMenuOpen && (
-                    <div className="gantt-view-menu" role="menu">
-                      {GANTT_ZOOM_OPTIONS.map((value) => (
-                        <Button variant="ghost" size="none" type="button" role="menuitemradio" aria-checked={ganttZoom === value} className={ganttZoom === value ? "active" : ""} onClick={() => { setGanttZoom(value); setGanttViewMenuOpen(false); }} key={value}>
-                          <span>{language === "zh"
-                            ? { day: "日视图", week: "周视图", month: "月视图" }[value]
-                            : { day: "Day", week: "Week", month: "Month" }[value]}</span>
-                          {ganttZoom === value && <LinearIcon name="check" />}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            <TaskFilterMenu
-              tasks={tasks}
-              search={search}
-              labels={availableLabels}
-              filters={filters}
-              onChange={setFilters}
-              sort={taskSort}
-              onSortChange={setTaskSort}
-            />
-            {boardView === "issues" && (isAllProjects || selectedProject) && (
-              <BoardCardDisplayMenu
-                settings={boardDisplaySettings}
-                onChange={updateProjectBoardDisplaySettings}
-                onReset={resetProjectBoardDisplaySettings}
-              />
-            )}
-            {boardView === "issues" && otherTasksAvailable && (
-              <Button variant="ghost" size="none"
-                className={`other-tasks-trigger${otherTasksOpen ? " is-open" : ""}`}
-                type="button"
-                aria-controls="other-tasks-panel"
-                aria-expanded={otherTasksOpen}
-                aria-label={otherTasksOpen
-                  ? text("关闭其他任务", "Close other issues")
-                  : text("打开其他任务", "Open other issues")}
-                title={text("其他任务", "Other issues")}
-                onClick={() => setOtherTasksOpen((current) => !current)}
-              >
-                <TaskboardIcon name="panel" />
-              </Button>
-            )}
-          </div>}
+          </TooltipProvider>}
         </div>}
 
         {(loadError || actionErrorText) && (

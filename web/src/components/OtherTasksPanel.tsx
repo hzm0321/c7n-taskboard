@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CSSProperties, DragEvent } from "react";
 import { useTaskCardDragPreview } from "../useTaskCardDragPreview";
 import type { ActorIdentity, Task, TaskDraft, TaskStatus } from "../types";
@@ -223,131 +224,124 @@ export function OtherTasksPanel({
   }
 
   return (
-    <aside
-      className={`other-tasks-panel${open ? " is-open" : ""}`}
-      id="other-tasks-panel"
-      aria-label={text("其他任务", "Other issues")}
-      aria-hidden={!open}
-    >
-      <div
-        className="other-tasks-tabs"
-        role="tablist"
-        aria-label={text("其他任务状态", "Other issue statuses")}
-        style={{ "--other-task-tab-count": tabs.length } as CSSProperties}
+    <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as OtherTaskTab)} asChild>
+      <aside
+        className={`other-tasks-panel${open ? " is-open" : ""}`}
+        id="other-tasks-panel"
+        aria-label={text("其他任务", "Other issues")}
+        aria-hidden={!open}
       >
-        {tabs.map((tab) => {
-          const label = tab === "archived"
-            ? text("已归档", "Archived")
-            : taskStatusLabel(language, tab);
-          const count = tab === "archived" ? archivedTasks.length : tasksByStatus[tab].length;
-          const selected = tab === activeTab;
-          return (
-            <Button variant="ghost" size="none"
-              className={`other-tasks-tab${selected ? " is-active" : ""}`}
-              id={`other-tasks-tab-${tab}`}
-              key={tab}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              aria-controls="other-tasks-list"
-              title={`${label} ${count}`}
-              onClick={() => onTabChange(tab)}
-            >
-              <span className="other-tasks-tab-label">{label}</span>
-              <span className="other-tasks-tab-count" aria-label={text(`${count} 个任务`, `${count} issues`)}>
-                {count}
-              </span>
-            </Button>
-          );
-        })}
-      </div>
-
-      {!archived && onCreate && (
-        <Button variant="ghost" size="none"
-          className="other-tasks-add"
-          type="button"
-          aria-label={text(`在${activeLabel}中新建任务`, `Create issue in ${activeLabel}`)}
-          title={text(`添加到${activeLabel}`, `Add to ${activeLabel}`)}
-          onClick={() => onCreate(activeTab)}
+        <TabsList
+          className="other-tasks-tabs view-tabs"
+          aria-label={text("其他任务状态", "Other issue statuses")}
+          style={{ "--other-task-tab-count": tabs.length } as CSSProperties}
         >
-          <PlusIcon color="currentColor" size={11} />
-        </Button>
-      )}
+          {tabs.map((tab) => {
+            const label = tab === "archived"
+              ? text("已归档", "Archived")
+              : taskStatusLabel(language, tab);
+            const count = tab === "archived" ? archivedTasks.length : tasksByStatus[tab].length;
+            return (
+              <TabsTrigger
+                className="other-tasks-tab"
+                key={tab}
+                value={tab}
+                title={`${label} ${count}`}
+              >
+                <span className="other-tasks-tab-label">{label}</span>
+                <span className="other-tasks-tab-count" aria-label={text(`${count} 个任务`, `${count} issues`)}>
+                  {count}
+                </span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
 
-      <div
-        className={`other-tasks-list${archived ? " is-archived" : ""}`}
-        id="other-tasks-list"
-        role="tabpanel"
-        aria-labelledby={`other-tasks-tab-${activeTab}`}
-        onDragEnter={() => {
-          if (!archived) onDragEnter(activeTab);
-        }}
-        onDragOver={(event) => {
-          if (archived) return;
-          onDragEnter(activeTab);
-          updateDropPreview(event);
-        }}
-        onDragLeave={leaveDropPreview}
-        onDrop={handleDrop}
-      >
-        {archived ? archivedTasks.map((task) => (
-          <ArchivedTaskCard
-            key={task.id}
-            task={task}
-            busy={restoringTaskId !== null || deletingTaskId !== null}
-            restoring={restoringTaskId === task.id}
-            onRestore={onRestore}
-            onDelete={onDelete}
-          />
-        )) : tasks.map((task) => {
-          const dragShift = getTaskDragShift(task.id);
-          return (
-            <TaskCard
+        {!archived && onCreate && (
+          <Button variant="outline" size="sm"
+            className="other-tasks-add"
+            type="button"
+            aria-label={text(`在${activeLabel}中新建任务`, `Create issue in ${activeLabel}`)}
+            onClick={() => onCreate(activeTab)}
+          >
+            <PlusIcon color="currentColor" />
+            <span>{text(`添加到${activeLabel}`, `Add to ${activeLabel}`)}</span>
+          </Button>
+        )}
+
+        <TabsContent
+          className={`other-tasks-list${archived ? " is-archived" : ""}`}
+          value={activeTab}
+          onDragEnter={() => {
+            if (!archived) onDragEnter(activeTab);
+          }}
+          onDragOver={(event) => {
+            if (archived) return;
+            onDragEnter(activeTab);
+            updateDropPreview(event);
+          }}
+          onDragLeave={leaveDropPreview}
+          onDrop={handleDrop}
+        >
+          {archived ? archivedTasks.map((task) => (
+            <ArchivedTaskCard
               key={task.id}
               task={task}
-              variant="sidebar"
-              presentation={presentations[task.id]}
-              isDragging={draggedTaskId === task.id}
-              dragShift={dragShift}
-              isMoving={movingTaskId === task.id}
-              isSettling={settlingTaskId === task.id}
-              isContextMenuOpen={contextMenuTaskId === task.id}
-              availableLabels={availableLabels}
-              projectName={projectNames?.[task.projectId]}
-              currentUser={currentUser}
-              showCover={showCover}
-              showBody={showBody}
-              showCreatedAt={showCreatedAt}
-              onCreateLabel={(label) => onCreateLabel(label, task.projectId)}
-              onEdit={onEdit}
-              onUpdate={onUpdate}
-              onContextMenu={onContextMenu}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
-              onOpenConversation={onOpenConversation}
+              busy={restoringTaskId !== null || deletingTaskId !== null}
+              restoring={restoringTaskId === task.id}
+              onRestore={onRestore}
+              onDelete={onDelete}
             />
-          );
-        })}
-        {tasks.length === 0 && (
-          <div className="other-tasks-empty">
-            {hasActiveFilters
-              ? <LinearIcon name="search" />
-              : archived
-                ? <DeleteIcon color="currentColor" />
-                : <LinearIcon name="panel" />}
-            <strong>{hasActiveFilters
-              ? text("当前筛选下无匹配任务", "No issues match the current filters")
-              : text("暂无任务", "No issues")}</strong>
-            <span>
+          )) : tasks.map((task) => {
+            const dragShift = getTaskDragShift(task.id);
+            return (
+              <TaskCard
+                key={task.id}
+                task={task}
+                variant="sidebar"
+                presentation={presentations[task.id]}
+                isDragging={draggedTaskId === task.id}
+                dragShift={dragShift}
+                isMoving={movingTaskId === task.id}
+                isSettling={settlingTaskId === task.id}
+                isContextMenuOpen={contextMenuTaskId === task.id}
+                availableLabels={availableLabels}
+                projectName={projectNames?.[task.projectId]}
+                currentUser={currentUser}
+                showCover={showCover}
+                showBody={showBody}
+                showCreatedAt={showCreatedAt}
+                onCreateLabel={(label) => onCreateLabel(label, task.projectId)}
+                onEdit={onEdit}
+                onUpdate={onUpdate}
+                onContextMenu={onContextMenu}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
+                onOpenConversation={onOpenConversation}
+              />
+            );
+          })}
+          {tasks.length === 0 && (
+            <div className="other-tasks-empty">
               {hasActiveFilters
-                ? text("搜索和筛选会同步作用于所有状态。", "Search and filters apply to every status.")
+                ? <LinearIcon name="search" />
                 : archived
-                  ? text("没有已归档任务。", "There are no archived issues.")
-                  : text(`没有${activeLabel}。`, `There are no issues in ${activeLabel}.`)}
-            </span>
-          </div>
-        )}
-      </div>
-    </aside>
+                  ? <DeleteIcon color="currentColor" />
+                  : <LinearIcon name="panel" />}
+              <strong>{hasActiveFilters
+                ? text("当前筛选下无匹配任务", "No issues match the current filters")
+                : text("暂无任务", "No issues")}</strong>
+              <span>
+                {hasActiveFilters
+                  ? text("搜索和筛选会同步作用于所有状态。", "Search and filters apply to every status.")
+                  : archived
+                    ? text("没有已归档任务。", "There are no archived issues.")
+                    : text(`没有${activeLabel}。`, `There are no issues in ${activeLabel}.`)}
+              </span>
+            </div>
+          )}
+        </TabsContent>
+      </aside>
+    </Tabs>
   );
 }

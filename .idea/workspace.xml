@@ -5,16 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: add supplementary description support and update task handling">
-      <change afterPath="$PROJECT_DIR$/web/src/components/SupplementaryDescription.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/app.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/app.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/choerodon-connection.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/choerodon-connection.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/database.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/database.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/App.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/src/components/BoardCardDisplayMenu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/BoardCardDisplayMenu.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/DashboardView.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/DashboardView.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/TaskDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/TaskDetail.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/components/OtherTasksPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/OtherTasksPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/components/TaskFilterMenu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/TaskFilterMenu.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/types.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,25 +63,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Git.Working.Tree.Tab.closed.by.user": "closed",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/hzm/WorkSpace/Github/c7n-taskboard",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
-    "ts.external.directory.path": "/Users/hzm/WorkSpace/Github/c7n-taskboard/node_modules/@typescript/typescript-darwin-arm64/lib"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Git.Working.Tree.Tab.closed.by.user&quot;: &quot;closed&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/hzm/WorkSpace/Github/c7n-taskboard&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/hzm/WorkSpace/Github/c7n-taskboard/node_modules/@typescript/typescript-darwin-arm64/lib&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -118,7 +114,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="codex/dev-port-c7n-insights" />
+                        <option value="c7n" />
                       </list>
                     </value>
                   </entry>

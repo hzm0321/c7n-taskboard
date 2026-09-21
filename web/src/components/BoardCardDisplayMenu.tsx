@@ -1,6 +1,7 @@
 import { GripVertical, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { listenForOutsidePointerDown } from "../menuEvents";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
@@ -353,23 +354,27 @@ export function BoardCardDisplayMenu({
 
   return (
     <>
-      <Button variant="ghost" size="none"
-        ref={triggerRef}
-        className={"task-filter-trigger board-card-display-trigger" + (
-          menuOpen || dialogOpen ? " is-open" : ""
-        )}
-        type="button"
-        aria-label={text("显示设置", "Display settings")}
-        aria-haspopup="dialog"
-        aria-expanded={menuOpen}
-        title={text("显示设置", "Display settings")}
-        onClick={() => {
-          if (!menuOpen) setPosition({ left: 0, top: 0, ready: false });
-          setMenuOpen((current) => !current);
-        }}
-      >
-        <LinearIcon name="displayOptions" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="none"
+            ref={triggerRef}
+            className={"task-filter-trigger board-card-display-trigger" + (
+              menuOpen || dialogOpen ? " is-open" : ""
+            )}
+            type="button"
+            aria-label={text("显示设置", "Display settings")}
+            aria-haspopup="dialog"
+            aria-expanded={menuOpen}
+            onClick={() => {
+              if (!menuOpen) setPosition({ left: 0, top: 0, ready: false });
+              setMenuOpen((current) => !current);
+            }}
+          >
+            <LinearIcon name="displayOptions" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{text("显示设置", "Display settings")}</TooltipContent>
+      </Tooltip>
       {menu}
       {dialog}
     </>
