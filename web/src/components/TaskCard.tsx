@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Check } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
@@ -27,7 +28,6 @@ import { DueDateIcon, PriorityIcon, ProjectIcon } from "./SemanticIcons";
 import { LabelPicker } from "./LabelPicker";
 import { TaskPropertyPicker } from "./TaskPropertyPicker";
 import { TaskConversationMenu } from "./TaskConversationMenu";
-import completeIcon from "../assets/figma-taskboard/card-complete.svg";
 import processingAnimation from "../assets/figma-taskboard/loading-16.svg";
 
 interface TaskCardProps {
@@ -551,7 +551,7 @@ export function TaskCard({
               );
             }}
           >
-            <img src={completeIcon} alt="" aria-hidden="true" />
+            <Check aria-hidden="true" />
             <span>{text("完成开发", "Complete")}</span>
           </Button>
         )}

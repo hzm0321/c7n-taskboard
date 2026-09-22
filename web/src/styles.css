@@ -7804,10 +7804,14 @@ kbd {
   min-height: 16px;
 }
 
-.task-card.status-in_review .card-topline,
 .task-card.status-todo .card-topline {
   height: 20px;
   min-height: 20px;
+}
+
+.task-card.status-in_review .card-topline {
+  height: 28px;
+  min-height: 28px;
 }
 
 .task-card-automation-control {
@@ -7824,19 +7828,19 @@ kbd {
   display: none;
   align-items: center;
   justify-content: center;
-  flex: 0 0 49px;
-  width: 49px;
-  height: 20px;
-  margin-left: 16px;
-  padding: 0 8px;
-  gap: 4px;
-  border: 0;
-  border-radius: 32px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 15px;
+  flex: 0 0 auto;
+  min-width: 78px;
+  height: 28px;
+  margin-left: 12px;
+  padding: 0 10px;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--success) 42%, var(--border));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--success) 10%, var(--surface));
+  color: color-mix(in srgb, var(--success) 72%, var(--text-primary));
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
   cursor: pointer;
   pointer-events: auto;
 }
@@ -7845,10 +7849,26 @@ kbd {
   display: inline-flex;
 }
 
-.task-card-complete img {
+.task-card-complete:hover {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 16%, var(--surface));
+  color: color-mix(in srgb, var(--success) 82%, var(--text-primary));
+}
+
+.task-card-complete:focus-visible {
+  display: inline-flex;
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 16%, var(--surface));
+  color: color-mix(in srgb, var(--success) 82%, var(--text-primary));
+  outline: 2px solid color-mix(in srgb, var(--success) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.task-card-complete svg {
   flex: 0 0 auto;
-  width: 6px;
-  height: 6px;
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
 }
 
 .card-reference {

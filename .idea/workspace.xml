@@ -4,22 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: update workspace configuration and improve UI responsiveness">
-      <change beforePath="$PROJECT_DIR$/scripts/codex-injector.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/codex-injector.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/app.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/app.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/database.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/database.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/task-input.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/shared/task-input.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/taskboard-automation.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/shared/taskboard-automation.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/server.test.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/test/server.test.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/taskboard-automation.test.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/test/taskboard-automation.test.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/BoardCardDisplayMenu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/BoardCardDisplayMenu.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/IssueListView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/IssueListView.tsx" afterDir="false" />
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: implement automation feature toggle for tasks and enhance UI components">
       <change beforePath="$PROJECT_DIR$/web/src/components/TaskCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/TaskCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/TaskEditor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/TaskEditor.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/types.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -144,6 +131,7 @@
     <MESSAGE value="feat: enhance UI components with tooltips and tabs for better user experience" />
     <MESSAGE value="feat: update workspace configuration and add English README" />
     <MESSAGE value="feat: update workspace configuration and improve UI responsiveness" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: update workspace configuration and improve UI responsiveness" />
+    <MESSAGE value="feat: implement automation feature toggle for tasks and enhance UI components" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: implement automation feature toggle for tasks and enhance UI components" />
   </component>
 </project>
