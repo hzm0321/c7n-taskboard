@@ -147,6 +147,10 @@ test("the stable name and generated prompt are project-scoped and encode the cla
   assert.match(prompt, /ppt-skill/);
   assert.match(prompt, /\/Users\/example\/Documents\/ppt-skill/);
   assert.match(prompt, /每次仅处理一个符合依赖条件的 todo/);
+  assert.match(prompt, /git fetch origin main/);
+  assert.match(prompt, /HEAD 严格等于 origin\/main/);
+  assert.match(prompt, /issue update 一次写入 --status in_progress、--worktree-path、--worktree-branch/);
+  assert.match(prompt, /保留该 worktree、分支、developmentContext 和 binding/);
   assert.match(prompt, /issue get/);
   assert.match(prompt, /comment list/);
   assert.match(prompt, /最新 version/);
@@ -235,7 +239,7 @@ test("the generated cron spec uses the selected whitelisted local Codex options"
     name: "Taskboard 自动认领 · ppt-skill",
     prompt: buildTaskboardAutomationPrompt(baseRequest),
     projectId: "codex-project-123",
-    executionEnvironment: "local",
+    executionEnvironment: "worktree",
     localEnvironmentConfigPath: null,
     model: "gpt-5.5",
     reasoningEffort: "high",
@@ -258,7 +262,7 @@ test("the generated cron spec uses the selected whitelisted local Codex options"
     name: "Taskboard 自动认领 · ppt-skill",
     prompt: buildTaskboardAutomationPrompt(remoteRequest),
     projectId: null,
-    executionEnvironment: "local",
+    executionEnvironment: "worktree",
     localEnvironmentConfigPath: null,
     model: "gpt-5.5",
     reasoningEffort: "high",
@@ -355,7 +359,7 @@ test("ensure-active updates a matching automation by id with a complete active s
     name: "Taskboard 自动认领 · ppt-skill",
     prompt: "old prompt",
     projectId: "old-project",
-    executionEnvironment: "local",
+    executionEnvironment: "worktree",
     localEnvironmentConfigPath: null,
     model: "gpt-5.5",
     reasoningEffort: "medium",

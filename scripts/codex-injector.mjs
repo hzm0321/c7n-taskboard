@@ -1325,6 +1325,28 @@ function normalizeRemoteWorkspace(value) {
     : workspacePath;
 }
 
+function remoteAutomationWorktreeBranch(task) {
+  const identifier = String(task.identifier || "task")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "task";
+  const id = String(task.id || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8);
+  return `codex/automation/${identifier}${id ? `-${id}` : ""}`;
+}
+
+function remoteAutomationWorktreePrompt(task, branch, baseWorkspacePath) {
+  return [
+    `为 Taskboard 任务 ${task.identifier} 准备独立 Git worktree。只准备工作目录，不修改项目文件。`,
+    `基础项目目录：${baseWorkspacePath}`,
+    `目标分支：${branch}`,
+    "先执行 git fetch origin main。若目标分支尚不存在，从最新 origin/main 使用 git worktree add -b 创建一个位于基础项目目录之外的绝对路径工作树。",
+    "若目标分支已由前一次尝试绑定到 worktree，只能在它的 HEAD 严格等于 origin/main、工作区干净且路径不等于基础项目目录时复用；不得删除、重置或接管其他分支或工作树。",
+    "创建或复用后再次确认分支名、绝对路径、HEAD、origin/main 和干净状态。失败时返回 status=error 和简短原因，不得回退到基础项目目录。",
+    "只返回符合 schema 的 JSON。",
+  ].join("\n");
+}
+
 function remoteAutomationTarget(request, task) {
   const workspacePath = task.developmentContext?.type === "worktree"
     ? task.developmentContext.path
@@ -1396,9 +1418,11 @@ function remoteAutomationPrompt(task, comments, attachments, target) {
       `- ${attachment.filename} (${attachment.contentType}, ${attachment.size} bytes)`
     )).join("\n")
     : "（无）";
-  const developmentContext = task.developmentContext
-    ? JSON.stringify(task.developmentContext)
-    : "（项目根目录）";
+  const developmentContext = target.branch
+    ? JSON.stringify({ type: "worktree", path: target.workspacePath, branch: target.branch })
+    : task.developmentContext
+      ? JSON.stringify(task.developmentContext)
+      : "（项目根目录）";
   return [
     `处理 Taskboard 任务 ${task.identifier}：${task.title}`,
     "",
@@ -1473,6 +1497,115 @@ function handleRemoteAutomationTurnNotification(notification) {
 function remoteAutomationTurnText(turn) {
   return [...(turn?.items ?? [])].reverse()
     .find((item) => item.type === "agentMessage")?.text?.trim() || "";
+}
+
+async function readCompletedRemoteAutomationTurnText(cdp, hostId, threadId, turnId, turn) {
+  const text = remoteAutomationTurnText(turn);
+  if (text) return text;
+  const read = await requestCodexAppServerViaCdp(
+    cdp,
+    undefined,
+    hostId,
+    "thread/read",
+    { threadId, includeTurns: true },
+  );
+  const savedTurn = read?.thread?.turns?.find((candidate) => (
+    candidate.id === turnId && candidate.status === "completed"
+  ));
+  return remoteAutomationTurnText(savedTurn);
+}
+
+async function createRemoteAutomationWorktree(cdp, request, task, target) {
+  const branch = remoteAutomationWorktreeBranch(task);
+  const started = await requestCodexAppServerViaCdp(
+    cdp,
+    undefined,
+    target.codexHostId,
+    "thread/start",
+    {
+      ephemeral: true,
+      model: request.model,
+      cwd: target.workspacePath,
+      runtimeWorkspaceRoots: [target.workspacePath],
+      approvalPolicy: "never",
+      sandbox: "danger-full-access",
+    },
+  );
+  const threadId = started?.thread?.id;
+  if (typeof threadId !== "string" || !threadId || started.thread.ephemeral !== true) {
+    throw new Error("Codex 未创建远程 worktree 准备线程");
+  }
+
+  const completion = waitForRemoteAutomationTurn(target.codexHostId, threadId);
+  let turnStarted;
+  try {
+    turnStarted = await requestCodexAppServerViaCdp(
+      cdp,
+      undefined,
+      target.codexHostId,
+      "turn/start",
+      {
+        threadId,
+        input: [{
+          type: "text",
+          text: remoteAutomationWorktreePrompt(task, branch, target.workspacePath),
+        }],
+        effort: request.reasoningEffort,
+        outputSchema: {
+          type: "object",
+          properties: {
+            status: { type: "string", enum: ["ready", "error"] },
+            workspacePath: { type: "string" },
+            branch: { type: "string" },
+            head: { type: "string" },
+            originMain: { type: "string" },
+            error: { type: "string" },
+          },
+          required: ["status", "workspacePath", "branch", "head", "originMain", "error"],
+          additionalProperties: false,
+        },
+      },
+    );
+  } catch (error) {
+    completion.cancel();
+    throw error;
+  }
+  const turnId = turnStarted?.turn?.id;
+  if (typeof turnId !== "string" || !turnId) {
+    completion.cancel();
+    throw new Error("Codex 未返回远程 worktree 准备 turn");
+  }
+  const turn = await completion.wait(turnId, "Codex remote worktree setup timed out");
+  if (turn.status !== "completed") {
+    throw new Error(turn.error?.message || "Codex 远程 worktree 准备失败");
+  }
+  const answer = await readCompletedRemoteAutomationTurnText(
+    cdp,
+    target.codexHostId,
+    threadId,
+    turnId,
+    turn,
+  );
+  let result;
+  try {
+    result = JSON.parse(answer);
+  } catch {
+    throw new Error("Codex 未返回有效的远程 worktree 结果");
+  }
+  const workspacePath = String(result.workspacePath || "").trim();
+  const absolute = path.posix.isAbsolute(workspacePath.replaceAll("\\", "/"))
+    || /^[A-Za-z]:[\\/]/.test(workspacePath);
+  if (result.status !== "ready") throw new Error(result.error || "远程 worktree 创建失败");
+  if (
+    !absolute
+    || normalizeRemoteWorkspace(workspacePath) === normalizeRemoteWorkspace(target.workspacePath)
+    || result.branch !== branch
+    || !/^[0-9a-f]{40,64}$/i.test(result.head)
+    || result.head !== result.originMain
+  ) {
+    throw new Error("Codex 返回的远程 worktree 未通过 origin/main 校验");
+  }
+  return { ...target, workspacePath, branch };
 }
 
 async function remoteAutomationCanStart(cdp, request, task, comments) {
@@ -1606,17 +1739,30 @@ async function runRemoteTaskboardAutomation(record) {
     });
     return;
   }
+  let executionTarget = target;
+  if (!existingBinding) {
+    try {
+      executionTarget = await createRemoteAutomationWorktree(cdp, request, task, target);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await taskboardRequest(commentsPath, {
+        method: "POST",
+        body: { body: `自动认领未开始：无法创建 origin/main 独立 worktree：${message}`.slice(0, 100_000) },
+      });
+      return;
+    }
+  }
   const snapshot = remoteAutomationSnapshot(task, comments, attachments);
   const started = await requestCodexAppServerViaCdp(
     cdp,
     undefined,
-    target.codexHostId,
+    executionTarget.codexHostId,
     existingBinding ? "thread/resume" : "thread/start",
     {
       ...(existingBinding ? { threadId: existingBinding.threadId } : {}),
       model: request.model,
-      cwd: target.workspacePath,
-      runtimeWorkspaceRoots: [target.workspacePath],
+      cwd: executionTarget.workspacePath,
+      runtimeWorkspaceRoots: [executionTarget.workspacePath],
       approvalPolicy: "never",
       sandbox: "danger-full-access",
     },
@@ -1625,7 +1771,7 @@ async function runRemoteTaskboardAutomation(record) {
   if (
     typeof threadId !== "string"
     || !threadId
-    || normalizeRemoteWorkspace(started.thread.cwd) !== normalizeRemoteWorkspace(target.workspacePath)
+    || normalizeRemoteWorkspace(started.thread.cwd) !== normalizeRemoteWorkspace(executionTarget.workspacePath)
   ) {
     throw new Error(`Codex did not ${existingBinding ? "resume" : "create"} the automation thread in the selected SSH workspace`);
   }
@@ -1653,29 +1799,36 @@ async function runRemoteTaskboardAutomation(record) {
 
   const threadBinding = existingBinding ?? {
     threadId,
-    codexProjectId: target.codexProjectId,
+    codexProjectId: executionTarget.codexProjectId,
     codexProjectKind: "remote",
-    codexHostId: target.codexHostId,
-    workspacePath: target.workspacePath,
+    codexHostId: executionTarget.codexHostId,
+    workspacePath: executionTarget.workspacePath,
   };
   let ownedTask = (
-    await taskboardRequest(`${taskPath}/move`, {
-      method: "POST",
+    await taskboardRequest(taskPath, {
+      method: "PATCH",
       body: {
         version: refreshedTask.version,
         status: "in_progress",
+        ...(!existingBinding ? {
+          developmentContext: {
+            type: "worktree",
+            path: executionTarget.workspacePath,
+            branch: executionTarget.branch,
+          },
+        } : {}),
         threadId,
         threadBinding,
       },
     })
   ).task;
 
-  const completion = waitForRemoteAutomationTurn(target.codexHostId, threadId);
+  const completion = waitForRemoteAutomationTurn(executionTarget.codexHostId, threadId);
   try {
     const turnStarted = await requestCodexAppServerViaCdp(
       cdp,
       undefined,
-      target.codexHostId,
+      executionTarget.codexHostId,
       "turn/start",
       {
         threadId,
@@ -1685,7 +1838,7 @@ async function runRemoteTaskboardAutomation(record) {
             refreshedTask,
             refreshedComments,
             refreshedAttachments,
-            target,
+            executionTarget,
           ),
         }],
         effort: request.reasoningEffort,
@@ -1700,21 +1853,13 @@ async function runRemoteTaskboardAutomation(record) {
     if (turn.status !== "completed") {
       throw new Error(turn.error?.message || `Codex remote turn ${turn.status}`);
     }
-    let finalText = remoteAutomationTurnText(turn);
-    if (!finalText) {
-      // Some completion notifications omit items; read the completed turn once.
-      const read = await requestCodexAppServerViaCdp(
-        cdp,
-        undefined,
-        target.codexHostId,
-        "thread/read",
-        { threadId, includeTurns: true },
-      );
-      const savedTurn = read?.thread?.turns?.find((candidate) => (
-        candidate.id === turnId && candidate.status === "completed"
-      ));
-      finalText = remoteAutomationTurnText(savedTurn);
-    }
+    const finalText = await readCompletedRemoteAutomationTurnText(
+      cdp,
+      executionTarget.codexHostId,
+      threadId,
+      turnId,
+      turn,
+    );
     if (!finalText) throw new Error("Codex completed without a final result");
 
     await taskboardRequest(commentsPath, {
@@ -1722,8 +1867,9 @@ async function runRemoteTaskboardAutomation(record) {
       body: {
         body: [
           "自动认领远程执行完成。",
-          `- Codex host：${target.codexHostId}`,
-          `- 远程目录：${target.workspacePath}`,
+          `- Codex host：${executionTarget.codexHostId}`,
+          `- 远程目录：${executionTarget.workspacePath}`,
+          `- Worktree 分支：${executionTarget.branch ?? refreshedTask.developmentContext?.branch ?? "未知"}`,
           `- 远程 thread：${threadId}`,
           "",
           finalText,

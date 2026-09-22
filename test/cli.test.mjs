@@ -336,7 +336,7 @@ test("issue update sends an explicit optimistic concurrency version", async () =
   });
 });
 
-test("issue update binds one worktree context", async () => {
+test("issue update atomically binds one worktree and Codex session", async () => {
   let requestBody;
   const repositoryPath = path.resolve("/work/repo");
   const worktreePath = path.resolve(repositoryPath, "../taskboard-worktree");
@@ -345,6 +345,11 @@ test("issue update binds one worktree context", async () => {
       "issue", "update", "TASK-1",
       "--worktree-path", "../taskboard-worktree",
       "--worktree-branch", "worktree/taskboard",
+      "--binding-thread-id", "thread-taskboard",
+      "--binding-codex-project-id", "project-taskboard",
+      "--binding-codex-project-kind", "local",
+      "--binding-codex-host-id", "local",
+      "--binding-workspace-path", worktreePath,
       "--if-version", "4",
     ],
     async (_url, init) => {
@@ -360,6 +365,13 @@ test("issue update binds one worktree context", async () => {
       type: "worktree",
       path: worktreePath,
       branch: "worktree/taskboard",
+    },
+    threadBinding: {
+      threadId: "thread-taskboard",
+      codexProjectId: "project-taskboard",
+      codexProjectKind: "local",
+      codexHostId: "local",
+      workspacePath: worktreePath,
     },
     threadId: "thread-current",
     version: 4,

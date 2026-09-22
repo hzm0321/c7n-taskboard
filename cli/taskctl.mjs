@@ -72,6 +72,12 @@ const COMMAND_OPTIONS = new Map([
       "priority",
       "labels",
       "thread-id", "agent-platform", "session-id",
+      "binding-thread-id",
+      "binding-codex-project-id",
+      "binding-codex-project-kind",
+      "binding-codex-host-id",
+      "binding-workspace-path",
+      "clear-binding-thread",
       "git-branch",
       "worktree-path",
       "worktree-branch",
@@ -174,6 +180,10 @@ Actions:
     [--description TEXT | --description-file FILE]
     [--status STATUS] [--priority PRIORITY] [--labels a,b]
     [--thread-id ID]
+    [--binding-thread-id ID
+      [--binding-codex-project-id ID --binding-codex-project-kind local|remote
+       --binding-codex-host-id ID --binding-workspace-path PATH]
+     | --clear-binding-thread]
     [--git-branch BRANCH | --worktree-path PATH [--worktree-branch BRANCH]]
     [--start-date YYYY-MM-DD] [--due-date YYYY-MM-DD]
     [--recurrence-interval N --recurrence-unit day|week|month|year]
@@ -193,7 +203,7 @@ Actions:
 All issue writes accept --agent-platform claude|pi|agy|grok --session-id ID
 instead of Codex --thread-id / CODEX_THREAD_ID. Both external options are required.
 External metadata does not replace --binding-* native Codex identity.
-Update also accepts only external session metadata plus --if-version.
+Update accepts native --binding-* options when claiming a task for a Codex session.
 
 Statuses: backlog, todo, in_progress, in_review, blocked, done, canceled
 Priorities: none, urgent, high, medium, low
@@ -887,6 +897,7 @@ async function updateIssue(api, taskId, options, overrides) {
   const developmentContext = developmentContextFromOptions(options, overrides);
   const recurrence = recurrenceFromOptions(options);
   const attribution = resolveConversationAttribution(options, overrides);
+  const threadBinding = threadBindingFromOptions(options);
   const patch = {
     ...optionalField("projectId", options.project),
     ...optionalField("title", options.title),
@@ -897,6 +908,7 @@ async function updateIssue(api, taskId, options, overrides) {
     ...optionalField("startDate", options["start-date"]),
     ...optionalField("dueDate", options["due-date"]),
     ...optionalField("recurrence", recurrence),
+    ...optionalField("threadBinding", threadBinding),
   };
   if (options.description !== undefined || options["description-file"] !== undefined) {
     patch.description = await resolveDescription(options, overrides);

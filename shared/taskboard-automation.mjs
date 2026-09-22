@@ -117,11 +117,12 @@ export function buildTaskboardAutomationPrompt(request) {
       ]
     : [
         ...candidateInstructions,
-        `确认允许开始后，只有 automationEnabled 为 true、threadId 和 threadBinding 都为空且仍为未归档 todo 的任务才可在读取代码、下载附件、分析或实施前认领。认领必须使用刚读取的 version 移到 in_progress，并显式传 --binding-thread-id "$CODEX_THREAD_ID"、--binding-codex-project-id ${JSON.stringify(request.codexProjectId)}、--binding-codex-project-kind "local"、--binding-codex-host-id ${JSON.stringify(request.codexHostId)}、--binding-workspace-path ${JSON.stringify(request.workspacePath)}，把当前自动化会话一次写成完整 binding；记录响应 task.version 为 ownedVersion。写入成功前不得继续。已有完整 binding 或 legacy local binding 的任务必须先按旧会话规则处理，不得先认领；不得认领已被其他会话绑定或其他 Agent 领取的任务。认领后的每一次 issue move 都必须显式传 ownedVersion 和这五个完整 binding 字段，成功后更新 ownedVersion。`,
+        `本定时任务由 Codex 在独立 worktree 中运行。确认允许开始后，只有 automationEnabled 为 true、threadId 和 threadBinding 都为空且仍为未归档 todo 的任务才可认领。认领前先在当前 worktree 执行 git fetch origin main，再将这个尚未修改的 worktree 重置到最新 origin/main；随后读取绝对工作目录和当前分支，并确认该目录不是项目基础目录 ${JSON.stringify(request.workspacePath)}、HEAD 严格等于 origin/main、工作区干净且当前分支非空。任一步失败时用 comment add 记录原因并结束，不得在项目基础目录实施。`,
+        `认领必须使用刚读取的 version，通过 issue update 一次写入 --status in_progress、--worktree-path、--worktree-branch，并显式传 --binding-thread-id "$CODEX_THREAD_ID"、--binding-codex-project-id ${JSON.stringify(request.codexProjectId)}、--binding-codex-project-kind "local"、--binding-codex-host-id ${JSON.stringify(request.codexHostId)}、--binding-workspace-path 为当前 worktree 的绝对路径，使开发上下文、完整 binding 和状态原子地指向同一 worktree；记录响应 task.version 为 ownedVersion。写入成功前不得读取代码、下载附件、分析或实施。已有完整 binding 或 legacy local binding 的任务必须先按旧会话规则处理，不得新建或替换 worktree；不得认领已被其他会话绑定或其他 Agent 领取的任务。认领后的每一次 issue move 都必须显式传 ownedVersion 和这五个完整 binding 字段，成功后更新 ownedVersion。`,
         "若因 version 陈旧发生版本冲突，重新运行 issue get 和 comment list；仅当仍为可认领 todo、未绑定其他会话、未归档且描述和最新评论未变化时，用最新 version 重试一次。若已被认领、状态或要求已变、已归档、服务或永久 API 错误，或重试仍失败，立即跳过该任务、退出并报告；不得抢占或循环重试。",
         `若首次 issue get 返回完整 threadBinding，任务已绑定原会话：不要在当前自动化会话认领；只能使用保存的 threadId 和 codexHostId 调用 Codex send_message_to_thread。send 成功时保留 binding 并结束本轮；只有工具明确返回终态 NOT_FOUND 或 CLOSED 等会话不存在或已关闭结果时才确认 stale。timeout、network failure、Codex host 暂时不可达或 Taskboard service unavailable 都保留 binding 并结束本轮，不得猜测 stale。确认 stale 后，先用 comment add 同时传 --thread-id 和完整旧 binding 保存历史，再用同一次 issue get 的 version 执行 issue move --status todo --clear-binding-thread --if-version；然后只重新 issue get 一次，仍为未归档 todo 且 threadId、threadBinding 都为空时，才在当前自动化会话处理。若任务已是 in_progress、活跃、已归档、状态或 binding 已变化，或发生 409，立即停止，不得抢占。若返回 threadId 但没有完整 threadBinding，这是 legacy local 绑定：先调用 Codex list_threads（limit=50），合并 pinnedThreads 与 threads，并按完整 threadId 精确查找。只有恰好一项 kind="codex"、projectId=${JSON.stringify(request.codexProjectId)}、hostId=${JSON.stringify(request.codexHostId)}、cwd=${JSON.stringify(request.workspacePath)} 全部一致时，才把该项视为可核验旧会话；使用最新 issue version 执行 issue move --status todo --if-version，并显式传旧 threadId 及上述 projectId、kind="local"、hostId、workspacePath 五字段，将 legacy local 原位升级为完整 binding。升级成功后只向该旧 threadId 和 hostId 调用 send_message_to_thread，随后结束本轮，由旧会话按任务最新要求继续。若 list_threads 未找到、出现多项或任一字段不一致，不得迁移或发送；使用 comment add 记录实际不一致项，再用首次读取的 version 和 --if-version、--binding-thread-id 保留原 threadId 将任务移到 blocked。若升级发生 409，立即停止，不得用新 version 覆盖。若没有 threadId，则按未绑定任务处理。`,
-        "若任务已绑定 branch 或 worktree，必须在该任务绑定的开发上下文执行，避免并行 Agent 修改同一工作目录。",
-        "执行完成并验证后，先用 comment add 记录关键改动、验证结果、执行结果和剩余风险，再使用 ownedVersion、显式 --if-version 和认领时保存的完整 binding 将任务移动到 in_review；成功后更新 ownedVersion。不要省略 binding，避免把完整绑定降级为 legacy local；不要直接标记为 done。",
+        "若任务已绑定原会话的 branch 或 worktree，必须继续使用该绑定；新认领任务的实现和直接验证只能在认领时绑定的 worktree 中完成。不得切回项目基础目录，不得把后续任务的改动加入当前 worktree。",
+        "执行完成并验证后，先用 comment add 记录关键改动、验证结果、执行结果和剩余风险，并附上 worktree 路径，再使用 ownedVersion、显式 --if-version 和认领时保存的完整 binding 将任务移动到 in_review；成功后更新 ownedVersion。保留该 worktree、分支、developmentContext 和 binding 供评审使用，不得清理或复用给下一项任务；不要省略 binding，避免把完整绑定降级为 legacy local；不要直接标记为 done。",
       ];
   return [
     `[$manage-taskboard](${request.skillPath}) e-taskboard 每 ${request.intervalMinutes} 分钟检查任务面板中的「${request.projectName}」项目（项目 ID：${request.taskboardProjectId}，项目目录：${request.workspacePath}）。`,
@@ -150,7 +151,7 @@ export function buildTaskboardAutomationSpec(request) {
     name: buildTaskboardAutomationName(request),
     prompt: buildTaskboardAutomationPrompt(request),
     projectId: request.codexProjectKind === "remote" ? null : request.codexProjectId,
-    executionEnvironment: "local",
+    executionEnvironment: "worktree",
     localEnvironmentConfigPath: null,
     model: request.model,
     reasoningEffort: request.reasoningEffort,
