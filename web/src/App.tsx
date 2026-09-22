@@ -77,6 +77,7 @@ import {
 import { Toaster } from "./components/ui/sonner";
 import { ChoerodonSyncDialog } from "./components/ChoerodonSyncDialog";
 import { ChoerodonConnectionDialog } from "./components/ChoerodonConnectionDialog";
+import { useChoerodonSyncWatcher } from "./useChoerodonSyncWatcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { ArchivedTasksColumn, OtherTasksPanel } from "./components/OtherTasksPanel";
 import {
@@ -954,6 +955,11 @@ export function App() {
   );
   const isAllProjects = selectedProjectId === ALL_PROJECTS_ID;
   const isJiraProject = selectedProject?.source === "jira";
+  const choerodonSyncWatcher = useChoerodonSyncWatcher({
+    projectId: selectedProject?.id ?? null,
+    enabled: Boolean(selectedProject && !isAllProjects && !isJiraProject && choerodonConfigured),
+    dialogOpen: Boolean(choerodonSyncProject),
+  });
   const storedBoardDisplaySettings = projectBoardDisplaySettings[selectedProjectId]
     ?? (isAllProjects
       ? ALL_PROJECTS_DEFAULT_BOARD_DISPLAY_SETTINGS
@@ -3577,14 +3583,26 @@ export function App() {
                     <Button variant="ghost" size="none"
                       className="header-integration-trigger no-drag"
                       type="button"
-                      onClick={() => setChoerodonSyncProject({ id: selectedProject.id, name: selectedProject.name })}
-                      aria-label={text("同步猪齿鱼", "Sync Choerodon")}
+                      onClick={() => {
+                        choerodonSyncWatcher.markAsSeen();
+                        setChoerodonSyncProject({ id: selectedProject.id, name: selectedProject.name });
+                      }}
+                      aria-label={
+                        choerodonSyncWatcher.hasNewIssues
+                          ? text(`同步猪齿鱼（发现 ${choerodonSyncWatcher.newCount} 个新任务）`, `Sync Choerodon (${choerodonSyncWatcher.newCount} new issues)`)
+                          : text("同步猪齿鱼", "Sync Choerodon")
+                      }
                     >
                       <RefreshIcon color="currentColor" />
                       <span>{text("同步猪齿鱼", "Sync Choerodon")}</span>
+                      {choerodonSyncWatcher.hasNewIssues && <span className="header-badge-dot" aria-hidden="true" />}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{text("同步猪齿鱼", "Sync Choerodon")}</TooltipContent>
+                  <TooltipContent>
+                    {choerodonSyncWatcher.hasNewIssues
+                      ? text(`同步猪齿鱼（发现 ${choerodonSyncWatcher.newCount} 个新任务）`, `Sync Choerodon (${choerodonSyncWatcher.newCount} new issues)`)
+                      : text("同步猪齿鱼", "Sync Choerodon")}
+                  </TooltipContent>
                 </Tooltip>
               )}
               {selectedProject && (
@@ -4034,10 +4052,14 @@ export function App() {
       {choerodonSyncProject && (
         <ChoerodonSyncDialog
           project={choerodonSyncProject}
-          onClose={() => setChoerodonSyncProject(null)}
+          onClose={() => {
+            setChoerodonSyncProject(null);
+            void choerodonSyncWatcher.refresh();
+          }}
           onSynced={async () => {
             await refreshTasks(choerodonSyncProject.id);
             await refreshProjectList();
+            void choerodonSyncWatcher.refresh();
           }}
         />
       )}

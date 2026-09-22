@@ -7389,6 +7389,7 @@ kbd {
 
 .project-automation-trigger,
 .header-integration-trigger {
+  position: relative;
   height: 29px;
   gap: 5px;
   padding: 0 11px;
@@ -7401,12 +7402,29 @@ kbd {
   font-weight: 500;
 }
 
+.header-integration-trigger .header-badge-dot {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 1.5px var(--surface);
+  pointer-events: none;
+}
+
 .project-automation-trigger:hover,
 .project-automation-trigger:focus-visible,
 .header-integration-trigger:hover,
 .header-integration-trigger:focus-visible {
   border-color: var(--border-strong);
   background: var(--surface-hover);
+}
+
+.header-integration-trigger:hover .header-badge-dot,
+.header-integration-trigger:focus-visible .header-badge-dot {
+  box-shadow: 0 0 0 1.5px var(--surface-hover);
 }
 
 .project-automation-trigger.is-active {
