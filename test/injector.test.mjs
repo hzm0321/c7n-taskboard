@@ -115,7 +115,10 @@ test("passive automation policy keeps idle pauses and only resumes quota pauses"
     source,
     /!explicit && result\.operation === "list" && result\.item\?\.status === "PAUSED"/,
   );
-  assert.match(source, /enabledByUser: false/);
+  assert.match(source, /isActionableTaskboardAutomationTask/);
+  assert.match(source, /tasks\.some\(isActionableTaskboardAutomationTask\)/);
+  assert.match(source, /pausedForNoActionableTask: current\.pausedForNoActionableTask/);
+  assert.match(source, /record\.pausedForNoActionableTask \? \{ pausedForNoActionableTask: true \} : \{\}/);
   assert.match(source, /record\.quota \? \{ quota: record\.quota \} : \{\}/);
 });
 
