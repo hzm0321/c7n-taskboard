@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: implement automation feature toggle and enhance TaskCard UI" />
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="fix: update workspace configuration and clean up .gitignore">
+      <change beforePath="$PROJECT_DIR$/web/src/components/ChoerodonSyncDialog.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/ChoerodonSyncDialog.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/styles.css" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -130,6 +133,7 @@
     <MESSAGE value="feat: update workspace configuration and improve UI responsiveness" />
     <MESSAGE value="feat: implement automation feature toggle for tasks and enhance UI components" />
     <MESSAGE value="feat: implement automation feature toggle and enhance TaskCard UI" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: implement automation feature toggle and enhance TaskCard UI" />
+    <MESSAGE value="fix: update workspace configuration and clean up .gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: update workspace configuration and clean up .gitignore" />
   </component>
 </project>

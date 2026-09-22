@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CalendarDays, CheckCheck, Filter, Link2, X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { ArrowRight, CalendarDays, Check, CheckCheck, ChevronDown, Filter, Link2, X } from "lucide-react";
 import { getChoerodonSyncPreview, syncChoerodonIssues } from "../api";
 import { useTaskboardI18n } from "../i18n";
 import type { ChoerodonSyncPreview } from "../types";
 import { taskboardStorage } from "../storage";
 import { toast } from "sonner";
 import { ActorAvatar } from "./ActorAvatar";
+import { listenForOutsidePointerDown } from "../menuEvents";
 
 const groupTones = ["blue", "amber", "violet", "green", "rose", "cyan"];
 
@@ -18,11 +18,44 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
 }) {
   const { text } = useTaskboardI18n();
   const dialog = useRef<HTMLDialogElement>(null);
-  const [selectContainer, setSelectContainer] = useState<HTMLDivElement | null>(null);
+  const groupFilterRef = useRef<HTMLDivElement>(null);
+  const typeFilterRef = useRef<HTMLDivElement>(null);
+  const assigneeFilterRef = useRef<HTMLDivElement>(null);
   const filterStorageKey = `taskboard.choerodon-sync-filters.${project.id}`;
-  const [typeFilter, setTypeFilter] = useState(() => taskboardStorage.getItem(`${filterStorageKey}.type`) ?? "all");
-  const [assigneeFilter, setAssigneeFilter] = useState(() => taskboardStorage.getItem(`${filterStorageKey}.assignee`) ?? "all");
-  const [groupFilter, setGroupFilter] = useState(() => taskboardStorage.getItem(`${filterStorageKey}.group`) ?? "");
+  const [groupFilter, setGroupFilter] = useState<string[] | null>(() => {
+    const stored = taskboardStorage.getItem(`${filterStorageKey}.group`);
+    if (stored === null) return null;
+    if (stored === "all") return [];
+    try {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) && parsed.every((value) => typeof value === "string") ? parsed : [stored];
+    } catch {
+      return [stored];
+    }
+  });
+  const [typeFilter, setTypeFilter] = useState<string[]>(() => {
+    const stored = taskboardStorage.getItem(`${filterStorageKey}.type`);
+    if (!stored || stored === "all") return [];
+    try {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) && parsed.every((value) => typeof value === "string") ? parsed : [stored];
+    } catch {
+      return [stored];
+    }
+  });
+  const [assigneeFilter, setAssigneeFilter] = useState<string[]>(() => {
+    const stored = taskboardStorage.getItem(`${filterStorageKey}.assignee`);
+    if (!stored || stored === "all") return [];
+    try {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) && parsed.every((value) => typeof value === "string") ? parsed : [stored];
+    } catch {
+      return [stored];
+    }
+  });
+  const [groupFilterOpen, setGroupFilterOpen] = useState(false);
+  const [typeFilterOpen, setTypeFilterOpen] = useState(false);
+  const [assigneeFilterOpen, setAssigneeFilterOpen] = useState(false);
   const allCheckbox = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ChoerodonSyncPreview | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -34,27 +67,45 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
   const groupColors = new Map(preview?.groups.map((group, index) => [group.id, groupTones[index % groupTones.length]]));
   const types = [...new Set(issues.map((issue) => issue.type))];
   const assignees = [...new Map(issues.map((issue) => [issue.assignee.id, issue.assignee])).values()];
+  const activeGroupFilter = groupFilter ?? [];
   const filteredIssues = issues.filter((issue) => (
-    (groupFilter === "all" || issue.groupId === groupFilter)
-    && (typeFilter === "all" || issue.type === typeFilter)
-    && (assigneeFilter === "all" || issue.assignee.id === assigneeFilter)
+    (!activeGroupFilter.length || activeGroupFilter.includes(issue.groupId))
+    && (!typeFilter.length || typeFilter.includes(issue.type))
+    && (!assigneeFilter.length || assigneeFilter.includes(issue.assignee.id))
   ));
   const visibleSelectedCount = filteredIssues.filter((issue) => selected.has(issue.id)).length;
   const hiddenSelectedCount = selected.size - visibleSelectedCount;
   const allSelected = filteredIssues.length > 0 && visibleSelectedCount === filteredIssues.length;
-  const hasFilters = (groupFilter !== "all" && groupFilter !== "") || typeFilter !== "all" || assigneeFilter !== "all";
+  const hasFilters = activeGroupFilter.length > 0 || typeFilter.length > 0 || assigneeFilter.length > 0;
 
   useEffect(() => {
-    if (groupFilter) taskboardStorage.setItem(`${filterStorageKey}.group`, groupFilter);
-    taskboardStorage.setItem(`${filterStorageKey}.type`, typeFilter);
-    taskboardStorage.setItem(`${filterStorageKey}.assignee`, assigneeFilter);
+    if (groupFilter !== null) {
+      taskboardStorage.setItem(`${filterStorageKey}.group`, groupFilter.length ? JSON.stringify(groupFilter) : "all");
+    }
+    taskboardStorage.setItem(`${filterStorageKey}.type`, typeFilter.length ? JSON.stringify(typeFilter) : "all");
+    taskboardStorage.setItem(`${filterStorageKey}.assignee`, assigneeFilter.length ? JSON.stringify(assigneeFilter) : "all");
   }, [filterStorageKey, typeFilter, assigneeFilter, groupFilter]);
 
   function clearFilters() {
-    setGroupFilter("all");
-    setTypeFilter("all");
-    setAssigneeFilter("all");
+    setGroupFilter([]);
+    setTypeFilter([]);
+    setAssigneeFilter([]);
   }
+
+  useEffect(() => {
+    if (!groupFilterOpen) return;
+    return listenForOutsidePointerDown([groupFilterRef], () => setGroupFilterOpen(false));
+  }, [groupFilterOpen]);
+
+  useEffect(() => {
+    if (!typeFilterOpen) return;
+    return listenForOutsidePointerDown([typeFilterRef], () => setTypeFilterOpen(false));
+  }, [typeFilterOpen]);
+
+  useEffect(() => {
+    if (!assigneeFilterOpen) return;
+    return listenForOutsidePointerDown([assigneeFilterRef], () => setAssigneeFilterOpen(false));
+  }, [assigneeFilterOpen]);
 
   useEffect(() => {
     dialog.current?.showModal();
@@ -64,7 +115,11 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
     void getChoerodonSyncPreview(project.id).then((value) => {
       if (!active) return;
       setPreview(value);
-      setGroupFilter((current) => current || value.groups.find((group) => group.name === "待开发")?.id || "all");
+      setGroupFilter((current) => {
+        if (current !== null) return current;
+        const devGroup = value.groups.find((group) => group.name === "待开发");
+        return devGroup ? [devGroup.id] : [];
+      });
       setSelected(new Set());
     }).catch((reason: unknown) => {
       if (active) setError(reason instanceof Error ? reason.message : String(reason));
@@ -97,7 +152,13 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
   return (
     <dialog ref={dialog} className="choerodon-sync-dialog" aria-labelledby="choerodon-sync-title"
       onKeyDown={(event) => event.stopPropagation()}
-      onCancel={(event) => { event.preventDefault(); if (!syncing) onClose(); }}>
+      onCancel={(event) => {
+        event.preventDefault();
+        if (groupFilterOpen) setGroupFilterOpen(false);
+        else if (typeFilterOpen) setTypeFilterOpen(false);
+        else if (assigneeFilterOpen) setAssigneeFilterOpen(false);
+        else if (!syncing) onClose();
+      }}>
       <header className="choerodon-sync-header">
         <div className="choerodon-sync-heading">
           <div>
@@ -113,35 +174,212 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
         </div>
       </header>
       <div className="choerodon-sync-filters">
-        <div className="choerodon-sync-filter">
+        <div ref={groupFilterRef} className="choerodon-sync-filter choerodon-sync-multi-select-filter"
+          onKeyDown={(event) => {
+            if (groupFilterOpen && event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              setGroupFilterOpen(false);
+            }
+          }}>
           <label htmlFor="choerodon-sync-group">{text("任务分组", "Task group")}</label>
-          <Select value={groupFilter} onValueChange={setGroupFilter} disabled={loading || syncing}>
-            <SelectTrigger id="choerodon-sync-group"><SelectValue placeholder={text("请选择分组", "Select a group")} /></SelectTrigger>
-            <SelectContent container={selectContainer}>
-              <SelectItem value="all">{text("全部分组", "All groups")}</SelectItem>
-              {preview?.groups.map((group) => <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Button
+            variant="outline"
+            size="none"
+            id="choerodon-sync-group"
+            type="button"
+            className="choerodon-sync-multi-select-trigger"
+            disabled={loading || syncing}
+            aria-haspopup="listbox"
+            aria-expanded={groupFilterOpen}
+            onClick={() => {
+              setGroupFilterOpen((open) => !open);
+              setTypeFilterOpen(false);
+              setAssigneeFilterOpen(false);
+            }}
+          >
+            <span>{activeGroupFilter.length === 0
+              ? text("全部分组", "All groups")
+              : activeGroupFilter.length === 1
+                ? (preview?.groups.find((group) => group.id === activeGroupFilter[0])?.name ?? activeGroupFilter[0])
+                : text(`已选 ${activeGroupFilter.length} 个分组`, `${activeGroupFilter.length} groups selected`)}</span>
+            <ChevronDown aria-hidden="true" />
+          </Button>
+          {groupFilterOpen && (
+            <div className="choerodon-sync-multi-select-popover" role="listbox" aria-multiselectable="true" aria-label={text("任务分组", "Task group")}>
+              <Button
+                variant="ghost"
+                size="none"
+                type="button"
+                role="option"
+                aria-selected={activeGroupFilter.length === 0}
+                className="choerodon-sync-multi-select-option"
+                onClick={() => setGroupFilter([])}
+              >
+                <span>{text("全部分组", "All groups")}</span>
+                {activeGroupFilter.length === 0 && <Check size={14} aria-hidden="true" />}
+              </Button>
+              {preview?.groups.map((group) => {
+                const checked = activeGroupFilter.includes(group.id);
+                return (
+                  <Button
+                    key={group.id}
+                    variant="ghost"
+                    size="none"
+                    type="button"
+                    role="option"
+                    aria-selected={checked}
+                    className="choerodon-sync-multi-select-option"
+                    onClick={() => setGroupFilter((current) => {
+                      const list = current ?? [];
+                      return checked
+                        ? list.filter((id) => id !== group.id)
+                        : [...list, group.id];
+                    })}
+                  >
+                    <span>{group.name}</span>
+                    {checked && <Check size={14} aria-hidden="true" />}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
         </div>
-        <div className="choerodon-sync-filter">
+        <div ref={typeFilterRef} className="choerodon-sync-filter choerodon-sync-multi-select-filter choerodon-sync-type-filter"
+          onKeyDown={(event) => {
+            if (typeFilterOpen && event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              setTypeFilterOpen(false);
+            }
+          }}>
           <label htmlFor="choerodon-sync-type">{text("任务类型", "Task type")}</label>
-          <Select value={typeFilter} onValueChange={setTypeFilter} disabled={loading || syncing}>
-            <SelectTrigger id="choerodon-sync-type"><SelectValue /></SelectTrigger>
-            <SelectContent container={selectContainer}>
-              <SelectItem value="all">{text("全部类型", "All types")}</SelectItem>
-              {types.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Button
+            variant="outline"
+            size="none"
+            id="choerodon-sync-type"
+            type="button"
+            className="choerodon-sync-multi-select-trigger"
+            disabled={loading || syncing}
+            aria-haspopup="listbox"
+            aria-expanded={typeFilterOpen}
+            onClick={() => {
+              setTypeFilterOpen((open) => !open);
+              setGroupFilterOpen(false);
+              setAssigneeFilterOpen(false);
+            }}
+          >
+            <span>{typeFilter.length === 0
+              ? text("全部类型", "All types")
+              : typeFilter.length === 1
+                ? typeFilter[0]
+                : text(`已选 ${typeFilter.length} 种类型`, `${typeFilter.length} types selected`)}</span>
+            <ChevronDown aria-hidden="true" />
+          </Button>
+          {typeFilterOpen && (
+            <div className="choerodon-sync-multi-select-popover choerodon-sync-type-popover" role="listbox" aria-multiselectable="true" aria-label={text("任务类型", "Task type")}>
+              <Button
+                variant="ghost"
+                size="none"
+                type="button"
+                role="option"
+                aria-selected={typeFilter.length === 0}
+                className="choerodon-sync-multi-select-option choerodon-sync-type-option"
+                onClick={() => setTypeFilter([])}
+              >
+                <span>{text("全部类型", "All types")}</span>
+                {typeFilter.length === 0 && <Check size={14} aria-hidden="true" />}
+              </Button>
+              {types.map((type) => {
+                const checked = typeFilter.includes(type);
+                return (
+                  <Button
+                    key={type}
+                    variant="ghost"
+                    size="none"
+                    type="button"
+                    role="option"
+                    aria-selected={checked}
+                    className="choerodon-sync-multi-select-option choerodon-sync-type-option"
+                    onClick={() => setTypeFilter((current) => checked
+                      ? current.filter((value) => value !== type)
+                      : [...current, type])}
+                  >
+                    <span>{type}</span>
+                    {checked && <Check size={14} aria-hidden="true" />}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
         </div>
-        <div className="choerodon-sync-filter">
+        <div ref={assigneeFilterRef} className="choerodon-sync-filter choerodon-sync-multi-select-filter"
+          onKeyDown={(event) => {
+            if (assigneeFilterOpen && event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              setAssigneeFilterOpen(false);
+            }
+          }}>
           <label htmlFor="choerodon-sync-assignee">{text("负责人", "Assignee")}</label>
-          <Select value={assigneeFilter} onValueChange={setAssigneeFilter} disabled={loading || syncing}>
-            <SelectTrigger id="choerodon-sync-assignee"><SelectValue /></SelectTrigger>
-            <SelectContent container={selectContainer}>
-              <SelectItem value="all">{text("全部人员", "All assignees")}</SelectItem>
-              {assignees.map((assignee) => <SelectItem key={assignee.id} value={assignee.id}>{assignee.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Button
+            variant="outline"
+            size="none"
+            id="choerodon-sync-assignee"
+            type="button"
+            className="choerodon-sync-multi-select-trigger"
+            disabled={loading || syncing}
+            aria-haspopup="listbox"
+            aria-expanded={assigneeFilterOpen}
+            onClick={() => {
+              setAssigneeFilterOpen((open) => !open);
+              setGroupFilterOpen(false);
+              setTypeFilterOpen(false);
+            }}
+          >
+            <span>{assigneeFilter.length === 0
+              ? text("全部人员", "All assignees")
+              : assigneeFilter.length === 1
+                ? (assignees.find((assignee) => assignee.id === assigneeFilter[0])?.name ?? assigneeFilter[0])
+                : text(`已选 ${assigneeFilter.length} 位负责人`, `${assigneeFilter.length} assignees selected`)}</span>
+            <ChevronDown aria-hidden="true" />
+          </Button>
+          {assigneeFilterOpen && (
+            <div className="choerodon-sync-multi-select-popover" role="listbox" aria-multiselectable="true" aria-label={text("负责人", "Assignee")}>
+              <Button
+                variant="ghost"
+                size="none"
+                type="button"
+                role="option"
+                aria-selected={assigneeFilter.length === 0}
+                className="choerodon-sync-multi-select-option"
+                onClick={() => setAssigneeFilter([])}
+              >
+                <span>{text("全部人员", "All assignees")}</span>
+                {assigneeFilter.length === 0 && <Check size={14} aria-hidden="true" />}
+              </Button>
+              {assignees.map((assignee) => {
+                const checked = assigneeFilter.includes(assignee.id);
+                return (
+                  <Button
+                    key={assignee.id}
+                    variant="ghost"
+                    size="none"
+                    type="button"
+                    role="option"
+                    aria-selected={checked}
+                    className="choerodon-sync-multi-select-option"
+                    onClick={() => setAssigneeFilter((current) => checked
+                      ? current.filter((id) => id !== assignee.id)
+                      : [...current, assignee.id])}
+                  >
+                    <span>{assignee.name}</span>
+                    {checked && <Check size={14} aria-hidden="true" />}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
         </div>
         <Button variant="ghost" size="none" className="choerodon-sync-text-button" type="button" disabled={!hasFilters || syncing || loading} onClick={clearFilters}>{text("清除筛选", "Clear filters")}</Button>
       </div>
@@ -201,7 +439,6 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
             ))}
           </div>}
       </div>
-      <div ref={setSelectContainer} />
       <footer className="choerodon-sync-footer">
         {error && <p className="project-dialog-error" role="alert">{error} {!preview && <Button variant="outline" size="sm" type="button" className="button secondary" onClick={() => setReload((value) => value + 1)}>{text("重试", "Retry")}</Button>}</p>}
         <div className="choerodon-sync-actions">
