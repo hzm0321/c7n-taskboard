@@ -6,6 +6,12 @@
   --dashboard-contribution-2: #7bc99a;
   --dashboard-contribution-3: #2da462;
   --dashboard-contribution-4: #1b7a43;
+  --dashboard-completion-empty: var(--text-tertiary);
+  --dashboard-completion-low: #ea580c;
+  --dashboard-completion-mid-low: #d97706;
+  --dashboard-completion-mid-high: #2563eb;
+  --dashboard-completion-high: #0d9488;
+  --dashboard-completion-done: #16a34a;
   padding: 20px 16px 64px;
   background: transparent;
   scrollbar-width: none;
@@ -19,6 +25,12 @@
   --dashboard-contribution-2: #166534;
   --dashboard-contribution-3: #22c55e;
   --dashboard-contribution-4: #4ade80;
+  --dashboard-completion-empty: var(--text-tertiary);
+  --dashboard-completion-low: #ff7e67;
+  --dashboard-completion-mid-low: #fbbf24;
+  --dashboard-completion-mid-high: #60a5fa;
+  --dashboard-completion-high: #2dd4bf;
+  --dashboard-completion-done: #4ade80;
 }
 
 .dashboard-view.dashboard-view::-webkit-scrollbar,
@@ -84,7 +96,7 @@
 
 .dashboard-view .dashboard-hero-value strong {
   flex: 0 0 auto;
-  color: var(--text-primary);
+  color: var(--dashboard-completion-color, var(--text-primary));
   font-size: 52px;
   font-weight: 700;
   letter-spacing: -2px;
@@ -92,6 +104,31 @@
   background: none;
   -webkit-background-clip: unset;
   -webkit-text-fill-color: initial;
+  transition: color 180ms ease;
+}
+
+.dashboard-view .dashboard-hero-value strong.tone-empty {
+  --dashboard-completion-color: var(--dashboard-completion-empty);
+}
+
+.dashboard-view .dashboard-hero-value strong.tone-low {
+  --dashboard-completion-color: var(--dashboard-completion-low);
+}
+
+.dashboard-view .dashboard-hero-value strong.tone-mid-low {
+  --dashboard-completion-color: var(--dashboard-completion-mid-low);
+}
+
+.dashboard-view .dashboard-hero-value strong.tone-mid-high {
+  --dashboard-completion-color: var(--dashboard-completion-mid-high);
+}
+
+.dashboard-view .dashboard-hero-value strong.tone-high {
+  --dashboard-completion-color: var(--dashboard-completion-high);
+}
+
+.dashboard-view .dashboard-hero-value strong.tone-done {
+  --dashboard-completion-color: var(--dashboard-completion-done);
 }
 
 .dashboard-view .dashboard-hero-value span {

@@ -100,6 +100,16 @@ function calculateProjectCompletion(tasks: Task[]): ProjectCompletion {
   };
 }
 
+function getCompletionTone(completion: ProjectCompletion): "empty" | "low" | "mid-low" | "mid-high" | "high" | "done" {
+  if (completion.parentCount === 0) return "empty";
+  const { percentage } = completion;
+  if (percentage >= 100) return "done";
+  if (percentage >= 75) return "high";
+  if (percentage >= 50) return "mid-high";
+  if (percentage >= 25) return "mid-low";
+  return "low";
+}
+
 function chartDate(value: number, locale: string, referenceValue?: number) {
   const includeYear = referenceValue !== undefined
     && new Date(value).getFullYear() !== new Date(referenceValue).getFullYear();
@@ -757,6 +767,7 @@ export function DashboardView({
     `${greeting}, ${currentUser.name}. Today is ${summaryDate}. ${summaryBody}`,
   );
   const summaryReady = isAllProjects || projectSummary !== null || summaryLoadFailed;
+  const completionTone = getCompletionTone(projectCompletion);
 
   return (
     <div className="dashboard-view">
@@ -765,7 +776,9 @@ export function DashboardView({
           <header className="dashboard-heading">
             <h1>{text("项目完成度", "Project completion")}</h1>
             <div className="dashboard-hero-value">
-              <strong>{projectCompletion.percentage}%</strong>
+              <strong className={`dashboard-completion-value tone-${completionTone}`}>
+                {projectCompletion.percentage}%
+              </strong>
               <span>{text(
                 projectCompletion.parentCount > 0
                   ? `${projectCompletion.completedParents}/${projectCompletion.parentCount} 个顶层任务完成 · ${completedTasks.length} 个任务已完成`
