@@ -7,6 +7,7 @@ import {
   buildTaskboardAutomationName,
   buildTaskboardAutomationPrompt,
   buildTaskboardAutomationSpec,
+  isActionableTaskboardAutomationTask,
   parseTaskboardAutomationHostRequest,
   reconcileTaskboardAutomation,
   taskboardAutomationPolicyOperation,
@@ -314,6 +315,36 @@ test("passive policy checks resume only after quota recovery", () => {
     ),
     "pause",
   );
+  assert.equal(
+    taskboardAutomationPolicyOperation(
+      { ...baseRequest, quotaAware: false },
+      {
+        ...passiveAvailable,
+        hasActionableTask: true,
+        pausedForNoActionableTask: true,
+      },
+    ),
+    "ensure-active",
+  );
+});
+
+test("the host recognizes only enabled todo tasks with completed dependencies", () => {
+  const actionable = {
+    status: "todo",
+    archivedAt: null,
+    automationEnabled: true,
+    relations: { blockedBy: [] },
+  };
+  assert.equal(isActionableTaskboardAutomationTask(actionable), true);
+  assert.equal(isActionableTaskboardAutomationTask({
+    ...actionable,
+    relations: { blockedBy: [{ status: "done" }] },
+  }), true);
+  assert.equal(isActionableTaskboardAutomationTask({ ...actionable, automationEnabled: false }), false);
+  assert.equal(isActionableTaskboardAutomationTask({
+    ...actionable,
+    relations: { blockedBy: [{ status: "in_progress" }] },
+  }), false);
 });
 
 test("ensure-active updates a matching automation by id with a complete active spec", async () => {

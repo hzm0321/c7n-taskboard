@@ -15,6 +15,7 @@ import { resolvePort } from "../server/app.mjs";
 import { resolveCodexExecutable } from "../shared/codex-executable.mjs";
 import { withoutTaskboardLauncherEnvironment } from "../shared/codex-environment.mjs";
 import {
+  isActionableTaskboardAutomationTask,
   parseTaskboardAutomationHostRequest,
   reconcileTaskboardAutomation,
   taskboardAutomationPolicyOperation,
@@ -1343,11 +1344,8 @@ function remoteAutomationTarget(request, task) {
 function eligibleRemoteAutomationTask(task) {
   const remoteBinding = task?.threadBinding?.codexProjectKind === "remote"
     && task.threadId === task.threadBinding.threadId;
-  return task?.status === "todo"
-    && task.archivedAt === null
-    && Boolean(task.automationEnabled)
-    && ((!task.threadId && !task.threadBinding) || remoteBinding)
-    && (task.relations?.blockedBy ?? []).every((dependency) => dependency.status === "done");
+  return isActionableTaskboardAutomationTask(task)
+    && ((!task.threadId && !task.threadBinding) || remoteBinding);
 }
 
 function remoteAutomationSnapshot(task, comments, attachments) {
@@ -1784,7 +1782,12 @@ async function applyTaskboardAutomationPolicy(
   request,
   rpc,
   stillCurrent = () => true,
-  { explicit = false, previousQuotaState, remoteNextRunAt } = {},
+  {
+    explicit = false,
+    pausedForNoActionableTask,
+    previousQuotaState,
+    remoteNextRunAt,
+  } = {},
 ) {
   const todoResponse = request.enabledByUser
     ? await fetch(
@@ -1800,7 +1803,10 @@ async function applyTaskboardAutomationPolicy(
     throw new Error("Taskboard todo check returned invalid JSON");
   }
   const hasTodo = todoPayload ? todoPayload.tasks.length > 0 : null;
-  const quota = request.quotaAware && hasTodo !== false
+  const hasActionableTask = todoPayload
+    ? todoPayload.tasks.some(isActionableTaskboardAutomationTask)
+    : null;
+  const quota = request.quotaAware && hasActionableTask !== false
     ? await readCodexQuotaStatus(request.model)
     : null;
   if (!stillCurrent()) return { quota, stale: true };
@@ -1813,6 +1819,8 @@ async function applyTaskboardAutomationPolicy(
     const operation = taskboardAutomationPolicyOperation(request, {
       explicit,
       hasTodo,
+      hasActionableTask,
+      pausedForNoActionableTask,
       previousQuotaState,
       quotaState: quota?.state,
       currentStatus,
@@ -1834,6 +1842,7 @@ async function applyTaskboardAutomationPolicy(
       items: [item],
       operation,
       hasTodo,
+      hasActionableTask,
       ...(quota ? { quota } : {}),
     };
   }
@@ -1851,6 +1860,8 @@ async function applyTaskboardAutomationPolicy(
   const operation = taskboardAutomationPolicyOperation(request, {
     explicit,
     hasTodo,
+    hasActionableTask,
+    pausedForNoActionableTask,
     previousQuotaState,
     quotaState: quota?.state,
     currentStatus: currentItem?.status,
@@ -1859,9 +1870,9 @@ async function applyTaskboardAutomationPolicy(
     ? { item: currentItem, items: listed.items }
     : await reconcileTaskboardAutomation({ ...request, operation }, rpc);
   if (result?.error === "not-found") {
-    return { operation, hasTodo, ...(quota ? { quota } : {}) };
+    return { operation, hasTodo, hasActionableTask, ...(quota ? { quota } : {}) };
   }
-  return { ...result, operation, hasTodo, ...(quota ? { quota } : {}) };
+  return { ...result, operation, hasTodo, hasActionableTask, ...(quota ? { quota } : {}) };
 }
 
 function storedAutomationPolicy(request) {
@@ -1885,7 +1896,7 @@ function storedAutomationPolicy(request) {
 
 function restoredAutomationPolicy(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const { nextRunAt, quota, ...stored } = value;
+  const { nextRunAt, pausedForNoActionableTask, quota, ...stored } = value;
   const request = parseTaskboardAutomationHostRequest({
     ...stored,
     id: "restored-policy",
@@ -1898,6 +1909,7 @@ function restoredAutomationPolicy(value) {
       request,
       ...(quota ? { quota } : {}),
       ...(Number.isFinite(nextRunAt) ? { nextRunAt } : {}),
+      ...(pausedForNoActionableTask === true ? { pausedForNoActionableTask: true } : {}),
     }
     : null;
 }
@@ -1932,6 +1944,7 @@ function persistQuotaPolicies() {
         ...storedAutomationPolicy(record.request),
         ...(record.quota ? { quota: record.quota } : {}),
         ...(Number.isFinite(record.nextRunAt) ? { nextRunAt: record.nextRunAt } : {}),
+        ...(record.pausedForNoActionableTask ? { pausedForNoActionableTask: true } : {}),
       },
     ]),
   );
@@ -1978,7 +1991,7 @@ function scheduleQuotaPolicyCheck(record, result) {
       1_000,
       nextRunAt - Date.now() - (request.codexProjectKind === "remote" ? 0 : 15_000),
     )
-    : 60_000;
+    : request.intervalMinutes * 60_000;
   const resetDelay = result.quota?.state === "blocked"
     && Number.isFinite(result.quota.resetsAt)
     ? Math.max(1_000, result.quota.resetsAt * 1_000 - Date.now() + 1_000)
@@ -2016,15 +2029,15 @@ function enqueueQuotaPolicyMutation(record, rpc, { explicit = false } = {}) {
         () => quotaPolicyRecords.get(key)?.version === current.version,
         {
           explicit,
+          pausedForNoActionableTask: current.pausedForNoActionableTask,
           previousQuotaState: current.quota?.state,
           remoteNextRunAt: current.nextRunAt,
         },
       );
       if (result.stale) return result;
-      if (result.hasTodo === false && result.operation === "pause") {
-        current.version += 1;
-        current.request = { ...current.request, enabledByUser: false };
-      } else if (!explicit && result.operation === "list" && result.item?.status === "PAUSED") {
+      current.pausedForNoActionableTask = result.hasActionableTask === false
+        && result.operation === "pause";
+      if (!explicit && result.operation === "list" && result.item?.status === "PAUSED") {
         current.version += 1;
         current.request = { ...current.request, enabledByUser: false };
       }

@@ -158,18 +158,29 @@ export function buildTaskboardAutomationSpec(request) {
   };
 }
 
+export function isActionableTaskboardAutomationTask(task) {
+  return task?.status === "todo"
+    && task.archivedAt === null
+    && task.automationEnabled === true
+    && (task.relations?.blockedBy ?? []).every((dependency) => dependency.status === "done");
+}
+
 export function taskboardAutomationPolicyOperation(request, {
   explicit,
   hasTodo,
+  hasActionableTask,
+  pausedForNoActionableTask,
   previousQuotaState,
   quotaState,
   currentStatus,
 }) {
+  const actionable = hasActionableTask ?? hasTodo;
   if (!request.enabledByUser) return "pause";
-  if (hasTodo === false) return "pause";
+  if (actionable === false) return "pause";
   if (
     !explicit
     && currentStatus === "PAUSED"
+    && !pausedForNoActionableTask
     && (!request.quotaAware || previousQuotaState === "available")
   ) return "list";
   if (request.quotaAware && quotaState !== "available") return "pause";
