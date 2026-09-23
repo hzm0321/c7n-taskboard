@@ -4,11 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: enhance Choerodon connection with group selection and credential management">
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: update default labels and enhance label management in project settings">
+      <change afterPath="$PROJECT_DIR$/web/src/components/BulkArchiveDialog.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/src/components/ui/checkbox.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cloud/migrations/0006_project_labels.sql" beforeDir="false" afterPath="$PROJECT_DIR$/cloud/migrations/0006_project_labels.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/domain.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/shared/domain.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/labels.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/labels.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/components/IssueListView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/IssueListView.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/shadcn.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/shadcn.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/styles.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -139,6 +144,7 @@
     <MESSAGE value="fix: update workspace configuration and enhance filter functionality in ChoerodonSyncDialog" />
     <MESSAGE value="feat: implement Choerodon sync watcher and enhance UI integration" />
     <MESSAGE value="feat: enhance Choerodon connection with group selection and credential management" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: enhance Choerodon connection with group selection and credential management" />
+    <MESSAGE value="feat: update default labels and enhance label management in project settings" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: update default labels and enhance label management in project settings" />
   </component>
 </project>

@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, type RefObject, type SyntheticEvent } from "react";
-import { assigneeTargetForActor } from "../actors";
+import { CODEX_AGENT_ACTOR, actorKey, assigneeTargetForActor } from "../actors";
 import { taskPriorityLabel, taskStatusLabel, useTaskboardI18n } from "../i18n";
 import { labelPresentation } from "../labels";
 import type { TaskCardPresentation } from "../taskConversations";
@@ -21,6 +22,9 @@ interface IssueListViewProps {
   presentations: Record<string, TaskCardPresentation>;
   currentUser: ActorIdentity;
   hasActiveFilters: boolean;
+  selectedTaskIds: Set<string>;
+  onToggleSelection: (taskId: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean) => void;
   onOpenTask: (task: Task) => void;
   onOpenConversation: (conversation: TaskCardPresentation["conversations"][number]) => void;
   onUpdate: (task: Task, changes: Partial<TaskDraft>) => Promise<Task>;
@@ -41,6 +45,9 @@ export function IssueListView({
   presentations,
   currentUser,
   hasActiveFilters,
+  selectedTaskIds,
+  onToggleSelection,
+  onToggleSelectAll,
   onOpenTask,
   onOpenConversation,
   onUpdate,
@@ -48,6 +55,11 @@ export function IssueListView({
   const { language, locale, text } = useTaskboardI18n();
   const [collapsed, setCollapsed] = useState(() => new Set(COLLAPSED_BY_DEFAULT));
   const [priorityMenuTaskId, setPriorityMenuTaskId] = useState<string | null>(null);
+  const [assigneeMenuTaskId, setAssigneeMenuTaskId] = useState<string | null>(null);
+
+  const allSelected = tasks.length > 0 && tasks.every((t) => selectedTaskIds.has(t.id));
+  const someSelected = tasks.some((t) => selectedTaskIds.has(t.id));
+  const selectAllState: boolean | "indeterminate" = allSelected ? true : someSelected ? "indeterminate" : false;
 
   function stopRow(event: SyntheticEvent) {
     event.stopPropagation();
@@ -64,7 +76,15 @@ export function IssueListView({
 
   return (
     <div className="issue-list-view" ref={scrollRef}>
-      <div className="issue-list-column-headings" aria-hidden="true">
+      <div className="issue-list-column-headings">
+        <span className="issue-list-selection">
+          <Checkbox
+            checked={selectAllState}
+            disabled={tasks.length === 0}
+            onCheckedChange={(checked) => onToggleSelectAll?.(checked === true)}
+            aria-label={text("全选所有任务", "Select all issues")}
+          />
+        </span>
         <span>{text("任务", "Task")}</span>
         <span className="issue-list-metadata-headings">
           <span>{text("优先级", "Priority")}</span>
@@ -92,11 +112,16 @@ export function IssueListView({
               {!isCollapsed && (
                 <div className="issue-list-rows">
                   {statusTasks.length ? statusTasks.map((task) => {
-                    const assigneeTarget = assigneeTargetForActor(task.assignee, currentUser) ?? "current-user";
+                    const currentUserKey = actorKey(currentUser);
+                    const currentAssignee = actorKey(task.assignee) === currentUserKey ? currentUser : task.assignee;
+                    const assigneeOptions = [currentAssignee, currentUser, CODEX_AGENT_ACTOR]
+                      .filter((actor, index, actors) => (
+                        actors.findIndex((candidate) => actorKey(candidate) === actorKey(actor)) === index
+                      ));
                     const displayIdentifier = task.externalKey ?? task.identifier;
                     return (
                       <div
-                        className={`issue-list-row${presentations[task.id]?.unread ? " is-unread" : ""}`}
+                        className={`issue-list-row${presentations[task.id]?.unread ? " is-unread" : ""}${selectedTaskIds.has(task.id) ? " is-selected" : ""}`}
                         role="button"
                         tabIndex={0}
                         key={task.id}
@@ -105,6 +130,13 @@ export function IssueListView({
                           if (event.key === "Enter" || event.key === " ") onOpenTask(task);
                         }}
                       >
+                        <span className="issue-list-selection" onClick={stopRow} onKeyDown={stopRow}>
+                          <Checkbox
+                            checked={selectedTaskIds.has(task.id)}
+                            onCheckedChange={(checked) => onToggleSelection(task.id, checked === true)}
+                            aria-label={text(`选择任务 ${displayIdentifier}`, `Select issue ${displayIdentifier}`)}
+                          />
+                        </span>
                         <span className="issue-list-title-cell">
                           <small>{displayIdentifier}</small>
                           <strong title={task.title}>{task.title}</strong>
@@ -124,7 +156,10 @@ export function IssueListView({
                               className="issue-list-property-picker"
                               triggerClassName={`issue-list-priority priority-${task.priority}`}
                               ariaLabel={text(`${displayIdentifier} 优先级`, `${displayIdentifier} priority`)}
-                              onOpenChange={(open) => setPriorityMenuTaskId(open ? task.id : null)}
+                              onOpenChange={(open) => {
+                                setPriorityMenuTaskId(open ? task.id : null);
+                                if (open) setAssigneeMenuTaskId(null);
+                              }}
                               onChange={(priority) => void onUpdate(task, { priority }).catch(() => {})}
                             />
                           </span>
@@ -159,19 +194,39 @@ export function IssueListView({
                             conversations={presentations[task.id]?.conversations ?? []}
                             onOpenConversation={onOpenConversation}
                           />
-                          <label className="issue-list-assignee" title={task.assignee.name} onClick={stopRow}>
-                            <ActorAvatar actor={task.assignee} />
-                            <span>{task.assignee.name}</span>
-                            <select
-                              aria-label={text(`${displayIdentifier} 负责人`, `${displayIdentifier} assignee`)}
-                              value={assigneeTarget}
+                          <span className="issue-list-assignee-control" onClick={stopRow} onKeyDown={stopRow}>
+                            <TaskPropertyPicker
+                              value={actorKey(task.assignee)}
+                              options={assigneeOptions.map((actor) => ({
+                                value: actorKey(actor),
+                                label: actorKey(actor) === currentUserKey
+                                  ? `${actor.name}${text("（我）", " (me)")}`
+                                  : actor.name,
+                                icon: <ActorAvatar actor={actor} className="task-property-assignee-avatar" />,
+                              }))}
+                              open={assigneeMenuTaskId === task.id}
                               disabled={task.source === "jira"}
-                              onChange={(event) => void onUpdate(task, { assigneeTarget: event.target.value as "current-user" | "codex-agent" }).catch(() => {})}
-                            >
-                              <option value="current-user">{currentUser.name}</option>
-                              <option value="codex-agent">Codex Agent</option>
-                            </select>
-                          </label>
+                              className="issue-list-property-picker issue-list-assignee-picker"
+                              triggerClassName="issue-list-assignee"
+                              triggerContent={(
+                                <>
+                                  <ActorAvatar actor={task.assignee} />
+                                  <span>{task.assignee.name}</span>
+                                </>
+                              )}
+                              ariaLabel={text(`${displayIdentifier} 负责人`, `${displayIdentifier} assignee`)}
+                              title={text(`负责人：${task.assignee.name}`, `Assignee: ${task.assignee.name}`)}
+                              onOpenChange={(open) => {
+                                setAssigneeMenuTaskId(open ? task.id : null);
+                                if (open) setPriorityMenuTaskId(null);
+                              }}
+                              onChange={(value) => {
+                                const selected = assigneeOptions.find((actor) => actorKey(actor) === value);
+                                const target = selected ? assigneeTargetForActor(selected, currentUser) : undefined;
+                                if (target) void onUpdate(task, { assigneeTarget: target }).catch(() => {});
+                              }}
+                            />
+                          </span>
                         </span>
                         <time
                           dateTime={task.createdAt}

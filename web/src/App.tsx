@@ -56,6 +56,7 @@ import {
   assigneeTargetForActor,
 } from "./actors";
 import { BoardColumn } from "./components/BoardColumn";
+import { BulkArchiveDialog } from "./components/BulkArchiveDialog";
 import type { AiChatOpenThreadRequest } from "./components/AiChat";
 import {
   BoardCardDisplayMenu,
@@ -784,6 +785,9 @@ export function App() {
   const [selectedProjectId, setSelectedProjectId] = useState(initialProjectId);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [archivedTasks, setArchivedTasks] = useState<Task[]>([]);
+  const [selectedListTaskIds, setSelectedListTaskIds] = useState<Set<string>>(new Set());
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
+  const [bulkArchiving, setBulkArchiving] = useState(false);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [hasLoadedTasks, setHasLoadedTasks] = useState(false);
   const [projectLoadError, setProjectLoadError] = useState<ProjectLoadError | null>(null);
@@ -1751,6 +1755,11 @@ export function App() {
   }, [selectedProjectId]);
 
   useEffect(() => {
+    setSelectedListTaskIds(new Set());
+    setBulkArchiveOpen(false);
+  }, [selectedProjectId]);
+
+  useEffect(() => {
     if (!selectedProjectId) {
       setDashboardSummaryAnimatedProjectId(null);
     } else if (boardView !== "dashboard") {
@@ -2329,6 +2338,7 @@ export function App() {
       (task) => matchesTaskSearch(task, search, language) && matchesTaskFilters(task, filters),
     ).sort(taskComparator);
   }, [filters, language, search, taskComparator, tasks]);
+  const selectedListTasks = tasks.filter((task) => selectedListTaskIds.has(task.id));
 
   const filteredArchivedTasks = useMemo(() => archivedTasks.filter(
     (task) => matchesTaskSearch(task, search, language) && matchesTaskFilters(task, filters),
@@ -2859,6 +2869,35 @@ export function App() {
         : errorMessage(error));
       if (taskScopeProjectId) void refreshTasks(taskScopeProjectId, { quiet: true });
     }
+  }
+
+  async function archiveSelectedListTasks() {
+    if (bulkArchiving || selectedListTasks.length === 0) return;
+    setBulkArchiving(true);
+    setActionError(null);
+    for (const task of selectedListTasks) {
+      try {
+        const archived = await archiveTaskRequest(task);
+        setTasks((current) => current.filter((candidate) => candidate.id !== task.id));
+        setArchivedTasks((current) => sortTasks([
+          ...current.filter((candidate) => candidate.id !== archived.id),
+          archived,
+        ]));
+        setSelectedListTaskIds((current) => {
+          const next = new Set(current);
+          next.delete(task.id);
+          return next;
+        });
+      } catch (error) {
+        setActionError(error instanceof ApiError && error.code === "VERSION_CONFLICT"
+          ? text("任务已在其他位置更新，看板已重新同步。", "An issue changed elsewhere. The board has been synced.")
+          : errorMessage(error));
+        if (taskScopeProjectId) void refreshTasks(taskScopeProjectId, { quiet: true });
+        break;
+      }
+    }
+    setBulkArchiving(false);
+    setBulkArchiveOpen(false);
   }
 
   async function restoreArchivedTask(task: Task) {
@@ -3762,6 +3801,20 @@ export function App() {
                     : text("打开其他任务", "Open other issues")}</TooltipContent>
                 </Tooltip>
               )}
+              {boardView === "list" && selectedListTasks.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="none"
+                  type="button"
+                  className="list-archive-button"
+                  onClick={() => setBulkArchiveOpen(true)}
+                  aria-label={text(`归档选中的 ${selectedListTasks.length} 个任务`, `Archive ${selectedListTasks.length} selected issues`)}
+                >
+                  <DeleteIcon color="currentColor" size={14} />
+                  <span>{text("归档", "Archive")}</span>
+                  <span className="list-archive-count">{selectedListTasks.length}</span>
+                </Button>
+              )}
             </div>
           </TooltipProvider>}
         </div>}
@@ -3888,6 +3941,17 @@ export function App() {
             presentations={taskPresentations}
             currentUser={currentUser}
             hasActiveFilters={hasActiveTaskFilters}
+            selectedTaskIds={selectedListTaskIds}
+            onToggleSelection={(taskId, checked) => setSelectedListTaskIds((current) => {
+              const next = new Set(current);
+              if (checked) next.add(taskId);
+              else next.delete(taskId);
+              return next;
+            })}
+            onToggleSelectAll={(checked) => setSelectedListTaskIds((current) => {
+              if (!checked) return new Set();
+              return new Set(filteredTasks.map((t) => t.id));
+            })}
             onOpenTask={openTaskDetail}
             onOpenConversation={openTaskConversation}
             onUpdate={updateTaskProperties}
@@ -4257,6 +4321,15 @@ export function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {bulkArchiveOpen && (
+        <BulkArchiveDialog
+          tasks={selectedListTasks}
+          busy={bulkArchiving}
+          onClose={() => setBulkArchiveOpen(false)}
+          onConfirm={() => void archiveSelectedListTasks()}
+        />
       )}
 
       {editor && (
