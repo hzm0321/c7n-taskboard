@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 export function ChoerodonConnectionDialog({ onClose }: { onClose: () => void }) {
   const { text } = useTaskboardI18n();
   const dialog = useRef<HTMLDialogElement>(null);
+  const loginCredentials = useRef<{ username: string; password: string } | null>(null);
   const [selectContainer, setSelectContainer] = useState<HTMLDivElement | null>(null);
   const [connection, setConnection] = useState<ChoerodonConnection | null>(null);
   const [authMode, setAuthMode] = useState("password");
@@ -63,6 +64,7 @@ export function ChoerodonConnectionDialog({ onClose }: { onClose: () => void }) 
   }
 
   function resetSelection() {
+    loginCredentials.current = null;
     setError(null);
     setVerified(false);
     setAccount(null);
@@ -81,6 +83,7 @@ export function ChoerodonConnectionDialog({ onClose }: { onClose: () => void }) 
     await run("login", async () => {
       const result = await loginChoerodon({ username, password });
       setAuthorization(result.authorization);
+      loginCredentials.current = { username, password };
       setPassword("");
       setAccount(result.account);
       setOrganizations(result.organizations);
@@ -127,7 +130,7 @@ export function ChoerodonConnectionDialog({ onClose }: { onClose: () => void }) 
     event.preventDefault();
     if (pending || !boardId) return;
     await run("save", async () => {
-      await configureChoerodonConnection({ authorization, organizationId, projectId, boardId });
+      await configureChoerodonConnection({ authorization, ...loginCredentials.current, organizationId, projectId, boardId });
       onClose();
       toast.success(text("猪齿鱼连接配置已保存", "Choerodon connection saved"));
     });
@@ -174,7 +177,7 @@ export function ChoerodonConnectionDialog({ onClose }: { onClose: () => void }) 
                   aria-describedby="choerodon-password-hint" placeholder={text("请输入密码", "Enter your password")}
                   onChange={(event) => { setPassword(event.target.value); resetSelection(); }} />
               </label>
-              <p id="choerodon-password-hint" className="choerodon-connection-hint">{text("密码仅用于本次登录，不会保存。登录成功后自动加载组织。", "Your password is used only for this sign-in and is not saved. Organizations load after sign-in.")}</p>
+              <p id="choerodon-password-hint" className="choerodon-connection-hint">{text("保存配置后，账号密码仅保存在本机，用于 Token 过期时自动重新登录。", "After saving, credentials stay on this device for automatic sign-in when the token expires.")}</p>
               <Button variant="default" size="sm" type="submit" className="button primary choerodon-auth-submit" disabled={busy || !username.trim() || !password}>
                 {pending === "login" ? text("登录中…", "Signing in…") : text("登录并加载组织", "Sign in and load organizations")}
               </Button>

@@ -2009,7 +2009,7 @@ export function createTaskboardServer(options = {}) {
         }
         const input = await readJson(request);
         assertPlainObject(input);
-        assertAllowedKeys(input, new Set(request.method === "DELETE" ? ["taskId", "version"] : ["taskId", "version", "threadId"]));
+        assertAllowedKeys(input, new Set(request.method === "DELETE" ? ["taskId", "version"] : ["taskId", "version", "threadId", "groupId"]));
         const taskId = stringField(input.taskId, "taskId", { required: true, maxLength: 256 });
         const version = parseVersion(input.version);
         const current = database.getTask(taskId);
@@ -2020,12 +2020,13 @@ export function createTaskboardServer(options = {}) {
           return sendJson(response, 200, { task });
         }
         const threadId = stringField(input.threadId, "threadId", { required: true, maxLength: 256 });
+        const groupId = stringField(input.groupId, "groupId", { required: true, maxLength: 256 });
         if (current.threadId || current.threadBinding || current.legacyLocalThreadId) {
           throw new ApiError(409, "THREAD_ALREADY_LINKED", "该任务已经关联了对话，请刷新详情");
         }
         const catalog = await listCodexConversations(resolved.codexStatePath, project.name);
-        const thread = catalog.threads.find((candidate) => candidate.id === threadId);
-        if (!thread) throw new ApiError(409, "CODEX_THREAD_UNAVAILABLE", "该会话已不属于当前同名项目分组，请重新打开弹框");
+        const thread = catalog.threads.find((candidate) => candidate.id === threadId && candidate.binding.codexProjectId === groupId);
+        if (!thread) throw new ApiError(409, "CODEX_THREAD_UNAVAILABLE", "该会话已不属于所选分组，请重新打开弹框");
         const task = database.updateTask(taskId, version, {}, threadId, thread.binding, actorFromRequest(request));
         events.emit("task.updated", { task });
         return sendJson(response, 200, { task });
@@ -2132,9 +2133,15 @@ export function createTaskboardServer(options = {}) {
         assertPlainObject(input);
         assertAllowedKeys(input, new Set(isOptions
           ? ["authorization", "resource", "organizationId", "projectId"]
-          : ["authorization", "organizationId", "projectId", "boardId"]));
+          : ["authorization", "username", "password", "organizationId", "projectId", "boardId"]));
         if (input.authorization !== undefined && typeof input.authorization !== "string") {
           throw new ApiError(400, "INVALID_FIELD", "Authorization 必须是文本");
+        }
+        if (input.username !== undefined || input.password !== undefined) {
+          stringField(input.username, "username", { required: true, maxLength: 240 });
+          if (typeof input.password !== "string" || !input.password || input.password.length > 1024) {
+            throw new ApiError(400, "CHOERODON_PASSWORD_REQUIRED", "请输入猪齿鱼密码");
+          }
         }
         return sendJson(response, 200, isOptions
           ? await choerodon.options(input)

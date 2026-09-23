@@ -70,6 +70,8 @@ function publicConnection(config) {
 }
 
 export function createChoerodonConnection({ configPath, fetch: fetchImplementation = globalThis.fetch }) {
+  const relogins = new Map();
+
   async function read() {
     try {
       return JSON.parse(await readFile(configPath, "utf8"));
@@ -79,35 +81,69 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
     }
   }
 
+  async function write(config) {
+    await mkdir(path.dirname(configPath), { recursive: true });
+    const temporaryPath = `${configPath}.${randomUUID()}.tmp`;
+    await writeFile(temporaryPath, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
+    await chmod(temporaryPath, 0o600);
+    await rename(temporaryPath, configPath);
+  }
+
   async function credentials(input) {
-    const authorization = input.authorization?.trim() || (await read())?.authorization;
+    const saved = input.authorization?.trim() ? null : await read();
+    const authorization = input.authorization?.trim() || saved?.authorization;
     if (typeof authorization !== "string" || !authorization || authorization.length > 8192 || /[^\x20-\x7e]/.test(authorization)) {
       throw new ApiError(400, "CHOERODON_AUTH_REQUIRED", "请填写请求头 Authorization 的完整值");
     }
-    return authorization.includes(" ") ? authorization : `Bearer ${authorization}`;
+    return {
+      authorization: authorization.includes(" ") ? authorization : `Bearer ${authorization}`,
+      username: input.username || saved?.username,
+      password: input.password || saved?.password,
+    };
   }
 
-  async function request(authorization, pathname, organizationId, body) {
+  async function relogin(auth) {
+    const expiredAuthorization = auth.authorization;
+    if (!relogins.has(expiredAuthorization)) {
+      const pending = (async () => {
+        const result = await login({ username: auth.username, password: auth.password });
+        const saved = await read();
+        if (saved?.authorization === expiredAuthorization && saved.username === auth.username) {
+          await write({ ...saved, authorization: result.authorization });
+        }
+        return result.authorization;
+      })();
+      relogins.set(expiredAuthorization, pending);
+      void pending.finally(() => relogins.delete(expiredAuthorization)).catch(() => {});
+    }
+    auth.authorization = await relogins.get(expiredAuthorization);
+  }
+
+  async function request(auth, pathname, organizationId, body) {
     let response;
-    try {
-      response = await fetchImplementation(`${API_ORIGIN}${pathname}`, {
-        method: body === undefined ? "GET" : "POST",
-        redirect: "error",
-        signal: AbortSignal.timeout(20_000),
-        headers: {
-          accept: "application/json",
-          authorization,
-          ...(organizationId ? { "H-Tenant-Id": organizationId } : {}),
-          ...(pathname.startsWith("/agile/") ? { "H-Menu-Id": "21" } : {}),
-          ...(body === undefined ? {} : { "content-type": "application/json" }),
-        },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      });
-    } catch {
-      throw new ApiError(502, "CHOERODON_UNAVAILABLE", "连接猪齿鱼失败，请检查网络后重试");
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        response = await fetchImplementation(`${API_ORIGIN}${pathname}`, {
+          method: body === undefined ? "GET" : "POST",
+          redirect: "error",
+          signal: AbortSignal.timeout(20_000),
+          headers: {
+            accept: "application/json",
+            authorization: auth.authorization,
+            ...(organizationId ? { "H-Tenant-Id": organizationId } : {}),
+            ...(pathname.startsWith("/agile/") ? { "H-Menu-Id": "21" } : {}),
+            ...(body === undefined ? {} : { "content-type": "application/json" }),
+          },
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        });
+      } catch {
+        throw new ApiError(502, "CHOERODON_UNAVAILABLE", "连接猪齿鱼失败，请检查网络后重试");
+      }
+      if (response.status !== 401 || !auth.username || !auth.password || attempt === 1) break;
+      await relogin(auth);
     }
     if (response.status === 401) {
-      throw new ApiError(401, "CHOERODON_AUTH_EXPIRED", "认证信息无效或已过期，请重新填写 Authorization");
+      throw new ApiError(401, "CHOERODON_AUTH_EXPIRED", "认证信息无效或已过期，请重新登录或填写 Authorization");
     }
     if (response.status === 403) {
       throw new ApiError(403, "CHOERODON_ACCESS_DENIED", "当前账号没有访问该组织、项目或看板的权限");
@@ -127,8 +163,8 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
     }
   }
 
-  async function account(authorization) {
-    const user = await request(authorization, "/iam/choerodon/v1/users/self");
+  async function account(auth) {
+    const user = await request(auth, "/iam/choerodon/v1/users/self");
     return { id: remoteId(user.id), name: user.realName || user.loginName || String(user.id) };
   }
 
@@ -233,20 +269,20 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
         || result.url.pathname.includes("phone"))) throw verificationRequired();
       throw new ApiError(400, "CHOERODON_LOGIN_FAILED", "登录未成功，请检查账号密码；如需验证码或账号验证，请先在官网完成登录");
     }
-    const authorization = await credentials({ authorization: result.token });
-    const [user, items] = await Promise.all([account(authorization), organizations(authorization)]);
-    return { authorization, account: user, organizations: items };
+    const auth = await credentials({ authorization: result.token });
+    const [user, items] = await Promise.all([account(auth), organizations(auth)]);
+    return { authorization: auth.authorization, account: user, organizations: items };
   }
 
-  async function organizations(authorization) {
-    return choices(await request(authorization, "/iam/choerodon/v1/users/self-tenants"), "tenantId", "tenantName");
+  async function organizations(auth) {
+    return choices(await request(auth, "/iam/choerodon/v1/users/self-tenants"), "tenantId", "tenantName");
   }
 
-  async function projects(authorization, organizationId, userId) {
+  async function projects(auth, organizationId, userId) {
     const items = [];
     for (let page = 0; ; page += 1) {
       const result = await request(
-        authorization,
+        auth,
         `/cbase/choerodon/v1/organizations/${organizationId}/users/${userId}/projects/paging?page=${page}&size=20&button_permission=true&business_type=project`,
         organizationId,
         {},
@@ -259,9 +295,9 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
     }
   }
 
-  async function boards(authorization, organizationId, projectId) {
+  async function boards(auth, organizationId, projectId) {
     return choices(
-      await request(authorization, `/agile/v1/projects/${projectId}/board?type=agile`, organizationId),
+      await request(auth, `/agile/v1/projects/${projectId}/board?type=agile`, organizationId),
       "boardId",
       "name",
     );
@@ -271,7 +307,7 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
     const config = await read();
     if (!config) throw new ApiError(400, "CHOERODON_NOT_CONFIGURED", "请先连接猪齿鱼");
     const { organization, project, board } = config;
-    const data = await request(config.authorization,
+    const data = await request(config,
       `/agile/v2/projects/${project.id}/board/${board.id}/all_data/${organization.id}`,
       organization.id, {});
     if (!Array.isArray(data?.columnsData?.columns)) {
@@ -309,7 +345,7 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
     for (const id of new Set(issueIds)) {
       const issue = issues.get(id);
       if (!issue) continue;
-      const detail = await request(config.authorization,
+      const detail = await request(config,
         `/agile/v1/projects/${project.id}/issues/${id}?organizationId=${organization.id}`,
         organization.id);
       const description = typeof detail?.description === "string"
@@ -317,14 +353,14 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
         : "";
       issue.description = stringField(description || `来源：猪齿鱼 / ${project.name} / ${board.name}\n任务编号：${issue.key}\n猪齿鱼任务 ID：${issue.id}`, "description", { maxLength: 100_000 });
       const commentsPath = `/agile/v1/projects/${project.id}/issue_comment`;
-      const comments = await request(config.authorization, `${commentsPath}/${id}`, organization.id);
+      const comments = await request(config, `${commentsPath}/${id}`, organization.id);
       if (!Array.isArray(comments)) throw new ApiError(502, "INVALID_CHOERODON_RESPONSE", "猪齿鱼未返回有效的评论列表");
       issue.comments = [];
       for (const comment of comments) {
         const normalized = normalizedComment(comment);
         issue.comments.push(normalized);
         if (comment.replySize > 0) {
-          const replies = await request(config.authorization, `${commentsPath}/reply/${normalized.id}`, organization.id);
+          const replies = await request(config, `${commentsPath}/reply/${normalized.id}`, organization.id);
           if (!Array.isArray(replies)) throw new ApiError(502, "INVALID_CHOERODON_RESPONSE", "猪齿鱼未返回有效的回复列表");
           issue.comments.push(...replies.map((reply) => normalizedComment(reply, normalized.id)));
         }
@@ -340,33 +376,29 @@ export function createChoerodonConnection({ configPath, fetch: fetchImplementati
       return publicConnection(await read());
     },
     async options(input) {
-      const authorization = await credentials(input);
+      const auth = await credentials(input);
       if (input.resource === "organizations") {
-        const [user, items] = await Promise.all([account(authorization), organizations(authorization)]);
+        const [user, items] = await Promise.all([account(auth), organizations(auth)]);
         return { account: user, organizations: items };
       }
       const organizationId = remoteId(input.organizationId);
       if (input.resource === "projects") {
-        const user = await account(authorization);
-        return { projects: await projects(authorization, organizationId, user.id) };
+        const user = await account(auth);
+        return { projects: await projects(auth, organizationId, user.id) };
       }
       if (input.resource === "boards") {
-        return { boards: await boards(authorization, organizationId, remoteId(input.projectId)) };
+        return { boards: await boards(auth, organizationId, remoteId(input.projectId)) };
       }
       throw new ApiError(400, "INVALID_CHOERODON_RESOURCE", "请选择组织、项目或看板");
     },
     async configure(input) {
-      const authorization = await credentials(input);
-      const [user, organizationList] = await Promise.all([account(authorization), organizations(authorization)]);
+      const auth = await credentials(input);
+      const [user, organizationList] = await Promise.all([account(auth), organizations(auth)]);
       const organization = selected(organizationList, input.organizationId, "组织");
-      const project = selected(await projects(authorization, organization.id, user.id), input.projectId, "项目");
-      const board = selected(await boards(authorization, organization.id, project.id), input.boardId, "看板");
-      const config = { authorization, account: user, organization, project, board };
-      await mkdir(path.dirname(configPath), { recursive: true });
-      const temporaryPath = `${configPath}.${randomUUID()}.tmp`;
-      await writeFile(temporaryPath, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
-      await chmod(temporaryPath, 0o600);
-      await rename(temporaryPath, configPath);
+      const project = selected(await projects(auth, organization.id, user.id), input.projectId, "项目");
+      const board = selected(await boards(auth, organization.id, project.id), input.boardId, "看板");
+      const config = { authorization: auth.authorization, ...(auth.username && auth.password ? { username: auth.username, password: auth.password } : {}), account: user, organization, project, board };
+      await write(config);
       return publicConnection(config);
     },
   };

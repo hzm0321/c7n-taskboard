@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FolderOpen, MessageSquare, RefreshCw, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { getCodexConversations, linkCodexConversation } from "../api";
 import { useTaskboardI18n } from "../i18n";
 import type { CodexConversationCatalog, Task } from "../types";
@@ -14,13 +15,15 @@ export function CodexConversationDialog({ task, onClose, onLinked }: {
   const { text, locale } = useTaskboardI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const [catalog, setCatalog] = useState<CodexConversationCatalog | null>(null);
+  const [groupId, setGroupId] = useState("");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
-  const threads = catalog?.threads.filter((thread) => `${thread.title} ${thread.id}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) ?? [];
+  const threads = catalog?.threads.filter((thread) => thread.binding.codexProjectId === groupId
+    && `${thread.title} ${thread.id}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) ?? [];
 
   useEffect(() => {
     dialog.current?.showModal();
@@ -29,7 +32,11 @@ export function CodexConversationDialog({ task, onClose, onLinked }: {
     setError(null);
     setSelected("");
     void getCodexConversations(task.projectId).then((value) => {
-      if (active) setCatalog(value);
+      if (active) {
+        setCatalog(value);
+        setGroupId((current) => value.groups.some((group) => group.id === current)
+          ? current : value.groups.find((group) => group.name.trim() === value.projectName.trim())?.id ?? "");
+      }
     }).catch((reason: unknown) => {
       if (active) setError(reason instanceof Error ? reason.message : String(reason));
     }).finally(() => { if (active) setLoading(false); });
@@ -40,7 +47,7 @@ export function CodexConversationDialog({ task, onClose, onLinked }: {
     setSaving(true);
     setError(null);
     try {
-      const updated = await linkCodexConversation(task, selected);
+      const updated = await linkCodexConversation(task, selected, groupId);
       onLinked(updated);
       onClose();
       toast.success(text("已关联 Codex 对话", "Codex conversation linked"));
@@ -65,8 +72,14 @@ export function CodexConversationDialog({ task, onClose, onLinked }: {
         </div>
       </header>
       <div className="codex-conversation-scope">
-        <span><FolderOpen size={14} aria-hidden="true" /><strong>{catalog?.projectName ?? text("当前项目", "Current project")}</strong></span>
-        <span>{text("同名分组 · 未归档会话", "Matching group · Unarchived")}</span>
+        <label className="sr-only" htmlFor="codex-conversation-group">{text("Codex 会话分组", "Codex project group")}</label>
+        <Select value={groupId} disabled={loading || saving || !catalog?.groups.length} onValueChange={(value) => { setGroupId(value); setSelected(""); setQuery(""); }}>
+          <SelectTrigger id="codex-conversation-group" size="sm"><FolderOpen size={14} aria-hidden="true" /><SelectValue placeholder={text("选择会话分组", "Select a group")} /></SelectTrigger>
+          <SelectContent container={dialog.current}>
+            <SelectGroup>{catalog?.groups.map((group) => <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>)}</SelectGroup>
+          </SelectContent>
+        </Select>
+        <span>{text("未归档会话", "Unarchived conversations")}</span>
       </div>
       <div className="codex-conversation-search">
         <label className="codex-conversation-search-field">
@@ -83,10 +96,11 @@ export function CodexConversationDialog({ task, onClose, onLinked }: {
         {loading ? <p className="codex-conversation-empty">{text("正在加载…", "Loading…")}</p>
           : catalog && !catalog.groups.length ? <div className="codex-conversation-empty">
             <MessageSquare size={24} aria-hidden="true" />
-            <h3>{text(`未找到名为“${catalog.projectName}”的 Codex 项目分组`, `No Codex project named “${catalog.projectName}”`)}</h3>
-            <p>{text("请先在 Codex 中使用与当前项目同名的项目分组，再点击刷新。", "Use a Codex project with the same name, then refresh.")}</p>
+            <h3>{text("未找到 Codex 会话分组", "No Codex project groups found")}</h3>
+            <p>{text("请先在 Codex 中创建项目分组，再点击刷新。", "Create a Codex project group, then refresh.")}</p>
           </div>
-          : catalog && !threads.length ? <p className="codex-conversation-empty">{query ? text("没有匹配的会话", "No matching conversations") : text("该项目分组暂无未归档会话", "No unarchived conversations in this project")}</p>
+          : catalog && !groupId ? <p className="codex-conversation-empty">{text("请选择 Codex 会话分组", "Select a Codex project group")}</p>
+          : catalog && !threads.length ? <p className="codex-conversation-empty">{query ? text("没有匹配的会话", "No matching conversations") : text("该分组暂无未归档会话", "No unarchived conversations in this group")}</p>
           : <div role="radiogroup" aria-label={text("选择 Codex 会话", "Choose a Codex conversation")}>
             {threads.map((thread) => <label key={thread.id} className={`codex-conversation-option${selected === thread.id ? " is-selected" : ""}`}>
               <input type="radio" name="codex-conversation" value={thread.id} checked={selected === thread.id} disabled={saving} onChange={() => setSelected(thread.id)} />
@@ -102,7 +116,7 @@ export function CodexConversationDialog({ task, onClose, onLinked }: {
         {error && <p className="project-dialog-error" role="alert">{error}</p>}
         <div><span>{selected ? text("已选择 1 个会话", "1 conversation selected") : text("请选择一个会话", "Select a conversation")}</span>
           <Button className="button secondary" variant="outline" size="sm" type="button" disabled={saving} onClick={onClose}>{text("取消", "Cancel")}</Button>
-          <Button className="button primary" variant="default" size="sm" type="button" disabled={loading || saving || !selected} onClick={() => void link()}>{saving ? text("关联中…", "Linking…") : text("关联所选对话", "Link selected conversation")}</Button>
+          <Button className="button primary" variant="default" size="sm" type="button" disabled={loading || saving || !groupId || !selected} onClick={() => void link()}>{saving ? text("关联中…", "Linking…") : text("关联所选对话", "Link selected conversation")}</Button>
         </div>
       </footer>
     </dialog>

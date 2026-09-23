@@ -868,10 +868,10 @@ export function getCodexConversations(projectId: string): Promise<CodexConversat
   return request(`/api/local/codex-conversations?projectId=${encodeURIComponent(projectId)}`);
 }
 
-export async function linkCodexConversation(task: Task, threadId: string): Promise<Task> {
+export async function linkCodexConversation(task: Task, threadId: string, groupId: string): Promise<Task> {
   const data = await request<{ task: Task }>(`/api/local/codex-conversations?projectId=${encodeURIComponent(task.projectId)}`, {
     method: "POST",
-    body: JSON.stringify({ taskId: task.id, version: task.version, threadId }),
+    body: JSON.stringify({ taskId: task.id, version: task.version, threadId, groupId }),
   });
   return data.task;
 }

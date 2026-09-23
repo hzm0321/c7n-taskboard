@@ -506,6 +506,8 @@ export interface ChoerodonSyncResult {
 
 export interface ChoerodonConnectionInput {
   authorization: string;
+  username?: string;
+  password?: string;
   organizationId: string;
   projectId: string;
   boardId: string;

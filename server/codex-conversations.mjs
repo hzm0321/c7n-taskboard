@@ -13,7 +13,7 @@ export async function listCodexConversations(codexStatePath, projectName) {
     throw new ApiError(502, "CODEX_PROJECTS_UNAVAILABLE", "无法读取本地 Codex 项目分组");
   }
   const groups = Object.entries(state["local-projects"] ?? {})
-    .filter(([, project]) => project.name?.trim() === projectName.trim())
+    .filter(([, project]) => typeof project.name === "string" && project.name.trim())
     .map(([id, project]) => ({ id, name: project.name }));
   if (!groups.length) return { projectName, groups, threads: [] };
 
