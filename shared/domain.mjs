@@ -14,15 +14,10 @@ export const JIRA_PROJECT_ID = "jira-my-tasks";
 export const DEFAULT_LABEL_NAMES = [
   "缺陷",
   "特性",
-  "for-claude",
-  "hold",
   "改进",
-  "phase-1",
-  "phase-2",
-  "phase-3",
-  "phase-4",
-  "phase-5",
-  "phase-6",
+  "文档",
+  "测试",
+  "维护",
 ];
 
 export function isTaskStatus(value) {

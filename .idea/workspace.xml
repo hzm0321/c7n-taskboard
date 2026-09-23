@@ -4,16 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: implement Choerodon sync watcher and enhance UI integration">
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: enhance Choerodon connection with group selection and credential management">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/app.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/app.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/choerodon-connection.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/choerodon-connection.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/codex-conversations.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/codex-conversations.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/ChoerodonConnectionDialog.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/ChoerodonConnectionDialog.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/CodexConversationDialog.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/CodexConversationDialog.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/types.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cloud/migrations/0006_project_labels.sql" beforeDir="false" afterPath="$PROJECT_DIR$/cloud/migrations/0006_project_labels.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared/domain.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/shared/domain.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/labels.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/labels.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -143,6 +138,7 @@
     <MESSAGE value="fix: update workspace configuration and clean up .gitignore" />
     <MESSAGE value="fix: update workspace configuration and enhance filter functionality in ChoerodonSyncDialog" />
     <MESSAGE value="feat: implement Choerodon sync watcher and enhance UI integration" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: implement Choerodon sync watcher and enhance UI integration" />
+    <MESSAGE value="feat: enhance Choerodon connection with group selection and credential management" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: enhance Choerodon connection with group selection and credential management" />
   </component>
 </project>
