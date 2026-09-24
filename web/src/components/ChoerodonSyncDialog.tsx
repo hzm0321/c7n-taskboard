@@ -11,6 +11,23 @@ import { listenForOutsidePointerDown } from "../menuEvents";
 
 const groupTones = ["blue", "amber", "violet", "green", "rose", "cyan"];
 
+function taskTypeTone(type: string): string {
+  const normalized = (type || "").trim().toLowerCase();
+  if (!normalized) return "task";
+  if (normalized.includes("子任务") || normalized.includes("subtask") || normalized.includes("sub-task")) return "subtask";
+  if (normalized.includes("故事") || normalized.includes("story") || normalized.includes("需求")) return "story";
+  if (normalized.includes("缺陷") || normalized.includes("故障") || normalized.includes("bug")) return "bug";
+  if (normalized.includes("任务") || normalized.includes("task")) return "task";
+  if (normalized.includes("史诗") || normalized.includes("epic")) return "epic";
+  if (normalized.includes("特性") || normalized.includes("新功能") || normalized.includes("feature")) return "feature";
+  if (normalized.includes("改进") || normalized.includes("优化") || normalized.includes("improvement")) return "improvement";
+
+  const fallbackTones = ["story", "task", "bug", "epic", "subtask", "feature", "improvement"];
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) hash = (hash * 31 + normalized.charCodeAt(i)) >>> 0;
+  return fallbackTones[hash % fallbackTones.length];
+}
+
 export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
   project: { id: string; name: string };
   onClose: () => void;
@@ -419,7 +436,7 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
                 </div>
                 <h3>{issue.title}</h3>
                 <div className="choerodon-sync-card-meta">
-                  <span className="choerodon-sync-type">{issue.type}</span>
+                  <span className="choerodon-sync-type" data-tone={taskTypeTone(issue.type)}>{issue.type}</span>
                   {issue.status !== issue.groupName && <span>{issue.status}</span>}
                   <span className="choerodon-sync-priority" data-priority={issue.priority} title={`${text("优先级", "Priority")} · ${issue.priorityName}`} aria-label={`${text("优先级", "Priority")} · ${issue.priorityName}`}>
                     {text("优先级", "Priority")} · {issue.priorityName}
@@ -433,7 +450,7 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
                   </span>
                   <span className="choerodon-sync-mapping">{issue.localIdentifier
                     ? <><Link2 size={12} aria-hidden="true" />{text(`已关联 ${issue.localIdentifier}`, `Linked ${issue.localIdentifier}`)}</>
-                    : text("待首次同步", "Not synced yet")}</span>
+                    : <><span className="choerodon-sync-dot" aria-hidden="true" />{text("待首次同步", "Not synced yet")}</>}</span>
                 </div>
               </label>
             ))}

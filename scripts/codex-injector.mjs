@@ -1340,9 +1340,9 @@ function remoteAutomationWorktreePrompt(task, branch, baseWorkspacePath) {
     `为 Taskboard 任务 ${task.identifier} 准备独立 Git worktree。只准备工作目录，不修改项目文件。`,
     `基础项目目录：${baseWorkspacePath}`,
     `目标分支：${branch}`,
-    "先执行 git fetch origin main。若目标分支尚不存在，从最新 origin/main 使用 git worktree add -b 创建一个位于基础项目目录之外的绝对路径工作树。",
-    "若目标分支已由前一次尝试绑定到 worktree，只能在它的 HEAD 严格等于 origin/main、工作区干净且路径不等于基础项目目录时复用；不得删除、重置或接管其他分支或工作树。",
-    "创建或复用后再次确认分支名、绝对路径、HEAD、origin/main 和干净状态。失败时返回 status=error 和简短原因，不得回退到基础项目目录。",
+    "先用 git ls-remote --symref origin HEAD 确认远端默认分支，再执行 git fetch origin <默认分支>。若目标分支尚不存在，从最新 origin/<默认分支> 使用 git worktree add -b 创建一个位于基础项目目录之外的绝对路径工作树。",
+    "若目标分支已由前一次尝试绑定到 worktree，只能在它的 HEAD 严格等于该远端跟踪分支、工作区干净且路径不等于基础项目目录时复用；不得删除、重置或接管其他分支或工作树。",
+    "创建或复用后再次确认分支名、绝对路径、HEAD、默认分支远端跟踪 HEAD 和干净状态；用 baseHead 返回默认分支远端跟踪 HEAD。失败时返回 status=error 和简短原因，不得回退到基础项目目录。",
     "只返回符合 schema 的 JSON。",
   ].join("\n");
 }
@@ -1558,10 +1558,10 @@ async function createRemoteAutomationWorktree(cdp, request, task, target) {
             workspacePath: { type: "string" },
             branch: { type: "string" },
             head: { type: "string" },
-            originMain: { type: "string" },
+            baseHead: { type: "string" },
             error: { type: "string" },
           },
-          required: ["status", "workspacePath", "branch", "head", "originMain", "error"],
+          required: ["status", "workspacePath", "branch", "head", "baseHead", "error"],
           additionalProperties: false,
         },
       },
@@ -1601,9 +1601,9 @@ async function createRemoteAutomationWorktree(cdp, request, task, target) {
     || normalizeRemoteWorkspace(workspacePath) === normalizeRemoteWorkspace(target.workspacePath)
     || result.branch !== branch
     || !/^[0-9a-f]{40,64}$/i.test(result.head)
-    || result.head !== result.originMain
+    || result.head !== result.baseHead
   ) {
-    throw new Error("Codex 返回的远程 worktree 未通过 origin/main 校验");
+    throw new Error("Codex 返回的远程 worktree 未通过默认分支校验");
   }
   return { ...target, workspacePath, branch };
 }
@@ -1747,7 +1747,7 @@ async function runRemoteTaskboardAutomation(record) {
       const message = error instanceof Error ? error.message : String(error);
       await taskboardRequest(commentsPath, {
         method: "POST",
-        body: { body: `自动认领未开始：无法创建 origin/main 独立 worktree：${message}`.slice(0, 100_000) },
+        body: { body: `自动认领未开始：无法创建基于默认分支的独立 worktree：${message}`.slice(0, 100_000) },
       });
       return;
     }

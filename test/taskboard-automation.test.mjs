@@ -147,10 +147,14 @@ test("the stable name and generated prompt are project-scoped and encode the cla
   assert.match(prompt, /ppt-skill/);
   assert.match(prompt, /\/Users\/example\/Documents\/ppt-skill/);
   assert.match(prompt, /每次仅处理一个符合依赖条件的 todo/);
-  assert.match(prompt, /git fetch origin main/);
-  assert.match(prompt, /HEAD 严格等于 origin\/main/);
-  assert.match(prompt, /issue update 一次写入 --status in_progress、--worktree-path、--worktree-branch/);
-  assert.match(prompt, /保留该 worktree、分支、developmentContext 和 binding/);
+  assert.match(prompt, /type="branch".*git worktree add <任务工作树路径> <指定分支>/);
+  assert.match(prompt, /developmentContext 为空时.*git rev-parse HEAD/);
+  assert.match(prompt, /codex\/automation\/<任务编号>/);
+  assert.match(prompt, /git worktree add -b <新分支> <任务工作树路径> <本地基线提交>/);
+  assert.match(prompt, /准备工作树时不 fetch、不 push/);
+  assert.match(prompt, /原开发上下文为 branch 或 worktree 时保留它/);
+  assert.match(prompt, /原开发上下文为空时传 --worktree-path/);
+  assert.match(prompt, /保留该目录、分支、developmentContext 和 binding/);
   assert.match(prompt, /issue get/);
   assert.match(prompt, /comment list/);
   assert.match(prompt, /最新 version/);

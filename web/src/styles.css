@@ -10087,6 +10087,13 @@ kbd {
   --group-green: #15803d;
   --group-rose: #be185d;
   --group-cyan: #0e7490;
+  --type-story: #15803d;
+  --type-task: #1d4ed8;
+  --type-bug: #b91c1c;
+  --type-epic: #6d28d9;
+  --type-subtask: #0e7490;
+  --type-feature: #b45309;
+  --type-improvement: #4338ca;
 }
 :root[data-theme="dark"] .choerodon-sync-dialog {
   --group-blue: #93c5fd;
@@ -10095,6 +10102,13 @@ kbd {
   --group-green: #86efac;
   --group-rose: #f9a8d4;
   --group-cyan: #67e8f9;
+  --type-story: #86efac;
+  --type-task: #93c5fd;
+  --type-bug: #fca5a5;
+  --type-epic: #c4b5fd;
+  --type-subtask: #67e8f9;
+  --type-feature: #fcd34d;
+  --type-improvement: #a5b4fc;
 }
 .choerodon-sync-badge[data-tone="blue"] { --group-color: var(--group-blue); }
 .choerodon-sync-badge[data-tone="amber"] { --group-color: var(--group-amber); }
@@ -10122,7 +10136,27 @@ kbd {
 .choerodon-sync-badge::before { content: ""; width: 5px; height: 5px; flex-shrink: 0; border-radius: 50%; background: currentColor; }
 .choerodon-sync-card h3 { margin: 0; font-size: 13px; font-weight: 550; line-height: 1.7; overflow-wrap: anywhere; }
 .choerodon-sync-card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--text-secondary); font-size: 11px; margin-top: auto; }
-.choerodon-sync-type { padding: 2px 6px; border: 1px solid var(--border); border-radius: 4px; }
+.choerodon-sync-type {
+  --type-color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  padding: 1.5px 6px;
+  border: 1px solid color-mix(in srgb, var(--type-color) 24%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--type-color) 8%, var(--surface));
+  color: var(--type-color);
+  font-size: 11px;
+  font-weight: 550;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.choerodon-sync-type[data-tone="story"] { --type-color: var(--type-story); }
+.choerodon-sync-type[data-tone="task"] { --type-color: var(--type-task); }
+.choerodon-sync-type[data-tone="bug"] { --type-color: var(--type-bug); }
+.choerodon-sync-type[data-tone="epic"] { --type-color: var(--type-epic); }
+.choerodon-sync-type[data-tone="subtask"] { --type-color: var(--type-subtask); }
+.choerodon-sync-type[data-tone="feature"] { --type-color: var(--type-feature); }
+.choerodon-sync-type[data-tone="improvement"] { --type-color: var(--type-improvement); }
 .choerodon-sync-priority {
   --priority-color: #999999;
   --priority-bg: #f2f2f2;
@@ -10149,6 +10183,7 @@ kbd {
 .choerodon-sync-card-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
 .choerodon-sync-person { display: inline-flex; align-items: center; gap: 9px; min-width: 0; max-width: 100%; font-size: 13px; font-weight: 450; color: var(--text-secondary); }
 .choerodon-sync-mapping { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); }
+.choerodon-sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
 .choerodon-sync-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 48px 16px; text-align: center; color: var(--text-secondary); }
 .choerodon-sync-empty h3 { margin: 0; font-size: 14px; font-weight: 550; color: var(--text-primary); }
 .choerodon-sync-empty p { margin: 0; line-height: 1.7; }
