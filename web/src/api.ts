@@ -889,12 +889,15 @@ export type AppUpdateStatus = {
   available?: boolean;
   busy?: boolean;
   message?: string;
+  version?: string | null;
+  currentVersion?: string | null;
+  downloadUrl?: string | null;
 };
 
 export async function getAppUpdateStatus(): Promise<AppUpdateStatus> {
-  return { supported: false };
+  return request<AppUpdateStatus>("/api/local/app-update");
 }
 
 export async function startAppUpdate(): Promise<AppUpdateStatus> {
-  return { supported: false };
+  return request<AppUpdateStatus>("/api/local/app-update", { method: "POST" });
 }

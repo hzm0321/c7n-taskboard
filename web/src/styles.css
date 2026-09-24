@@ -7443,6 +7443,23 @@ kbd {
   height: 13px;
 }
 
+.header-update-button {
+  border-color: #3395ff;
+  background: #3395ff;
+  color: #ffffff;
+}
+
+.header-update-button:hover:not(:disabled),
+.header-update-button:focus-visible:not(:disabled) {
+  border-color: #2087f5;
+  background: #2087f5;
+  color: #ffffff;
+}
+
+.header-update-button:disabled {
+  opacity: 0.65;
+}
+
 .header-create-button {
   width: 28px;
   height: 28px;

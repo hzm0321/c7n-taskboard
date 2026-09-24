@@ -109,6 +109,117 @@ function sendEmpty(response, status, headers = {}) {
   response.end();
 }
 
+let cachedPackageJsonVersion = null;
+async function getPackageJsonVersion() {
+  if (cachedPackageJsonVersion) return cachedPackageJsonVersion;
+  try {
+    const content = await readFile(path.join(PROJECT_ROOT, "package.json"), "utf8");
+    const parsed = JSON.parse(content);
+    cachedPackageJsonVersion = typeof parsed.version === "string" ? parsed.version : null;
+  } catch {
+    cachedPackageJsonVersion = null;
+  }
+  return cachedPackageJsonVersion;
+}
+
+function parseSemver(version) {
+  if (typeof version !== "string") return null;
+  const match = version.trim().replace(/^v/i, "").match(/^(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?$/);
+  if (!match) return null;
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    beta: match[4] !== undefined ? Number(match[4]) : null,
+  };
+}
+
+function isNewerVersion(remote, current) {
+  const r = parseSemver(remote);
+  const c = parseSemver(current);
+  if (!r || !c) return false;
+  if (r.major !== c.major) return r.major > c.major;
+  if (r.minor !== c.minor) return r.minor > c.minor;
+  if (r.patch !== c.patch) return r.patch > c.patch;
+  if (r.beta === null && c.beta !== null) return true;
+  if (r.beta !== null && c.beta === null) return false;
+  if (r.beta !== null && c.beta !== null) return r.beta > c.beta;
+  return false;
+}
+
+function resolveInstallerUrl(version, platform = process.platform) {
+  if (!version) return null;
+  const baseUrl = `https://github.com/hzm0321/c7n-taskboard/releases/download/v${version}`;
+  if (platform === "darwin") {
+    return `${baseUrl}/C7N.Codex_${version}_macOS-universal.dmg`;
+  }
+  if (platform === "win32") {
+    return `${baseUrl}/C7N.Codex_${version}_NSIS-x64-unsigned.exe`;
+  }
+  if (platform === "linux") {
+    return `${baseUrl}/C7N.Codex_${version}_Ubuntu-24.04-x64.AppImage`;
+  }
+  return `https://github.com/hzm0321/c7n-taskboard/releases/tag/v${version}`;
+}
+
+let appUpdateCache = null;
+const APP_UPDATE_CACHE_TTL_MS = 60_000;
+
+async function checkAppUpdate(currentVersion, userAgent) {
+  let targetPlatform = process.platform;
+  if (typeof userAgent === "string") {
+    const ua = userAgent.toLowerCase();
+    if (ua.includes("macintosh") || ua.includes("mac os x")) targetPlatform = "darwin";
+    else if (ua.includes("windows")) targetPlatform = "win32";
+    else if (ua.includes("linux")) targetPlatform = "linux";
+  }
+
+  if (appUpdateCache && Date.now() - appUpdateCache.timestamp < APP_UPDATE_CACHE_TTL_MS) {
+    const cached = appUpdateCache.result;
+    return {
+      ...cached,
+      downloadUrl: cached.version ? resolveInstallerUrl(cached.version, targetPlatform) : null,
+    };
+  }
+  const isBeta = typeof currentVersion === "string" && currentVersion.includes("-beta.");
+  const endpoint = isBeta
+    ? "https://raw.githubusercontent.com/hzm0321/c7n-taskboard/beta-updater/latest.json"
+    : "https://github.com/hzm0321/c7n-taskboard/releases/latest/download/latest.json";
+  try {
+    const response = await fetch(endpoint, {
+      signal: AbortSignal.timeout(5000),
+      headers: { "user-agent": "c7n-taskboard" },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const latest = await response.json();
+    const remoteVersion = typeof latest?.version === "string" ? latest.version : null;
+    const available = Boolean(remoteVersion && isNewerVersion(remoteVersion, currentVersion));
+    const downloadUrl = remoteVersion
+      ? resolveInstallerUrl(remoteVersion, targetPlatform)
+      : null;
+    const result = {
+      supported: true,
+      available,
+      currentVersion,
+      version: remoteVersion,
+      downloadUrl: available ? downloadUrl : null,
+      message: available ? `发现新版本 v${remoteVersion}，点击下载安装包` : "当前已是最新版本",
+    };
+    appUpdateCache = { timestamp: Date.now(), result };
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      supported: true,
+      available: false,
+      currentVersion,
+      message: `检查更新失败: ${message}`,
+    };
+  }
+}
+
 function toFetchRequest(request) {
   const headers = new Headers();
   for (const [name, value] of Object.entries(request.headers)) {
@@ -2226,6 +2337,21 @@ export function createTaskboardServer(options = {}) {
         }
         await cloudConfig.setProjectWorkspace(projectId, workspacePath);
         return sendJson(response, 200, { projectId, workspacePath });
+      }
+
+      if (pathname === "/api/local/app-update") {
+        if (request.method !== "GET" && request.method !== "POST") {
+          return methodNotAllowed(response, ["GET", "POST"]);
+        }
+        if ([...url.searchParams.keys()].length > 0) {
+          throw new ApiError(400, "UNKNOWN_QUERY_PARAMETER", `${request.method} /api/local/app-update does not accept query parameters`);
+        }
+        const currentVersion = resolved.version === "development"
+          ? (await getPackageJsonVersion() ?? resolved.version)
+          : resolved.version;
+        const userAgent = request.headers["user-agent"];
+        const status = await checkAppUpdate(currentVersion, userAgent);
+        return sendJson(response, 200, status);
       }
 
       if (pathname === "/api/meta") {

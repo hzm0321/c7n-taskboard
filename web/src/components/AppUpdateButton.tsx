@@ -36,7 +36,12 @@ export function AppUpdateButton({ onError }: { onError: (message: string) => voi
   async function update() {
     setStarting(true);
     try {
-      setStatus(await startAppUpdate());
+      const next = await startAppUpdate();
+      setStatus(next);
+      const targetUrl = next.downloadUrl || (next.version
+        ? `https://github.com/hzm0321/c7n-taskboard/releases/tag/v${next.version}`
+        : "https://github.com/hzm0321/c7n-taskboard/releases/latest");
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
     } catch (error) {
       onError(error instanceof Error ? error.message : String(error));
     } finally {

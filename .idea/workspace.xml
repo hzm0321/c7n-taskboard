@@ -4,15 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: update default labels and enhance label management in project settings">
-      <change afterPath="$PROJECT_DIR$/web/src/components/BulkArchiveDialog.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/src/components/ui/checkbox.tsx" afterDir="false" />
+    <list default="true" id="6e3ab83d-8ac5-473e-8c9e-87713086459c" name="更改" comment="feat: enhance task type handling and improve styling in Choerodon sync dialog">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/app.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/server/app.mjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/IssueListView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/IssueListView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/shadcn.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/shadcn.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/src/components/AppUpdateButton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/AppUpdateButton.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/styles.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -145,6 +142,7 @@
     <MESSAGE value="feat: implement Choerodon sync watcher and enhance UI integration" />
     <MESSAGE value="feat: enhance Choerodon connection with group selection and credential management" />
     <MESSAGE value="feat: update default labels and enhance label management in project settings" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: update default labels and enhance label management in project settings" />
+    <MESSAGE value="feat: enhance task type handling and improve styling in Choerodon sync dialog" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: enhance task type handling and improve styling in Choerodon sync dialog" />
   </component>
 </project>

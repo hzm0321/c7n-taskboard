@@ -103,6 +103,7 @@ import {
   type NewTaskEditorDraft,
 } from "./components/TaskEditor";
 import { TaskFilterMenu, type TaskSort } from "./components/TaskFilterMenu";
+import { AppUpdateButton } from "./components/AppUpdateButton";
 import {
   PROJECT_BOARD_DISPLAY_SETTINGS_KEY_PREFIX,
   projectBoardDisplaySettingsStorageEntries,
@@ -3603,6 +3604,7 @@ export function App() {
 
           <div className="header-actions">
             <TooltipProvider delayDuration={150}>
+              <AppUpdateButton onError={setAnnouncement} />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="none"
