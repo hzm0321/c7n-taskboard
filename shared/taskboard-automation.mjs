@@ -175,6 +175,7 @@ export function taskboardAutomationPolicyOperation(request, {
   previousQuotaState,
   quotaState,
   currentStatus,
+  idlePaused = false,
 }) {
   const actionable = hasActionableTask ?? hasTodo;
   if (!request.enabledByUser) return "pause";
@@ -183,6 +184,7 @@ export function taskboardAutomationPolicyOperation(request, {
     !explicit
     && currentStatus === "PAUSED"
     && !pausedForNoActionableTask
+    && !idlePaused
     && (!request.quotaAware || previousQuotaState === "available")
   ) return "list";
   if (request.quotaAware && quotaState !== "available") return "pause";
