@@ -1,39 +1,39 @@
 {
-  "version": "0.0.7-beta.1",
-  "notes": "C7N Codex 0.0.7-beta.1",
-  "pub_date": "2026-09-24T06:59:04.424Z",
+  "version": "0.1.0-beta.1",
+  "notes": "C7N Codex 0.1.0-beta.1",
+  "pub_date": "2026-09-28T02:06:57.005Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZWQrTktwNEd2b0VkUlJ0L1VyOENkYWZFaG84c2tjOUUwbUwvR3ZIc1RiRVQyTEVLem5uL2ZqQzRaZjJnNU1Zckg1WGZXUFdNakRUbHVWL3JpcXcxSVFjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMjMzMTQ0CWZpbGU6QzdOLkNvZGV4XzAuMC43X3VuaXZlcnNhbC5hcHAudGFyLmd6CjRCSldveW1FeWJEdmlkaWZPOFdYU05vdEdxbFdsUW1MeTdxa2xiWTJ1eWgvUGVZMEx2NnZ6blpVdHJmajU5alVLTkJScE0yeFJpOHUvVmdDMllheURBPT0K",
-      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.0.7-beta.1/C7N.Codex_0.0.7_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZVk0RXBNeDhTWVpHNDUwZCtBd3ZaUUo3RHB2OXZxTzBWWlN5YUQwR25CWlZQSXJ6QUpUaVhTMzJ1TlMvMkZ0Z2FSK01QcWthMS94ODZ4QUNpNmEyclFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTYxMjE2CWZpbGU6QzdOLkNvZGV4XzAuMS4wX3VuaXZlcnNhbC5hcHAudGFyLmd6CkRyVCtBYVRoMmppK0YybmcwSmpvbko3MFJrV1ZyajdLaXZBckhMVW5MMWZ3RHpGVVN4VkpLZXNyd2NoU0cyWWhjbXNvQzNZeEtPSG52QmxwYXEwY0N3PT0K",
+      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.1.0-beta.1/C7N.Codex_0.1.0_universal.app.tar.gz"
     },
     "darwin-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZWQrTktwNEd2b0VkUlJ0L1VyOENkYWZFaG84c2tjOUUwbUwvR3ZIc1RiRVQyTEVLem5uL2ZqQzRaZjJnNU1Zckg1WGZXUFdNakRUbHVWL3JpcXcxSVFjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMjMzMTQ0CWZpbGU6QzdOLkNvZGV4XzAuMC43X3VuaXZlcnNhbC5hcHAudGFyLmd6CjRCSldveW1FeWJEdmlkaWZPOFdYU05vdEdxbFdsUW1MeTdxa2xiWTJ1eWgvUGVZMEx2NnZ6blpVdHJmajU5alVLTkJScE0yeFJpOHUvVmdDMllheURBPT0K",
-      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.0.7-beta.1/C7N.Codex_0.0.7_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZVk0RXBNeDhTWVpHNDUwZCtBd3ZaUUo3RHB2OXZxTzBWWlN5YUQwR25CWlZQSXJ6QUpUaVhTMzJ1TlMvMkZ0Z2FSK01QcWthMS94ODZ4QUNpNmEyclFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTYxMjE2CWZpbGU6QzdOLkNvZGV4XzAuMS4wX3VuaXZlcnNhbC5hcHAudGFyLmd6CkRyVCtBYVRoMmppK0YybmcwSmpvbko3MFJrV1ZyajdLaXZBckhMVW5MMWZ3RHpGVVN4VkpLZXNyd2NoU0cyWWhjbXNvQzNZeEtPSG52QmxwYXEwY0N3PT0K",
+      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.1.0-beta.1/C7N.Codex_0.1.0_universal.app.tar.gz"
     },
     "darwin-universal": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZWQrTktwNEd2b0VkUlJ0L1VyOENkYWZFaG84c2tjOUUwbUwvR3ZIc1RiRVQyTEVLem5uL2ZqQzRaZjJnNU1Zckg1WGZXUFdNakRUbHVWL3JpcXcxSVFjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMjMzMTQ0CWZpbGU6QzdOLkNvZGV4XzAuMC43X3VuaXZlcnNhbC5hcHAudGFyLmd6CjRCSldveW1FeWJEdmlkaWZPOFdYU05vdEdxbFdsUW1MeTdxa2xiWTJ1eWgvUGVZMEx2NnZ6blpVdHJmajU5alVLTkJScE0yeFJpOHUvVmdDMllheURBPT0K",
-      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.0.7-beta.1/C7N.Codex_0.0.7_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZVk0RXBNeDhTWVpHNDUwZCtBd3ZaUUo3RHB2OXZxTzBWWlN5YUQwR25CWlZQSXJ6QUpUaVhTMzJ1TlMvMkZ0Z2FSK01QcWthMS94ODZ4QUNpNmEyclFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTYxMjE2CWZpbGU6QzdOLkNvZGV4XzAuMS4wX3VuaXZlcnNhbC5hcHAudGFyLmd6CkRyVCtBYVRoMmppK0YybmcwSmpvbko3MFJrV1ZyajdLaXZBckhMVW5MMWZ3RHpGVVN4VkpLZXNyd2NoU0cyWWhjbXNvQzNZeEtPSG52QmxwYXEwY0N3PT0K",
+      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.1.0-beta.1/C7N.Codex_0.1.0_universal.app.tar.gz"
     },
     "darwin-aarch64-app": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZWQrTktwNEd2b0VkUlJ0L1VyOENkYWZFaG84c2tjOUUwbUwvR3ZIc1RiRVQyTEVLem5uL2ZqQzRaZjJnNU1Zckg1WGZXUFdNakRUbHVWL3JpcXcxSVFjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMjMzMTQ0CWZpbGU6QzdOLkNvZGV4XzAuMC43X3VuaXZlcnNhbC5hcHAudGFyLmd6CjRCSldveW1FeWJEdmlkaWZPOFdYU05vdEdxbFdsUW1MeTdxa2xiWTJ1eWgvUGVZMEx2NnZ6blpVdHJmajU5alVLTkJScE0yeFJpOHUvVmdDMllheURBPT0K",
-      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.0.7-beta.1/C7N.Codex_0.0.7_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZVk0RXBNeDhTWVpHNDUwZCtBd3ZaUUo3RHB2OXZxTzBWWlN5YUQwR25CWlZQSXJ6QUpUaVhTMzJ1TlMvMkZ0Z2FSK01QcWthMS94ODZ4QUNpNmEyclFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTYxMjE2CWZpbGU6QzdOLkNvZGV4XzAuMS4wX3VuaXZlcnNhbC5hcHAudGFyLmd6CkRyVCtBYVRoMmppK0YybmcwSmpvbko3MFJrV1ZyajdLaXZBckhMVW5MMWZ3RHpGVVN4VkpLZXNyd2NoU0cyWWhjbXNvQzNZeEtPSG52QmxwYXEwY0N3PT0K",
+      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.1.0-beta.1/C7N.Codex_0.1.0_universal.app.tar.gz"
     },
     "darwin-x86_64-app": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZWQrTktwNEd2b0VkUlJ0L1VyOENkYWZFaG84c2tjOUUwbUwvR3ZIc1RiRVQyTEVLem5uL2ZqQzRaZjJnNU1Zckg1WGZXUFdNakRUbHVWL3JpcXcxSVFjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMjMzMTQ0CWZpbGU6QzdOLkNvZGV4XzAuMC43X3VuaXZlcnNhbC5hcHAudGFyLmd6CjRCSldveW1FeWJEdmlkaWZPOFdYU05vdEdxbFdsUW1MeTdxa2xiWTJ1eWgvUGVZMEx2NnZ6blpVdHJmajU5alVLTkJScE0yeFJpOHUvVmdDMllheURBPT0K",
-      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.0.7-beta.1/C7N.Codex_0.0.7_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZVk0RXBNeDhTWVpHNDUwZCtBd3ZaUUo3RHB2OXZxTzBWWlN5YUQwR25CWlZQSXJ6QUpUaVhTMzJ1TlMvMkZ0Z2FSK01QcWthMS94ODZ4QUNpNmEyclFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTYxMjE2CWZpbGU6QzdOLkNvZGV4XzAuMS4wX3VuaXZlcnNhbC5hcHAudGFyLmd6CkRyVCtBYVRoMmppK0YybmcwSmpvbko3MFJrV1ZyajdLaXZBckhMVW5MMWZ3RHpGVVN4VkpLZXNyd2NoU0cyWWhjbXNvQzNZeEtPSG52QmxwYXEwY0N3PT0K",
+      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.1.0-beta.1/C7N.Codex_0.1.0_universal.app.tar.gz"
     },
     "darwin-universal-app": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZWQrTktwNEd2b0VkUlJ0L1VyOENkYWZFaG84c2tjOUUwbUwvR3ZIc1RiRVQyTEVLem5uL2ZqQzRaZjJnNU1Zckg1WGZXUFdNakRUbHVWL3JpcXcxSVFjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMjMzMTQ0CWZpbGU6QzdOLkNvZGV4XzAuMC43X3VuaXZlcnNhbC5hcHAudGFyLmd6CjRCSldveW1FeWJEdmlkaWZPOFdYU05vdEdxbFdsUW1MeTdxa2xiWTJ1eWgvUGVZMEx2NnZ6blpVdHJmajU5alVLTkJScE0yeFJpOHUvVmdDMllheURBPT0K",
-      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.0.7-beta.1/C7N.Codex_0.0.7_universal.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZVk0RXBNeDhTWVpHNDUwZCtBd3ZaUUo3RHB2OXZxTzBWWlN5YUQwR25CWlZQSXJ6QUpUaVhTMzJ1TlMvMkZ0Z2FSK01QcWthMS94ODZ4QUNpNmEyclFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTYxMjE2CWZpbGU6QzdOLkNvZGV4XzAuMS4wX3VuaXZlcnNhbC5hcHAudGFyLmd6CkRyVCtBYVRoMmppK0YybmcwSmpvbko3MFJrV1ZyajdLaXZBckhMVW5MMWZ3RHpGVVN4VkpLZXNyd2NoU0cyWWhjbXNvQzNZeEtPSG52QmxwYXEwY0N3PT0K",
+      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.1.0-beta.1/C7N.Codex_0.1.0_universal.app.tar.gz"
     },
     "linux-x86_64-deb": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZVppc3ZJek9pNU9WRjVCQXhsbXRYWERCNG56RzFxUEM4dHdSSTlhTXpheW55cUFzMDl1M21rQStjZVM2cVRaakZiVkhvaEszaFZQVnVPaUFFTmR4dVF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMjMyOTUyCWZpbGU6QzdOIENvZGV4IEJldGFfMC4wLjdfYW1kNjQuZGViCjI1cjVqaGdod1BjWWpYSGE1Z3o1MVc1aldNMTlFVCtFQXduWGcreitYQzdYelR3NzNBRnZZbGJQMTd3N3J6ZHVHMC82OS9wRjZqczJFWStjUTZTbERRPT0K",
-      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.0.7-beta.1/C7N.Codex_0.0.7_Ubuntu-24.04-x64.deb"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZVZBdTV0eGNoUTE0M3VXcUZ1ZFY1OFk2YzdSVUY3cVNpeUNWR2tRN29Lc1cxSllJazU1bDlNUjNSTFhoNytFZ2doM3Q1Vm5JSExHcllTQW5JNHdlQWdZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTYwOTk4CWZpbGU6QzdOIENvZGV4IEJldGFfMC4xLjBfYW1kNjQuZGViCmMzM3ZkdGxERWJ4VTg4cHFaOVNId3FKNHhPbGhueHAxOEFiRTRSaElVRUFtdzFNdzUyeWhRemVvbHAzSFNBWmhzc1V6aUNmWjZnR0tqSHlKSy9KSERBPT0K",
+      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.1.0-beta.1/C7N.Codex_0.1.0_Ubuntu-24.04-x64.deb"
     },
     "linux-x86_64-appimage": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZWNBeTdXbnFuZ01KL01WTFBGYVBxN1NXM0had2VldlRMQ3E3UkpFdVNFdFVUdHQ0d1h5c1lyeWg0Tm00Mm0yTTZCay9XR20vOE9LZldwTDdZTFNqV1FjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMjMyOTUyCWZpbGU6QzdOIENvZGV4IEJldGFfMC4wLjdfYW1kNjQuQXBwSW1hZ2UKUWx0NGJMUmxkUUdXMjlSZkYrZGJsUS9oRVUwY1d6TzFlN3dLRDRpbXN3VmQ3RU1aSEpYcnBqN21SeG1WdXlPbDZGS3N4ck9rZ21LcWRUc2MxV3FtRHc9PQo=",
-      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.0.7-beta.1/C7N.Codex_0.0.7_Ubuntu-24.04-x64.AppImage"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTY3pvUjljeHVTZWFkWnNmcVhUWCt2MTdXNFg1Q1pyTjFaaDdxZmVLN09CSmNUSnFuTUE1YlJxYU5sM2pTUGZ0eUNhWmJLekZTRVBQamxaSC9IOUJhVk14cGxzT1V2SndJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwNTYwOTk4CWZpbGU6QzdOIENvZGV4IEJldGFfMC4xLjBfYW1kNjQuQXBwSW1hZ2UKbHRpcy9FYzZOOUdLRVJnTHdaNGpFUUNWdmlnb01wcU1pZlU3TzVrL2VBY0lURWMzUGY5TEd4Rm5Va1NUN08zejFGbHp1NHRydzBGSWpnTlBDbS9aQ3c9PQo=",
+      "url": "https://github.com/hzm0321/c7n-taskboard/releases/download/v0.1.0-beta.1/C7N.Codex_0.1.0_Ubuntu-24.04-x64.AppImage"
     }
   }
 }
