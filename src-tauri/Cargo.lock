@@ -343,7 +343,7 @@ dependencies = [
 
 [[package]]
 name = "codex-taskboard-launcher"
-version = "0.0.7"
+version = "0.1.0"
 dependencies = [
  "dispatch2",
  "futures-util",
