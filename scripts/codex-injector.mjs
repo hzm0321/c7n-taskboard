@@ -34,6 +34,7 @@ import {
 } from "./codex-cdp-pipe.mjs";
 import {
   activateWindowsCodex,
+  activateWindowsCodexWindow,
   stopWindowsCodex,
   windowsCodexProcesses,
   windowsCodexProfileArgument,
@@ -563,6 +564,17 @@ async function stopManagedCodex(record) {
 }
 
 function activateCodexApp(pid) {
+  if (process.platform === "win32") {
+    try {
+      activateWindowsCodexWindow(
+        pid,
+        withoutTaskboardLauncherEnvironment(process.env),
+      );
+    } catch (error) {
+      console.error(`Unable to activate the Codex window: ${error.message}`);
+    }
+    return;
+  }
   if (process.platform !== "darwin") return;
   const activation = spawnSync("/usr/bin/osascript", [
     "-l",
