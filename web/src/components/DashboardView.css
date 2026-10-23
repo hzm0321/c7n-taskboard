@@ -1236,6 +1236,10 @@
     border-left: 0;
   }
 
+  .dashboard-view .dashboard-role-panel {
+    height: auto;
+  }
+
   .dashboard-view .dashboard-contribution-panel {
     grid-column: span 2;
   }
