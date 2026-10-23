@@ -2397,7 +2397,12 @@ async function restoreQuotaPolicies(cdp) {
     await ensureQuotaPoliciesLoaded();
     for (const [projectId, record] of quotaPolicyRecords) {
       if (record.request.enabledByUser) {
-        await enqueueCurrentQuotaPolicy(projectId);
+        try {
+          await enqueueCurrentQuotaPolicy(projectId);
+        } catch (error) {
+          console.error(`Taskboard quota policy restore failed (${projectId}): ${error.message}`);
+          scheduleQuotaPolicyCheck(record, { quota: { state: "unknown" } });
+        }
       }
     }
     restoredQuotaPolicyCdps.add(cdp);
