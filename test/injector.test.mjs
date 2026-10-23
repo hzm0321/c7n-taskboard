@@ -17,6 +17,49 @@ const packageJson = JSON.parse(
   await readFile(new URL("../package.json", import.meta.url), "utf8"),
 );
 
+test("an unavailable automation API does not block the injection host bridge", async () => {
+  const errors = [];
+  const restored = [];
+  const retries = [];
+  const records = new Map([
+    ["unavailable", { request: { enabledByUser: true } }],
+    ["available", { request: { enabledByUser: true } }],
+  ]);
+  const cdp = {
+    on() {},
+    async send(method) {
+      if (method === "Page.getFrameTree") return { frameTree: { frame: { id: "main" } } };
+      if (method === "Page.createIsolatedWorld") return { executionContextId: 12 };
+      return {};
+    },
+  };
+  const install = vm.runInNewContext(`(() => {
+    ${source.slice(source.indexOf("async function restoreQuotaPolicies"), source.indexOf("async function startTaskConversationViaCdp"))}
+    ${source.slice(source.indexOf("function installTaskboardHostBinding"), source.indexOf("async function readInjectionStatus"))}
+    return installTaskboardHostBinding;
+  })()`, {
+    console: { error: (message) => errors.push(message) },
+    hostBindingName: "host", codexNotificationBindingName: "notification",
+    hostRequestMessage: "request", hostCapability: "capability",
+    registerQuotaPolicyCdp() {},
+    restoredQuotaPolicyCdps: new WeakSet(), quotaPolicyRestorePromises: new WeakMap(),
+    ensureQuotaPoliciesLoaded: async () => {}, quotaPolicyRecords: records,
+    enqueueCurrentQuotaPolicy: async (projectId) => {
+      restored.push(projectId);
+      if (projectId === "unavailable") throw new Error("Codex automation request returned HTTP 432");
+    },
+    scheduleQuotaPolicyCheck: (record) => retries.push(record),
+  });
+  const bridge = install(cdp, {}, null, () => {}, () => {});
+  assert.equal(await bridge.install(), 12);
+  assert.deepEqual(restored, ["unavailable", "available"]);
+  assert.deepEqual(retries, [records.get("unavailable")]);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /HTTP 432/);
+  await bridge.install();
+  assert.equal(restored.length, 2, "heartbeats must not repeat the failed restore immediately");
+});
+
 test("the resident injector authenticates its launcher-managed Taskboard service", () => {
   assert.match(supervisorSource, /function createTaskboardSupervisor/);
   assert.match(source, /CODEX_TASKBOARD_INSTANCE_TOKEN/);
