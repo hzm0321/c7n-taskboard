@@ -16,6 +16,190 @@
   box-sizing: border-box;
 }
 
+.project-readme-header,
+.project-readme-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.project-readme-header {
+  min-height: 36px;
+  margin-bottom: 28px;
+}
+
+.project-readme-header h1 {
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.project-readme-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.project-readme-section + .project-readme-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.project-readme-section-header {
+  min-height: 32px;
+  margin-bottom: 12px;
+}
+
+.project-readme-section-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.project-readme-empty {
+  margin: 0;
+  padding: 8px 0;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.project-prototype-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.project-prototype-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr) 36px;
+  align-items: start;
+  gap: 12px;
+}
+
+.project-prototype-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 7px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.project-prototype-field input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.project-prototype-field input:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.project-prototype-field input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.project-prototype-field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.project-prototype-error {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.project-prototype-row .project-prototype-remove {
+  width: 36px;
+  height: 36px;
+  margin-top: 25px;
+}
+
+.project-prototype-add {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.project-prototype-add:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.project-prototype-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-prototype-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.project-prototype-list a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 16px;
+  padding: 12px 0;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.project-prototype-list a:hover {
+  color: var(--accent);
+}
+
+.project-prototype-list a > svg {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.project-prototype-link-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.project-prototype-link-copy strong {
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.project-prototype-link-copy > span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.project-readme-section .issue-description-read {
+  cursor: text;
+}
+
+@media (max-width: 600px) {
+  .project-readme-container { padding: 20px 16px 48px; }
+  .project-readme-content { padding-inline: 0; }
+  .project-prototype-row { grid-template-columns: minmax(0, 1fr) 36px; }
+  .project-prototype-field { grid-column: 1; }
+  .project-prototype-remove { grid-column: 2; grid-row: 1 / 3; }
+}
+
 .project-readme-loading {
   display: flex;
   flex: 1;

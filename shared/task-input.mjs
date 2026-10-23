@@ -334,18 +334,40 @@ function projectReadmeContent(value) {
   return content;
 }
 
+function projectPrototypeLinks(value) {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) {
+    throw new ApiError(400, "INVALID_FIELD", "'prototypeLinks' must be an array");
+  }
+  return value.map((link, index) => {
+    assertPlainObject(link);
+    assertAllowedKeys(link, new Set(["name", "url"]));
+    if (typeof link.url !== "string" || (link.name !== undefined && typeof link.name !== "string")) {
+      throw new ApiError(400, "INVALID_FIELD", `Prototype link ${index + 1} must have a URL and an optional name`);
+    }
+    const url = link.url.trim();
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new ApiError(400, "INVALID_FIELD", `Prototype link ${index + 1} must be an HTTP or HTTPS URL`);
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new ApiError(400, "INVALID_FIELD", `Prototype link ${index + 1} must be an HTTP or HTTPS URL`);
+    }
+    return { name: (link.name ?? "").trim(), url };
+  });
+}
+
 export function parseProjectReadmeSave(body) {
   assertPlainObject(body);
-  assertAllowedKeys(body, new Set(["content", "version"]));
+  assertAllowedKeys(body, new Set(["content", "version", "prototypeLinks"]));
   const content = projectReadmeContent(body.content);
   const version = body.version === undefined ? undefined : parseVersion(body.version, { allowZero: true });
-  return { content, version };
+  const prototypeLinks = projectPrototypeLinks(body.prototypeLinks);
+  return { content, version, ...(prototypeLinks !== undefined ? { prototypeLinks } : {}) };
 }
 
 export function parseCloudProjectReadmeSave(body) {
-  assertPlainObject(body);
-  assertAllowedKeys(body, new Set(["version", "content"]));
-  const version = body.version === undefined ? undefined : parseVersion(body.version, { allowZero: true });
-  const content = projectReadmeContent(body.content);
-  return { content, version };
+  return parseProjectReadmeSave(body);
 }

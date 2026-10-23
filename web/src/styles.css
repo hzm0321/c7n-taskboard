@@ -7499,8 +7499,12 @@ kbd {
 }
 
 .view-tabs [data-slot="tabs-trigger"][data-state="active"] {
-  background: #fff;
-  color: #000;
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .view-tabs [data-slot="tabs-trigger"][data-state="active"] {
+  background: var(--surface-active);
 }
 
 .workspace[data-slot="tabs"] {

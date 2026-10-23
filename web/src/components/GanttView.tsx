@@ -276,6 +276,13 @@ export function GanttView({ tasks, presentations, hasActiveFilters, zoom, hideCo
       void onUpdateRef.current(task, { startDate, dueDate }).catch(() => {});
       return true;
     });
+    instance.attachEvent("onTaskClick", (id, event) => {
+      const task = instance.getTask(id) as TaskboardGanttTask;
+      if (!task.taskboardGroup || !(event?.target as HTMLElement | null)?.closest(".gantt_grid")) return true;
+      if (task.$open) instance.close(id);
+      else instance.open(id);
+      return false;
+    });
     instance.attachEvent("onTaskDblClick", (id) => {
       const task = tasksRef.current.find((candidate) => candidate.id === String(id));
       if (task) {

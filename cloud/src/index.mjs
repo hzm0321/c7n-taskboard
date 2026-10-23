@@ -2007,7 +2007,7 @@ async function getProjectReadme(env, projectId) {
     throw new ApiError(404, "PROJECT_NOT_FOUND", `Project '${projectId}' does not exist`);
   }
   const row = await env.DB.prepare(`
-    SELECT project_id, content, version, created_at, updated_at
+    SELECT project_id, content, prototype_links, version, created_at, updated_at
     FROM project_readmes
     WHERE project_id = ?
   `).bind(projectId).first();
@@ -2015,28 +2015,31 @@ async function getProjectReadme(env, projectId) {
     ? {
       projectId: row.project_id,
       content: row.content,
+      prototypeLinks: JSON.parse(row.prototype_links),
       version: row.version,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }
-    : { projectId, content: "", version: 0, createdAt: null, updatedAt: null };
+    : { projectId, content: "", prototypeLinks: [], version: 0, createdAt: null, updatedAt: null };
 }
 
-async function saveProjectReadme(env, projectId, content, expectedVersion) {
+async function saveProjectReadme(env, projectId, content, expectedVersion, prototypeLinks) {
   const project = await getProject(env, projectId);
   if (!project) {
     throw new ApiError(404, "PROJECT_NOT_FOUND", `Project '${projectId}' does not exist`);
   }
   const timestamp = now();
+  const storedLinks = prototypeLinks === undefined ? null : JSON.stringify(prototypeLinks);
   if (expectedVersion === undefined) {
     await env.DB.prepare(`
-      INSERT INTO project_readmes (project_id, content, version, created_at, updated_at)
-      VALUES (?, ?, 1, ?, ?)
+      INSERT INTO project_readmes (project_id, content, prototype_links, version, created_at, updated_at)
+      VALUES (?, ?, COALESCE(?, '[]'), 1, ?, ?)
       ON CONFLICT(project_id) DO UPDATE SET
         content = excluded.content,
+        prototype_links = COALESCE(?, project_readmes.prototype_links),
         version = project_readmes.version + 1,
         updated_at = excluded.updated_at
-    `).bind(projectId, content, timestamp, timestamp).run();
+    `).bind(projectId, content, storedLinks, timestamp, timestamp, storedLinks).run();
     return getProjectReadme(env, projectId);
   }
   const current = await env.DB.prepare(`
@@ -2054,11 +2057,11 @@ async function saveProjectReadme(env, projectId, content, expectedVersion) {
   if (current) {
     const versionCondition = expectedVersion !== undefined ? " AND version = ?" : "";
     const params = expectedVersion !== undefined
-      ? [content, timestamp, projectId, expectedVersion]
-      : [content, timestamp, projectId];
+      ? [content, storedLinks, timestamp, projectId, expectedVersion]
+      : [content, storedLinks, timestamp, projectId];
     const result = await env.DB.prepare(`
       UPDATE project_readmes
-      SET content = ?, version = version + 1, updated_at = ?
+      SET content = ?, prototype_links = COALESCE(?, prototype_links), version = version + 1, updated_at = ?
       WHERE project_id = ?${versionCondition}
     `).bind(...params).run();
     if (!changed(result)) {
@@ -2075,9 +2078,9 @@ async function saveProjectReadme(env, projectId, content, expectedVersion) {
   } else {
     try {
       await env.DB.prepare(`
-        INSERT INTO project_readmes (project_id, content, version, created_at, updated_at)
-        VALUES (?, ?, 1, ?, ?)
-      `).bind(projectId, content, timestamp, timestamp).run();
+        INSERT INTO project_readmes (project_id, content, prototype_links, version, created_at, updated_at)
+        VALUES (?, ?, COALESCE(?, '[]'), 1, ?, ?)
+      `).bind(projectId, content, storedLinks, timestamp, timestamp).run();
     } catch (error) {
       if (String(error.message).includes("UNIQUE constraint failed")) {
         const latest = await env.DB.prepare(`
@@ -2541,6 +2544,7 @@ async function routeApi(request, env, actor, url) {
   if (
     pathname === "/api/device-workspaces"
     || /^\/api\/projects\/[^/]+\/development-contexts$/.test(pathname)
+    || /^\/api\/local\/projects\/[^/]+\/skills$/.test(pathname)
   ) {
     if (request.method !== "GET") methodNotAllowed(["GET"]);
     throw new ApiError(
@@ -2623,13 +2627,13 @@ async function routeApi(request, env, actor, url) {
       return json(200, { readme: await getProjectReadme(env, projectId) });
     }
     if (request.method === "PUT") {
-      const { content, version } = parseProjectReadmeSave(await readJson(
+      const { content, version, prototypeLinks } = parseProjectReadmeSave(await readJson(
         request,
         PROJECT_README_BODY_LIMIT,
         "Project README request cannot exceed 3 MiB",
       ));
       return json(200, {
-        readme: await saveProjectReadme(env, projectId, content, version),
+        readme: await saveProjectReadme(env, projectId, content, version, prototypeLinks),
       });
     }
     methodNotAllowed(["GET", "PUT"]);

@@ -30,6 +30,7 @@ import type {
   Project,
   ProjectReadme,
   ProjectReadmeAttachment,
+  ProjectSkills,
   ProjectSummary,
   Task,
   TaskChangeActivity,
@@ -498,6 +499,21 @@ export async function listDeviceWorkspaces(signal?: AbortSignal): Promise<Record
   }
 }
 
+export async function listProjectSkills(
+  projectId: string,
+  context: { workspacePath?: string; codexProjectId?: string; codexThreadId?: string },
+  signal?: AbortSignal,
+): Promise<ProjectSkills> {
+  const query = new URLSearchParams();
+  if (context.workspacePath) query.set("workspacePath", context.workspacePath);
+  if (context.codexProjectId) query.set("codexProjectId", context.codexProjectId);
+  if (context.codexThreadId) query.set("codexThreadId", context.codexThreadId);
+  return request<ProjectSkills>(
+    `/api/local/projects/${encodeURIComponent(projectId)}/skills${query.size ? `?${query}` : ""}`,
+    { signal },
+  );
+}
+
 export async function getProjectReadme(
   projectId: string,
   signal?: AbortSignal,
@@ -513,12 +529,17 @@ export async function saveProjectReadme(
   projectId: string,
   content: string,
   version?: number,
+  prototypeLinks?: ProjectReadme["prototypeLinks"],
 ): Promise<ProjectReadme> {
   const data = await request<{ readme: ProjectReadme }>(
     `/api/projects/${encodeURIComponent(projectId)}/readme`,
     {
       method: "PUT",
-      body: JSON.stringify({ content, ...(version !== undefined ? { version } : {}) }),
+      body: JSON.stringify({
+        content,
+        ...(version !== undefined ? { version } : {}),
+        ...(prototypeLinks !== undefined ? { prototypeLinks } : {}),
+      }),
     },
   );
   return data.readme;

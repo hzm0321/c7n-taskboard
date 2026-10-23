@@ -66,6 +66,7 @@ import {
 } from "./components/BoardCardDisplayMenu";
 import { DashboardView } from "./components/DashboardView";
 import { ProjectReadmeView } from "./components/ProjectReadmeView";
+import { ProjectSkillsView } from "./components/ProjectSkillsView";
 import { IssueListView } from "./components/IssueListView";
 import { JiraConnectionDialog } from "./components/JiraConnectionDialog";
 import { FeedbackDialog } from "./components/FeedbackDialog";
@@ -166,7 +167,7 @@ import { createRevisionPoller, createRevisionWebSocketClient, getRevisionPolling
 
 type ConnectionState = "connecting" | "live" | "reconnecting";
 type Theme = "light" | "dark";
-type BoardView = "readme" | "dashboard" | "issues" | "list" | "gantt";
+type BoardView = "readme" | "skills" | "dashboard" | "issues" | "list" | "gantt";
 type DetailSourceScroll =
   | { projectId: string; view: "issues"; status: TaskStatus; scrollTop: number; scrollLeft: number }
   | { projectId: string; view: "list"; scrollTop: number };
@@ -341,7 +342,7 @@ function issueReadStorageKey(mode: string, task: Pick<Task, "id" | "projectId">)
 
 function readProjectBoardView(projectId: string): BoardView {
   const view = taskboardStorage.getItem(`${PROJECT_VIEW_KEY_PREFIX}${projectId}`);
-  return view === "readme" || view === "dashboard" || view === "list" || view === "gantt" || view === "issues"
+  return view === "readme" || view === "skills" || view === "dashboard" || view === "list" || view === "gantt" || view === "issues"
     ? view
     : "issues";
 }
@@ -3716,7 +3717,10 @@ export function App() {
             <TabsTrigger value="list">{text("列表视图", "List")}</TabsTrigger>
             <TabsTrigger value="gantt">{text("甘特图", "Gantt")}</TabsTrigger>
             {!isAllProjects && (
-              <TabsTrigger value="readme">{text("项目文档", "Project Docs")}</TabsTrigger>
+              <>
+                <TabsTrigger value="readme">{text("项目文档", "Project Docs")}</TabsTrigger>
+                <TabsTrigger value="skills">{text("技能", "Skills")}</TabsTrigger>
+              </>
             )}
           </TabsList>
           {(boardView === "issues" || boardView === "list" || boardView === "gantt") && <TooltipProvider delayDuration={150}>
@@ -3890,7 +3894,7 @@ export function App() {
             openingThread={openingThreadTaskId === detailTask.id}
             onError={setActionError}
           />
-        ) : boardView !== "readme"
+        ) : boardView !== "readme" && boardView !== "skills"
           && hasLoadedTasks
           && tasks.length === 0
           && selectedProject
@@ -3929,6 +3933,14 @@ export function App() {
               </Button>
             </div>
           </div>
+        ) : boardView === "skills" && selectedProject ? (
+          <ProjectSkillsView
+            key={selectedProjectId}
+            projectId={selectedProject.id}
+            workspacePath={selectedDeviceWorkspacePath ?? selectedCodexProjectIdentity?.workspacePath ?? undefined}
+            codexProjectId={selectedProjectId === GLOBAL_PROJECT_ID ? hostContext?.projectId : selectedCodexProjectIdentity?.codexProjectId ?? selectedProject.id}
+            codexThreadId={hostContext?.threadId}
+          />
         ) : boardView === "readme" && selectedProject ? (
           <ProjectReadmeView
             key={selectedProjectId}

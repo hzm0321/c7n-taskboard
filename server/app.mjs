@@ -48,6 +48,7 @@ import { createJiraConfigStore } from "./jira-config.mjs";
 import { createJiraIntegration } from "./jira-integration.mjs";
 import { createChoerodonConnection } from "./choerodon-connection.mjs";
 import { ProjectSummaryService } from "./project-summary.mjs";
+import { scanProjectSkills } from "./project-skills.mjs";
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const execFileAsync = promisify(execFile);
@@ -2694,7 +2695,7 @@ export function createTaskboardServer(options = {}) {
             PROJECT_README_BODY_LIMIT,
             "Project README request cannot exceed 3 MiB",
           ));
-          const readme = database.saveProjectReadme(projectId, input.content, input.version);
+          const readme = database.saveProjectReadme(projectId, input.content, input.version, input.prototypeLinks);
           events.emit("project.readme.updated", {
             projectId,
             readmeVersion: readme.version,
@@ -2705,7 +2706,8 @@ export function createTaskboardServer(options = {}) {
       }
 
       const developmentContextsRoute = pathname.match(/^\/api\/projects\/([^/]+)\/development-contexts$/);
-      if (developmentContextsRoute) {
+      const projectSkillsRoute = pathname.match(/^\/api\/local\/projects\/([^/]+)\/skills$/);
+      if (developmentContextsRoute || projectSkillsRoute) {
         if (request.method !== "GET") return methodNotAllowed(response, ["GET"]);
         const unknownQuery = [...url.searchParams.keys()].filter((key) => (
           !["codexProjectId", "codexThreadId", "workspacePath"].includes(key)
@@ -2715,7 +2717,7 @@ export function createTaskboardServer(options = {}) {
         }
         let projectId;
         try {
-          projectId = decodeURIComponent(developmentContextsRoute[1]);
+          projectId = decodeURIComponent((developmentContextsRoute ?? projectSkillsRoute)[1]);
         } catch {
           throw new ApiError(400, "INVALID_PATH", "Project id contains invalid encoding");
         }
@@ -2752,6 +2754,13 @@ export function createTaskboardServer(options = {}) {
           resolved.codexStatePath,
           resolved.codexProcessesPath,
         );
+        if (projectSkillsRoute) {
+          try {
+            return sendJson(response, 200, await scanProjectSkills(workspacePath));
+          } catch (error) {
+            throw new ApiError(500, "SKILLS_READ_FAILED", `Unable to read project skills: ${error.message}`);
+          }
+        }
         return sendJson(
           response,
           200,

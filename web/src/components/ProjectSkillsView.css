@@ -1,0 +1,118 @@
+.project-skills-container {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 32px 40px 80px;
+  user-select: text;
+}
+
+.project-skills-content {
+  width: min(781px, 100%);
+  margin: 0 auto;
+  padding: 0 14px 34px;
+}
+
+.project-skills-header,
+.project-skills-heading,
+.project-skill-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-skills-header,
+.project-skill-heading {
+  justify-content: space-between;
+}
+
+.project-skills-header {
+  min-height: 36px;
+  margin-bottom: 12px;
+}
+
+.project-skills-header h1 {
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.project-skills-heading > span {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.project-skills-header .icon-button {
+  width: 30px;
+  height: 30px;
+}
+
+.project-skills-workspace {
+  margin: 0 0 24px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.project-skills-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-skills-list > li {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.project-skill-heading h2,
+.project-skills-status h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.project-skill-heading h2 {
+  overflow-wrap: anywhere;
+}
+
+.project-skill-heading code {
+  min-width: 0;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.project-skills-list p,
+.project-skills-status {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.project-skills-list p {
+  margin: 10px 0 0;
+  white-space: pre-wrap;
+}
+
+.project-skills-status {
+  margin: 28px 0;
+}
+
+.project-skills-status p {
+  margin: 8px 0 16px;
+}
+
+@media (max-width: 600px) {
+  .project-skills-container { padding: 20px 16px 48px; }
+  .project-skills-content { padding-inline: 0; }
+  .project-skill-heading { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .project-skill-heading code { text-align: left; }
+}

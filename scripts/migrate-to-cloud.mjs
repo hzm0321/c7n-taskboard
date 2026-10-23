@@ -360,7 +360,7 @@ const CLOUD_COLUMNS = {
   projects: [
     "id", "name", "workspace_path", "labels", "next_task_number", "created_at", "updated_at",
   ],
-  project_readmes: ["project_id", "content", "version", "created_at", "updated_at"],
+  project_readmes: ["project_id", "content", "prototype_links", "version", "created_at", "updated_at"],
   tasks: [
     "id", "identifier", "project_id", "title", "description", "status", "priority", "labels",
     "sort_order", "thread_id", "thread_codex_project_id", "thread_codex_project_kind",
@@ -398,6 +398,10 @@ function cloudTaskRow(task) {
 
 function cloudRows(table, tables) {
   if (table === "projects") return projectRowsWithLabels(tables);
+  if (table === "project_readmes") return tables.project_readmes.map((row) => ({
+    ...row,
+    prototype_links: row.prototype_links ?? "[]",
+  }));
   return table === "tasks" ? tables.tasks.map(cloudTaskRow) : tables[table];
 }
 
@@ -504,7 +508,7 @@ export const CLOUD_PROJECT_COUNTS_SQL = `
 `;
 
 export const CLOUD_PROJECT_READMES_SQL = `
-  SELECT project_id, content, version, created_at, updated_at
+  SELECT project_id, content, prototype_links, version, created_at, updated_at
   FROM project_readmes ORDER BY project_id
 `;
 
@@ -512,6 +516,7 @@ function assertProjectReadmesMatch(expected, actual) {
   const normalize = (rows) => rows.map((row) => ({
     project_id: row.project_id,
     content: row.content,
+    prototype_links: row.prototype_links ?? "[]",
     version: Number(row.version),
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -539,11 +544,12 @@ export function createCloudBindingMigrationAdapters({ d1, r2 }) {
           for (const readme of readmes) {
             statements.push(d1.prepare(`
               INSERT INTO project_readmes
-                (project_id, content, version, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?)
+                (project_id, content, prototype_links, version, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?)
             `).bind(
               readme.project_id,
               readme.content,
+              readme.prototype_links,
               readme.version,
               readme.created_at,
               readme.updated_at,

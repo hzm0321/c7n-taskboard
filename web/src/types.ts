@@ -358,9 +358,27 @@ export interface ProjectSummary {
   error: string | null;
 }
 
+export interface ProjectSkill {
+  name: string;
+  description: string;
+  path: string;
+  sourceDirectory: string;
+}
+
+export interface ProjectSkills {
+  workspacePath: string | null;
+  skills: ProjectSkill[];
+}
+
+export interface ProjectPrototypeLink {
+  name: string;
+  url: string;
+}
+
 export interface ProjectReadme {
   projectId: string;
   content: string;
+  prototypeLinks: ProjectPrototypeLink[];
   version: number;
   createdAt: string | null;
   updatedAt: string | null;

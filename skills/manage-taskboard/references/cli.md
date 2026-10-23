@@ -36,7 +36,7 @@ taskctl project readme set [PROJECT_ID] (--content TEXT | --file PATH) [--if-ver
 
 Use `--workspace-path` to associate a project with a local repository. `context current` chooses the most specific project whose workspace contains the current directory, then falls back to the `local` project.
 
-Use `project readme get` and `project readme set` to read and update the project's single root README document. Detailed multi-page documentation belongs in the project's local `docs/` folder.
+Use `project readme get` to read the project's development guidelines (`readme.content`) and prototype links (`readme.prototypeLinks`, an ordered array of `{ name, url }`). Names may be empty; URLs use HTTP or HTTPS. `project readme set` updates the guidelines and preserves existing prototype links. Prototype links are edited in the Project Docs page. These fields are read on demand, not automatically injected into conversations. Detailed multi-page documentation belongs in the project's local `docs/` folder.
 
 Set `CODEX_TASKBOARD_URL` to override the default local API origin, `http://127.0.0.1:47823`.
 
