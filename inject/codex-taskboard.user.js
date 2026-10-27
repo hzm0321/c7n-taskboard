@@ -597,17 +597,6 @@
     return metadata;
   }
 
-  async function activeNativeWorkspaceRoots() {
-    const response = await requestNativeFetch("active-workspace-roots", {});
-    const roots = response?.roots;
-    // Keep an unavailable endpoint distinct from a successful response with no
-    // workspace roots. The latter must not be treated as a confirmed switch.
-    return {
-      available: Array.isArray(roots),
-      roots: Array.isArray(roots) ? roots.filter((root) => typeof root === "string") : [],
-    };
-  }
-
   function normalizeNativeRootPath(value) {
     const path = String(value || "").trim();
     if (!path) return "";
@@ -1223,30 +1212,41 @@
     }
   }
 
-  async function waitForNativeProject(targetRoot, expectedProjectId) {
-    const deadline = Date.now() + 8_000;
-    while (Date.now() < deadline) {
-      const [projectId, activeWorkspace] = await Promise.all([
-        selectedNativeProjectId(),
-        activeNativeWorkspaceRoots(),
-      ]);
-      if (projectId && projectId === expectedProjectId) {
-        // Some Codex desktop builds no longer expose active-workspace-roots.
-        // A confirmed selected project is still safe when that endpoint is unavailable;
-        // keep rejecting an explicitly reported, mismatched workspace root.
-        if (!activeWorkspace.available) return projectId;
-        const [canonicalTargetRoot, ...canonicalActiveRoots] = await canonicalNativeRootPaths([
-          targetRoot,
-          ...activeWorkspace.roots,
-        ]);
-        if (canonicalActiveRoots.some((root) => root === canonicalTargetRoot)) return projectId;
+  function selectNativeProject(targetRoot, expectedProjectId) {
+    return new Promise((resolve, reject) => {
+      let projectSelected = false;
+      const finish = (error) => {
+        window.clearTimeout(timeout);
+        window.removeEventListener("message", onMessage);
+        if (error) reject(error);
+        else resolve(expectedProjectId);
+      };
+      const onMessage = (event) => {
+        if (event.source && event.source !== window) return;
+        const message = event.data;
+        if (message?.type === "workspace-root-option-added") {
+          projectSelected = (message.selectedProjectId ?? message.projectId) === expectedProjectId;
+        }
+        // The native picker navigates after selecting the project. Wait for that
+        // navigation before applying our prompt so it cannot clear the draft.
+        if (projectSelected && message?.type === "navigate-to-route" && message.path === "/") {
+          finish();
+        }
+      };
+      const timeout = window.setTimeout(() => finish(new Error(hostText(
+        "Codex 未在限定时间内切换到目标项目或 worktree",
+        "Codex did not switch to the target project or worktree in time",
+      ))), 8_000);
+      window.addEventListener("message", onMessage);
+      try {
+        Promise.resolve(window.electronBridge.sendMessageFromView({
+          type: "electron-add-new-workspace-root-option",
+          root: targetRoot,
+        })).catch(finish);
+      } catch (error) {
+        finish(error);
       }
-      await new Promise((resolve) => window.setTimeout(resolve, 80));
-    }
-    throw new Error(hostText(
-      "Codex 未在限定时间内切换到目标项目或 worktree",
-      "Codex did not switch to the target project or worktree in time",
-    ));
+    });
   }
 
   async function createThreadForTask(payload) {
@@ -1296,11 +1296,7 @@
           ));
         }
         const { projectId, targetRoot } = target;
-        bridge.sendMessageFromView({
-          type: "electron-add-new-workspace-root-option",
-          root: targetRoot,
-        });
-        lastNativeProjectId = await waitForNativeProject(targetRoot, projectId);
+        lastNativeProjectId = await selectNativeProject(targetRoot, projectId);
       }
 
       closeTaskboard(false);
