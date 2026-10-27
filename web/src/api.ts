@@ -908,6 +908,7 @@ export async function unlinkCodexConversation(task: Task): Promise<Task> {
 
 export type AppUpdateStatus = {
   supported?: boolean;
+  nativeUpdater?: boolean;
   available?: boolean;
   busy?: boolean;
   message?: string;

@@ -139,12 +139,29 @@ struct LauncherRuntimeDescriptor {
 #[derive(Deserialize)]
 #[serde(tag = "launcherEvent", rename_all = "camelCase")]
 enum LauncherEvent {
+    CheckUpdate,
     WaitingForCodex,
     ServiceReady,
     OpenSignalReady,
     OpenSignalQueued,
     OpenedInExistingCodex,
     Injected,
+}
+
+struct UpdateMenu {
+    check_update: MenuItem<tauri::Wry>,
+    quit: MenuItem<tauri::Wry>,
+}
+
+fn request_update(app: &AppHandle) {
+    let state = Arc::clone(app.state::<Arc<LauncherState>>().inner());
+    let menu = app.state::<UpdateMenu>();
+    let check_update = menu.check_update.clone();
+    let quit = menu.quit.clone();
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        offer_update(&app, &state, &check_update, &quit, true).await;
+    });
 }
 
 struct LauncherState {
@@ -1565,6 +1582,7 @@ fn watch_launcher_output<R: std::io::Read + Send + 'static>(
                     return;
                 }
                 match event {
+                    LauncherEvent::CheckUpdate => request_update(&app),
                     LauncherEvent::WaitingForCodex => {
                         snapshot.phase = "starting".into();
                         snapshot.message = "正在等待 Codex 窗口…".into();
@@ -1728,6 +1746,10 @@ fn start_launcher_locked(
         .env("CODEX_TASKBOARD_INSTANCE_TOKEN", &instance_token)
         .env("CODEX_TASKBOARD_INSTANCE_SECRET", &instance_secret)
         .env("CODEX_TASKBOARD_VERSION", &version)
+        .env(
+            "CODEX_TASKBOARD_NATIVE_UPDATER",
+            if cfg!(target_os = "windows") { "0" } else { "1" },
+        )
         .env("CODEX_TASKBOARD_SKILL_PATH", &manage_taskboard_skill_path)
         .env_remove("CODEX_API_KEY")
         .env(
@@ -2502,8 +2524,10 @@ fn main() {
                     &quit,
                 ],
             )?;
-            let check_update_menu = check_update.clone();
-            let quit_menu = quit.clone();
+            app.manage(UpdateMenu {
+                check_update: check_update.clone(),
+                quit: quit.clone(),
+            });
             let autostart_menu = autostart.clone();
             let autostart_confirmed = Arc::new(AtomicBool::new(autostart_enabled));
             TrayIconBuilder::new()
@@ -2512,18 +2536,7 @@ fn main() {
                 .tooltip("C7N Codex")
                 .menu(&tray_menu)
                 .on_menu_event(move |app, event| match event.id().as_ref() {
-                    "check-update" => {
-                        let Some(state) = app.try_state::<Arc<LauncherState>>() else {
-                            return;
-                        };
-                        let state = Arc::clone(state.inner());
-                        let app = app.clone();
-                        let check_update = check_update_menu.clone();
-                        let quit = quit_menu.clone();
-                        tauri::async_runtime::spawn(async move {
-                            offer_update(&app, &state, &check_update, &quit, true).await;
-                        });
-                    }
+                    "check-update" => request_update(app),
                     "open-taskboard" => {
                         let Some(state) = app.try_state::<Arc<LauncherState>>() else {
                             return;

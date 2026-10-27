@@ -37,11 +37,7 @@ export function AppUpdateButton({ onError }: { onError: (message: string) => voi
     setStarting(true);
     try {
       const next = await startAppUpdate();
-      setStatus(next);
-      const targetUrl = next.downloadUrl || (next.version
-        ? `https://github.com/hzm0321/c7n-taskboard/releases/tag/v${next.version}`
-        : "https://github.com/hzm0321/c7n-taskboard/releases/latest");
-      window.open(targetUrl, "_blank", "noopener,noreferrer");
+      setStatus((current) => ({ ...current, ...next }));
     } catch (error) {
       onError(error instanceof Error ? error.message : String(error));
     } finally {
@@ -49,19 +45,32 @@ export function AppUpdateButton({ onError }: { onError: (message: string) => voi
     }
   }
 
+  const downloadUrl = status.downloadUrl || (status.version
+    ? `https://github.com/hzm0321/c7n-taskboard/releases/tag/v${status.version}`
+    : "https://github.com/hzm0321/c7n-taskboard/releases/latest");
+  const content = <>
+    <Download size={14} aria-hidden="true" />
+    <span>{starting || busy ? text("更新中…", "Updating…") : text("更新", "Update")}</span>
+  </>;
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="none"
+        {status.nativeUpdater ? <Button variant="ghost" size="none"
           className="header-integration-trigger header-update-button no-drag"
           type="button"
           disabled={starting || busy}
           onClick={() => void update()}
           aria-label={text("更新软件", "Update app")}
         >
-          <Download size={14} aria-hidden="true" />
-          <span>{starting || busy ? text("更新中…", "Updating…") : text("更新", "Update")}</span>
-        </Button>
+          {content}
+        </Button> : <Button variant="ghost" size="none" asChild
+          className="header-integration-trigger header-update-button no-drag"
+        >
+          <a href={downloadUrl} target="_blank" rel="noopener noreferrer"
+            aria-label={text("下载安装包", "Download installer")}
+          >{content}</a>
+        </Button>}
       </TooltipTrigger>
       <TooltipContent>
         {starting || busy
