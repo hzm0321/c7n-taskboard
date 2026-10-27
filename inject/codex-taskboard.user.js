@@ -321,11 +321,7 @@
       button.getAttribute(OWNED_ATTRIBUTE) !== "true"
       && buttonMatches(button, ["插件", "plugins"])
     ));
-    if (plugin?.parentElement) {
-      const siblings = Array.from(plugin.parentElement.children)
-        .filter((child) => child.tagName === "BUTTON");
-      if (siblings.length >= 3) return plugin;
-    }
+    if (plugin) return plugin;
     const firstSection = scroll.querySelector("[data-app-action-sidebar-section]");
     const sectionTop = firstSection?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
     const groups = Array.from(scroll.querySelectorAll("div")).filter((element) => {
