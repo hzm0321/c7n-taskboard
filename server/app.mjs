@@ -1464,6 +1464,7 @@ export function resolveServerOptions(options = {}) {
       ?? path.join(codexHome, "process_manager", "chat_processes.json"),
     instanceToken,
     instanceSecret,
+    nativeUpdater: environment.CODEX_TASKBOARD_NATIVE_UPDATER === "1",
     trustedOrigins: parseTrustedOrigins(environment[TRUSTED_ORIGINS_ENV]),
     version: String(
       options.version ?? environment.CODEX_TASKBOARD_VERSION ?? "development",
@@ -2353,9 +2354,18 @@ export function createTaskboardServer(options = {}) {
         const currentVersion = resolved.version === "development"
           ? (await getPackageJsonVersion() ?? resolved.version)
           : resolved.version;
+        if (request.method === "POST" && resolved.nativeUpdater) {
+          process.stdout.write(`${JSON.stringify({ launcherEvent: "checkUpdate" })}\n`);
+          return sendJson(response, 202, {
+            supported: true,
+            nativeUpdater: true,
+            currentVersion,
+            message: "请在启动器更新窗口中继续安装。",
+          });
+        }
         const userAgent = request.headers["user-agent"];
         const status = await checkAppUpdate(currentVersion, userAgent);
-        return sendJson(response, 200, status);
+        return sendJson(response, 200, { ...status, nativeUpdater: resolved.nativeUpdater });
       }
 
       if (pathname === "/api/meta") {
