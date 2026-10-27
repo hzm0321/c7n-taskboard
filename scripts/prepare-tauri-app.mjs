@@ -240,7 +240,7 @@ async function copyApplicationResources() {
     ),
   ]);
   await mkdir(path.join(appResources, "node_modules"), { recursive: true });
-  for (const dependency of ["ws", "turndown", "@mixmark-io/domino"]) {
+  for (const dependency of ["ws", "turndown", "@mixmark-io/domino", "js-yaml", "argparse"]) {
     await cp(
       path.join(projectRoot, "node_modules", dependency),
       path.join(appResources, "node_modules", dependency),
