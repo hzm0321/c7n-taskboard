@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useTaskboardI18n } from "../i18n";
 
-export function FeedbackDialog({ onClose }: { onClose: () => void }) {
+export function FeedbackDialog({ defaultName, onClose }: { defaultName: string; onClose: () => void }) {
   const { text } = useTaskboardI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -82,6 +82,7 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
           <input
             type="text"
             name="name"
+            defaultValue={defaultName}
             maxLength={100}
             disabled={submitting}
             placeholder={text("请输入您的姓名或昵称（选填）", "Enter your name (optional)")}

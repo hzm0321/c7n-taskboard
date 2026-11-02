@@ -483,6 +483,7 @@ export interface ChoerodonChoice {
 
 export interface ChoerodonConnection {
   configured: boolean;
+  username: string | null;
   account: ChoerodonChoice | null;
   organization: ChoerodonChoice | null;
   project: ChoerodonChoice | null;

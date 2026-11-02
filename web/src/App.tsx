@@ -862,6 +862,7 @@ export function App() {
   const [choerodonDialogOpen, setChoerodonDialogOpen] = useState(false);
   const [choerodonSyncProject, setChoerodonSyncProject] = useState<{ id: string; name: string } | null>(null);
   const [choerodonConfigured, setChoerodonConfigured] = useState(false);
+  const [choerodonUsername, setChoerodonUsername] = useState("");
   const [jiraConnection, setJiraConnection] = useState<JiraConnection | null>(null);
   const [jiraSaving, setJiraSaving] = useState(false);
   const [jiraSyncing, setJiraSyncing] = useState(false);
@@ -2032,7 +2033,10 @@ export function App() {
     if (!taskboardMetadata || taskboardMetadata.mode === "cloud" || choerodonDialogOpen) return;
     let active = true;
     void getChoerodonConnection().then((connection) => {
-      if (active) setChoerodonConfigured(connection.configured);
+      if (active) {
+        setChoerodonConfigured(connection.configured);
+        setChoerodonUsername(connection.username ?? "");
+      }
     }).catch((error: unknown) => {
       if (active) setActionError(errorMessage(error));
     });
@@ -4166,7 +4170,7 @@ export function App() {
       )}
 
       {feedbackDialogOpen && (
-        <FeedbackDialog onClose={() => setFeedbackDialogOpen(false)} />
+        <FeedbackDialog defaultName={choerodonUsername} onClose={() => setFeedbackDialogOpen(false)} />
       )}
 
       {jiraDialogOpen && (

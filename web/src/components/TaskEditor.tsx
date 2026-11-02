@@ -455,6 +455,7 @@ export function TaskEditor({
       aria-labelledby="task-dialog-title"
       aria-describedby="task-dialog-description"
       onCancel={(event) => {
+        if (event.target !== event.currentTarget) return;
         event.preventDefault();
         if (!saving) cancelEditor();
       }}

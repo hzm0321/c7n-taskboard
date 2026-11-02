@@ -62,6 +62,7 @@ function selected(items, id, label) {
 function publicConnection(config) {
   return {
     configured: Boolean(config),
+    username: config?.username ?? null,
     account: config?.account ?? null,
     organization: config?.organization ?? null,
     project: config?.project ?? null,
