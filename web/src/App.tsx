@@ -25,7 +25,7 @@ import {
   createProject as createProjectRequest,
   createTask as createTaskRequest,
   configureJiraConnection,
-  deleteArchivedTask as deleteArchivedTaskRequest,
+  deleteTask as deleteTaskRequest,
   deleteProjectLabel as deleteProjectLabelRequest,
   deleteProject as deleteProjectRequest,
   getAiChatCatalog,
@@ -70,7 +70,7 @@ import { ProjectSkillsView } from "./components/ProjectSkillsView";
 import { IssueListView } from "./components/IssueListView";
 import { JiraConnectionDialog } from "./components/JiraConnectionDialog";
 import { FeedbackDialog } from "./components/FeedbackDialog";
-import { MessageSquareText } from "lucide-react";
+import { MessageSquareText, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -828,8 +828,8 @@ export function App() {
   const [otherTasksVisible, setOtherTasksVisible] = useState(false);
   const [otherTasksTab, setOtherTasksTab] = useState<OtherTaskTab>("backlog");
   const [restoringTaskId, setRestoringTaskId] = useState<string | null>(null);
-  const [pendingArchivedTaskDelete, setPendingArchivedTaskDelete] = useState<Task | null>(null);
-  const [deletingArchivedTaskId, setDeletingArchivedTaskId] = useState<string | null>(null);
+  const [pendingTaskDelete, setPendingTaskDelete] = useState<Task | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [newTaskDraft, setNewTaskDraft] = useState<{
     projectId: string;
@@ -2946,15 +2946,17 @@ export function App() {
     }
   }
 
-  async function deletePendingArchivedTask() {
-    if (!pendingArchivedTaskDelete || deletingArchivedTaskId) return;
-    const task = pendingArchivedTaskDelete;
+  async function deletePendingTask() {
+    if (!pendingTaskDelete || deletingTaskId) return;
+    const task = pendingTaskDelete;
     setActionError(null);
-    setDeletingArchivedTaskId(task.id);
+    setDeletingTaskId(task.id);
     try {
-      await deleteArchivedTaskRequest(task);
+      await deleteTaskRequest(task);
+      setTasks((current) => current.filter((candidate) => candidate.id !== task.id));
+      if (detailTaskIdentifier === task.identifier) closeTaskDetail();
       setArchivedTasks((current) => current.filter((candidate) => candidate.id !== task.id));
-      setPendingArchivedTaskDelete(null);
+      setPendingTaskDelete(null);
       setAnnouncement(text(
         `${task.identifier} 已永久删除。`,
         `${task.identifier} was permanently deleted.`,
@@ -2968,7 +2970,7 @@ export function App() {
         : errorMessage(error));
       if (taskScopeProjectId) void refreshTasks(taskScopeProjectId, { quiet: true });
     } finally {
-      setDeletingArchivedTaskId(null);
+      setDeletingTaskId(null);
     }
   }
 
@@ -4029,9 +4031,9 @@ export function App() {
                         tasks={filteredArchivedTasks}
                         hasActiveFilters={hasActiveTaskFilters}
                         restoringTaskId={restoringTaskId}
-                        deletingTaskId={deletingArchivedTaskId}
+                        deletingTaskId={deletingTaskId}
                         onRestore={(task) => void restoreArchivedTask(task)}
-                        onDelete={setPendingArchivedTaskDelete}
+                        onDelete={setPendingTaskDelete}
                       />
                     ) : (
                       <BoardColumn
@@ -4096,13 +4098,13 @@ export function App() {
                     showCreatedAt={Boolean(boardDisplaySettings.createdAt)}
                     onCreateLabel={persistProjectLabel}
                     restoringTaskId={restoringTaskId}
-                    deletingTaskId={deletingArchivedTaskId}
+                    deletingTaskId={deletingTaskId}
                     onTabChange={setOtherTasksTab}
                     onCreate={isJiraProject
                       ? undefined
                       : (initialStatus) => setEditor({ status: initialStatus })}
                     onRestore={(task) => void restoreArchivedTask(task)}
-                    onDelete={setPendingArchivedTaskDelete}
+                    onDelete={setPendingTaskDelete}
                     onEdit={openTaskDetail}
                     onUpdate={updateTaskProperties}
                     onContextMenu={openTaskContextMenu}
@@ -4302,54 +4304,72 @@ export function App() {
         </div>
       )}
 
-      {pendingArchivedTaskDelete && (
+      {pendingTaskDelete && (
         <div
           className="delete-backdrop"
           onPointerDown={(event) => {
-            if (event.target === event.currentTarget && !deletingArchivedTaskId) {
-              setPendingArchivedTaskDelete(null);
+            if (event.target === event.currentTarget && !deletingTaskId) {
+              setPendingTaskDelete(null);
             }
           }}
         >
           <div
-            className="delete-dialog"
+            className="delete-dialog task-delete-dialog"
             role="alertdialog"
             aria-modal="true"
-            aria-labelledby="archived-task-delete-title"
+            aria-labelledby="task-delete-title"
+            aria-describedby="task-delete-description"
             onKeyDown={(event) => {
-              if (event.key === "Escape" && !deletingArchivedTaskId) {
-                setPendingArchivedTaskDelete(null);
+              if (event.key === "Escape" && !deletingTaskId) {
+                setPendingTaskDelete(null);
               }
             }}
           >
-            <h2 id="archived-task-delete-title">{text(
-              `永久删除 ${pendingArchivedTaskDelete.identifier}？`,
-              `Permanently delete ${pendingArchivedTaskDelete.identifier}?`,
-            )}</h2>
-            <p>{text(
-              `“${pendingArchivedTaskDelete.title}”及其评论和附件将被永久删除，此操作无法撤销。`,
-              `“${pendingArchivedTaskDelete.title}” and its comments and attachments will be permanently deleted. This cannot be undone.`,
-            )}</p>
-            <div>
-              <Button variant="outline" size="sm"
-                className="button secondary"
-                type="button"
-                disabled={deletingArchivedTaskId !== null}
-                onClick={() => setPendingArchivedTaskDelete(null)}
-              >
-                {text("取消", "Cancel")}
-              </Button>
-              <Button variant="destructive" size="sm"
-                className="button danger"
-                type="button"
-                disabled={deletingArchivedTaskId !== null}
-                onClick={() => void deletePendingArchivedTask()}
-              >
-                {deletingArchivedTaskId
-                  ? text("删除中…", "Deleting…")
-                  : text("永久删除", "Delete permanently")}
-              </Button>
-            </div>
+            <header className="choerodon-sync-header">
+              <div className="choerodon-sync-heading">
+                <div>
+                  <h2 id="task-delete-title">{text(
+                    `永久删除 ${pendingTaskDelete.identifier}？`,
+                    `Permanently delete ${pendingTaskDelete.identifier}?`,
+                  )}</h2>
+                  <p id="task-delete-description">{text(
+                    `“${pendingTaskDelete.title}”及其评论和附件将被永久删除，此操作无法撤销。`,
+                    `“${pendingTaskDelete.title}” and its comments and attachments will be permanently deleted. This cannot be undone.`,
+                  )}</p>
+                </div>
+                <Button variant="ghost" size="none"
+                  className="icon-button"
+                  type="button"
+                  disabled={deletingTaskId !== null}
+                  onClick={() => setPendingTaskDelete(null)}
+                  aria-label={text("关闭删除弹框", "Close delete dialog")}
+                >
+                  <X size={18} aria-hidden="true" />
+                </Button>
+              </div>
+            </header>
+            <footer className="choerodon-sync-footer">
+              <div className="choerodon-sync-actions">
+                <Button variant="outline" size="sm"
+                  className="button secondary"
+                  type="button"
+                  disabled={deletingTaskId !== null}
+                  onClick={() => setPendingTaskDelete(null)}
+                >
+                  {text("取消", "Cancel")}
+                </Button>
+                <Button variant="destructive" size="sm"
+                  className="button danger"
+                  type="button"
+                  disabled={deletingTaskId !== null}
+                  onClick={() => void deletePendingTask()}
+                >
+                  {deletingTaskId
+                    ? text("删除中…", "Deleting…")
+                    : text("永久删除", "Delete permanently")}
+                </Button>
+              </div>
+            </footer>
           </div>
         </div>
       )}
@@ -4415,6 +4435,7 @@ export function App() {
           openInThreadDisabled={developmentScanLoading}
           onOpenInThread={openTaskInThread}
           onArchive={(task) => void archiveTask(task)}
+          onDelete={setPendingTaskDelete}
         />
       )}
 
