@@ -1640,23 +1640,20 @@ async function restoreTask(env, id, input, actor) {
   return getTask(env, current.id);
 }
 
-async function deleteArchivedTask(env, id, expectedVersion) {
+async function deleteTask(env, id, expectedVersion) {
   const current = await requireTaskRow(env, id);
   assertTaskVersion(current, expectedVersion);
-  if (current.archived_at === null) {
-    throw new ApiError(409, "TASK_NOT_ARCHIVED", "Only archived tasks can be deleted");
-  }
   const results = await env.DB.batch([
     env.DB.prepare("SELECT id FROM attachments WHERE task_id = ?").bind(current.id),
     env.DB.prepare(`
       DELETE FROM tasks
-      WHERE id = ? AND version = ? AND archived_at IS NOT NULL
+      WHERE id = ? AND version = ?
     `).bind(current.id, expectedVersion),
   ]);
   if (!changed(results[1])) {
     const latest = await requireTaskRow(env, current.id);
     assertTaskVersion(latest, expectedVersion);
-    throw new ApiError(409, "TASK_NOT_ARCHIVED", "Only archived tasks can be deleted");
+    throw new ApiError(409, "VERSION_CONFLICT", "Task was changed by another client");
   }
   const attachmentIds = results[0].results.map((attachment) => attachment.id);
   await Promise.all(attachmentIds.map((attachmentId) => env.ATTACHMENTS.delete(attachmentId)));
@@ -2821,7 +2818,7 @@ async function routeApi(request, env, actor, url) {
     }
     if (!action && request.method === "DELETE") {
       const { version } = parseVersionMutation(await readJson(request));
-      await deleteArchivedTask(env, taskId, version);
+      await deleteTask(env, taskId, version);
       return empty(204);
     }
     if (action === "move" && request.method === "POST") {

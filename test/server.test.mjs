@@ -1556,7 +1556,7 @@ test("issue attachments can be uploaded, listed, opened, downloaded, and deleted
   assert.equal(deletedContent.body.error.code, "ATTACHMENT_NOT_FOUND");
 });
 
-test("permanent task deletion requires archiving and removes attachment files", async () => {
+test("permanent task deletion supports active tasks and removes attachment files", async () => {
   const baseUrl = await startServer();
   await request(baseUrl, "/api/projects", {
     method: "POST",
@@ -1603,20 +1603,9 @@ test("permanent task deletion requires archiving and removes attachment files", 
   ));
   await Promise.all(storagePaths.map((storagePath) => access(storagePath)));
 
-  const activeDelete = await request(baseUrl, `/api/tasks/${task.id}`, {
-    method: "DELETE",
-    body: { version: task.version },
-  });
-  assert.equal(activeDelete.response.status, 409);
-  assert.equal(activeDelete.body.error.code, "TASK_NOT_ARCHIVED");
-
-  const archived = await request(baseUrl, `/api/tasks/${task.id}/archive`, {
-    method: "POST",
-    body: { version: task.version },
-  });
   const deleted = await request(baseUrl, `/api/tasks/${task.id}`, {
     method: "DELETE",
-    body: { version: archived.body.task.version },
+    body: { version: task.version },
   });
   assert.equal(deleted.response.status, 204);
   await Promise.all(storagePaths.map((storagePath) => (

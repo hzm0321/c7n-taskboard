@@ -3984,6 +3984,11 @@ kbd {
   font-size: 11px;
 }
 
+.task-delete-dialog {
+  width: min(460px, 100%);
+  padding: 0;
+}
+
 .project-create-dialog label {
   display: grid;
   gap: 6px;
