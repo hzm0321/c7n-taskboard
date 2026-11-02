@@ -431,12 +431,12 @@ export function ChoerodonSyncDialog({ project, onClose, onSynced }: {
                     onChange={(event) => {
                       setSelected((current) => { const next = new Set(current); if (event.target.checked) next.add(issue.id); else next.delete(issue.id); return next; });
                     }} />
+                  <span className="choerodon-sync-type" data-tone={taskTypeTone(issue.type)}>{issue.type}</span>
                   <span>{issue.key}</span>
                   <span className="choerodon-sync-badge" data-tone={groupColors.get(issue.groupId)} title={issue.groupName}>{issue.groupName}</span>
                 </div>
                 <h3>{issue.title}</h3>
                 <div className="choerodon-sync-card-meta">
-                  <span className="choerodon-sync-type" data-tone={taskTypeTone(issue.type)}>{issue.type}</span>
                   {issue.status !== issue.groupName && <span>{issue.status}</span>}
                   <span className="choerodon-sync-priority" data-priority={issue.priority} title={`${text("优先级", "Priority")} · ${issue.priorityName}`} aria-label={`${text("优先级", "Priority")} · ${issue.priorityName}`}>
                     {text("优先级", "Priority")} · {issue.priorityName}
